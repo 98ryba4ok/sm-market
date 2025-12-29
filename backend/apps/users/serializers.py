@@ -35,3 +35,12 @@ class LoginSerializer(serializers.Serializer):
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for user profile"""
+    
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'phone', 'is_active', 'is_staff', 'date_joined']
+        read_only_fields = ['id', 'is_active', 'is_staff', 'date_joined']
