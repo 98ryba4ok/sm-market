@@ -7,6 +7,26 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
+from rest_framework.permissions import IsAuthenticated
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+
+            # дополнительная защита: токен должен принадлежать пользователю
+            if token["user_id"] != request.user.id:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -26,15 +46,7 @@ class RefreshView(TokenRefreshView):
     permission_classes = [AllowAny]
 
 
-class LogoutView(APIView):
-    def post(self, request):
-        try:
-            refresh_token = request.data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response(status=status.HTTP_205_RESET_CONTENT)
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class UserProfileView(APIView):
@@ -43,10 +55,4 @@ class UserProfileView(APIView):
     
     def get(self, request):
         serializer = UserSerializer(request.user)
-        return Response(serializer.data)
-    
-    def patch(self, request):
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
         return Response(serializer.data)

@@ -1,33 +1,24 @@
-// Типы для пользователей и аутентификации
 
 export interface User {
   id: number;
   email: string;
-  first_name: string;
-  last_name: string;
-  phone: string | null;
+  phone: string;
 }
 
-export interface AuthTokens {
-  access: string;
-  refresh: string;
-}
 
-export interface LoginCredentials {
+export interface LoginPayload {
   email: string;
   password: string;
 }
 
-export interface RegisterData {
+export interface RegisterPayload {
   email: string;
+  phone: string;
   password: string;
-  password_confirm: string;
-  first_name: string;
-  last_name: string;
 }
 
-export interface LoginResponse {
+
+export interface TokenResponse {
   access: string;
   refresh: string;
-  user: User;
 }

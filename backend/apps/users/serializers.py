@@ -12,6 +12,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ("email", "phone", "password")
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Пользователь с таким email уже существует.")
+        return value
+
+    def validate_phone(self, value):
+        if User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError("Пользователь с таким телефоном уже существует.")
+        return value
+
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
 
@@ -22,12 +32,12 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, data):
         user = authenticate(
-            email=data["email"],
+            username=data["email"],  # здесь username это email
             password=data["password"],
         )
 
         if not user:
-            raise serializers.ValidationError("Invalid credentials")
+            raise serializers.ValidationError("Email или пароль неверны.")  # более дружелюбное сообщение
 
         refresh = RefreshToken.for_user(user)
 
@@ -38,9 +48,14 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for user profile"""
-    
     class Meta:
         model = User
         fields = ['id', 'email', 'phone', 'is_active', 'is_staff', 'date_joined']
-        read_only_fields = ['id', 'is_active', 'is_staff', 'date_joined']
+        read_only_fields = [
+            'id',
+            'email',
+            'phone',
+            'is_active',
+            'is_staff',
+            'date_joined',
+        ]

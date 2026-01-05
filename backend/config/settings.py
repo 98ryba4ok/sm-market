@@ -3,12 +3,15 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-secret-key")
-
+SECRET_KEY = os.getenv("SECRET_KEY")
+# в проде заменить os get env
 DEBUG = os.getenv("DEBUG") == "1"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
+AUTHENTICATION_BACKENDS = [
+    "apps.users.backends.EmailBackend",
+]
 
 
 INSTALLED_APPS = [
@@ -20,10 +23,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'django_filters',  # Added for filtering support
+    'django_filters',  
     'apps.catalog',
     'apps.users',
     'apps.orders',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 from datetime import timedelta
@@ -33,7 +37,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.AllowAny",  # Changed to AllowAny - permissions set per ViewSet
+        "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,

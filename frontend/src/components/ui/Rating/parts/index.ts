@@ -1,1 +1,0 @@
-export { RatingCompact } from './RatingCompact';
