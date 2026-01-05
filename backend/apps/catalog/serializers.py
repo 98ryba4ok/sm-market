@@ -1,13 +1,14 @@
 from rest_framework import serializers
 from django.db.models import Avg
-from .models import Category, Product, ProductImage, ProductReview, Wishlist
+from .models import Category, Product, ProductImage, ProductReview, Wishlist, Banner, Brand
 
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор категории с вложенными подкатегориями"""
     subcategories = serializers.SerializerMethodField()
     products_count = serializers.SerializerMethodField()
-    
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
         fields = [
@@ -16,6 +17,12 @@ class CategorySerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
+
+    def get_image(self, obj):
+        """Вернуть относительный URL изображения"""
+        if obj.image:
+            return obj.image.url
+        return None
     
     def get_subcategories(self, obj):
         """Получить подкатегории (только первый уровень)"""
@@ -41,11 +48,22 @@ class ProductImageSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
+class BrandSerializer(serializers.ModelSerializer):
+    """Сериализатор для брендов"""
+    class Meta:
+        model = Brand
+        fields = [
+            'id', 'name', 'slug', 'description',
+            'order', 'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
 class ProductReviewSerializer(serializers.ModelSerializer):
     """Сериализатор отзыва с информацией о пользователе"""
     user_email = serializers.EmailField(source='user.email', read_only=True)
     user_id = serializers.IntegerField(source='user.id', read_only=True)
-    
+
     class Meta:
         model = ProductReview
         fields = [
@@ -54,7 +72,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at', 'is_verified_purchase']
-    
+
     def validate_rating(self, value):
         """Валидация рейтинга"""
         if value < 1 or value > 5:
@@ -65,14 +83,17 @@ class ProductReviewSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     """Легковесный сериализатор для списка товаров"""
     category_name = serializers.CharField(source='category.name', read_only=True)
+    brand_id = serializers.IntegerField(source='brand.id', read_only=True, allow_null=True)
+    brand_name = serializers.CharField(source='brand.name', read_only=True, allow_null=True)
     main_image = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     reviews_count = serializers.IntegerField(source='reviews.count', read_only=True)
-    
+
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'slug', 'category', 'category_name',
+            'brand_id', 'brand_name',
             'price', 'discount_price', 'final_price', 'discount_percentage',
             'stock_quantity', 'in_stock', 'main_image',
             'average_rating', 'reviews_count', 'views_count'
@@ -83,9 +104,6 @@ class ProductListSerializer(serializers.ModelSerializer):
         """Получить главное изображение товара"""
         main_image = obj.images.filter(is_main=True).first()
         if main_image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(main_image.image.url)
             return main_image.image.url
         return None
     
@@ -99,16 +117,17 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     """Полный сериализатор товара с изображениями и отзывами"""
     category_name = serializers.CharField(source='category.name', read_only=True)
     category_slug = serializers.CharField(source='category.slug', read_only=True)
+    brand = BrandSerializer(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
     reviews = ProductReviewSerializer(many=True, read_only=True)
     average_rating = serializers.SerializerMethodField()
     reviews_count = serializers.IntegerField(source='reviews.count', read_only=True)
-    
+
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'slug', 'description',
-            'category', 'category_name', 'category_slug',
+            'category', 'category_name', 'category_slug', 'brand',
             'price', 'discount_price', 'final_price', 'discount_percentage',
             'stock_quantity', 'in_stock', 'is_active',
             'images', 'reviews', 'average_rating', 'reviews_count',
@@ -136,9 +155,29 @@ class WishlistSerializer(serializers.ModelSerializer):
 class WishlistAddRemoveSerializer(serializers.Serializer):
     """Сериализатор для добавления/удаления товара из избранного"""
     product_id = serializers.IntegerField()
-    
+
     def validate_product_id(self, value):
         """Проверка существования товара"""
         if not Product.objects.filter(id=value, is_active=True).exists():
             raise serializers.ValidationError("Товар не найден или неактивен")
         return value
+
+
+class BannerSerializer(serializers.ModelSerializer):
+    """Сериализатор баннера для главной страницы"""
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Banner
+        fields = [
+            'id', 'title', 'description', 'image', 'link',
+            'button_text', 'order', 'is_active',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_image(self, obj):
+        """Вернуть относительный URL изображения"""
+        if obj.image:
+            return obj.image.url
+        return None

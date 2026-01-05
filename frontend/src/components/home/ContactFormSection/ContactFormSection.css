@@ -1,0 +1,112 @@
+.contact-form-section {
+  padding: 4rem 0;
+  background-color: rgb(249, 250, 251);
+}
+
+.contact-form-section__container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.contact-form-section__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .contact-form-section__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.contact-form-section__image {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.contact-form-section__image-background {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgb(37, 99, 235), rgb(29, 78, 216));
+}
+
+.contact-form-section__image-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 3.75rem;
+  font-weight: bold;
+  opacity: 0.2;
+}
+
+.contact-form-section__title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: rgb(17, 24, 39);
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .contact-form-section__title {
+    font-size: 2.25rem;
+  }
+}
+
+.contact-form-section__description {
+  color: rgb(75, 85, 99);
+  margin-bottom: 2rem;
+}
+
+.contact-form-section__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contact-form-section__inputs-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .contact-form-section__inputs-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.contact-form-section__textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgb(209, 213, 219);
+  border-radius: 0.25rem;
+  outline: none;
+  min-height: 120px;
+  resize: none;
+}
+
+.contact-form-section__textarea:focus {
+  box-shadow: 0 0 0 2px rgb(59, 130, 246);
+  border-color: transparent;
+}
+
+.contact-form-section__submit-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.contact-form-section__disclaimer {
+  font-size: 0.75rem;
+  color: rgb(107, 114, 128);
+  margin-top: 0.5rem;
+}

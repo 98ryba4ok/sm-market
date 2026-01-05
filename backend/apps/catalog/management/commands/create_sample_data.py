@@ -1,8 +1,11 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+from django.core.files import File
 from decimal import Decimal
 import random
-from apps.catalog.models import Category, Product, ProductImage, ProductReview
+import shutil
+from pathlib import Path
+from apps.catalog.models import Category, Product, ProductImage, ProductReview, Brand, Banner
 from apps.orders.models import Order, OrderItem
 
 User = get_user_model()
@@ -10,13 +13,24 @@ User = get_user_model()
 
 class Command(BaseCommand):
     help = 'Создает тестовые данные для интернет-магазина'
-    
+
     def add_arguments(self, parser):
         parser.add_argument(
             '--clear',
             action='store_true',
             help='Очистить существующие данные перед созданием новых',
         )
+
+    def get_photo_path(self, filename):
+        """Получить путь к фото из локальной папки photo рядом со скриптом"""
+        # Папка photo находится рядом с этим файлом
+        script_dir = Path(__file__).parent
+        photo_dir = script_dir / 'photo'
+        photo_path = photo_dir / filename
+
+        if photo_path.exists():
+            return photo_path
+        return None
     
     def handle(self, *args, **options):
         if options['clear']:
@@ -26,6 +40,8 @@ class Command(BaseCommand):
             ProductReview.objects.all().delete()
             ProductImage.objects.all().delete()
             Product.objects.all().delete()
+            Banner.objects.all().delete()
+            Brand.objects.all().delete()
             Category.objects.all().delete()
             # Удаляем тестовых пользователей (кроме суперпользователей)
             User.objects.filter(is_superuser=False, is_staff=False).delete()
@@ -58,158 +74,166 @@ class Command(BaseCommand):
         # Создать категории
         self.stdout.write('Создание категорий...')
         categories_data = [
-            {
-                'name': 'Электроника',
-                'description': 'Электронные устройства и гаджеты',
-                'subcategories': [
-                    {'name': 'Смартфоны', 'description': 'Мобильные телефоны и аксессуары'},
-                    {'name': 'Ноутбуки', 'description': 'Портативные компьютеры'},
-                    {'name': 'Наушники', 'description': 'Аудио устройства'},
-                ]
-            },
-            {
-                'name': 'Одежда',
-                'description': 'Мужская и женская одежда',
-                'subcategories': [
-                    {'name': 'Мужская одежда', 'description': 'Одежда для мужчин'},
-                    {'name': 'Женская одежда', 'description': 'Одежда для женщин'},
-                ]
-            },
-            {
-                'name': 'Дом и сад',
-                'description': 'Товары для дома и сада',
-                'subcategories': [
-                    {'name': 'Мебель', 'description': 'Домашняя мебель'},
-                    {'name': 'Декор', 'description': 'Предметы декора'},
-                ]
-            },
-            {
-                'name': 'Спорт',
-                'description': 'Спортивные товары и оборудование',
-                'subcategories': [
-                    {'name': 'Фитнес', 'description': 'Оборудование для фитнеса'},
-                    {'name': 'Велосипеды', 'description': 'Велосипеды и аксессуары'},
-                ]
-            },
+            {'name': 'Сантехника', 'description': 'Сантехническое оборудование для дома', 'image': 'santehnika.png'},
+            {'name': 'Кухни', 'description': 'Кухонное оборудование и мебель', 'image': 'kuhni.png'},
+            {'name': 'Унитазы', 'description': 'Унитазы и комплектующие', 'image': 'unitazy.png'},
+            {'name': 'Плитка', 'description': 'Плитка для ванной и кухни', 'image': 'plitka.png'},
+            {'name': 'Ванны', 'description': 'Ванны и душевые кабины', 'image': 'vanny.png'},
+            {'name': 'Мебель для ванны', 'description': 'Мебель и аксессуары для ванной комнаты', 'image': 'mebel.png'},
         ]
-        
-        categories = {}
+
+        categories = []
         for cat_data in categories_data:
-            parent_cat = Category.objects.create(
+            category = Category.objects.create(
                 name=cat_data['name'],
                 description=cat_data['description'],
                 is_active=True
             )
-            categories[cat_data['name']] = parent_cat
-            self.stdout.write(f'  ✓ Создана категория: {parent_cat.name}')
-            
-            for subcat_data in cat_data.get('subcategories', []):
-                subcat = Category.objects.create(
-                    name=subcat_data['name'],
-                    description=subcat_data['description'],
-                    parent=parent_cat,
-                    is_active=True
-                )
-                categories[subcat_data['name']] = subcat
-                self.stdout.write(f'    ✓ Создана подкатегория: {subcat.name}')
-        
-        # Создать товары
+
+            # Добавляем изображение, если оно существует
+            photo_path = self.get_photo_path(cat_data['image'])
+            if photo_path:
+                with open(photo_path, 'rb') as f:
+                    category.image.save(cat_data['image'], File(f), save=True)
+                self.stdout.write(f'  ✓ Создана категория: {category.name} (с изображением)')
+            else:
+                self.stdout.write(f'  ✓ Создана категория: {category.name} (без изображения)')
+
+            categories.append(category)
+
+        # Создать бренды
+        self.stdout.write('\nСоздание брендов...')
+        brands_data = [
+            {'name': 'GESSI', 'description': 'Итальянский производитель премиум сантехники', 'order': 1, 'logo': 'gessi.png'},
+            {'name': 'cielo', 'description': 'Дизайнерская керамика и сантехника', 'order': 2, 'logo': 'cielo.png'},
+            {'name': 'Jorger', 'description': 'Эксклюзивная сантехника класса люкс', 'order': 3, 'logo': 'jorger.png'},
+            {'name': 'KRONOS ceramiche', 'description': 'Итальянская керамическая плитка', 'order': 4, 'logo': 'kronos.png'},
+            {'name': 'DevoN&DevoN', 'description': 'Мебель для ванных комнат', 'order': 5, 'logo': 'devon.png'},
+        ]
+
+        brands = []
+        for brand_data in brands_data:
+            brand = Brand.objects.create(
+                name=brand_data['name'],
+                description=brand_data['description'],
+                order=brand_data['order'],
+                is_active=True
+            )
+
+            # Добавляем логотип, если он существует
+            photo_path = self.get_photo_path(brand_data['logo'])
+            if photo_path:
+                with open(photo_path, 'rb') as f:
+                    brand.logo.save(brand_data['logo'], File(f), save=True)
+                self.stdout.write(f'  ✓ Создан бренд: {brand.name} (с логотипом)')
+            else:
+                self.stdout.write(f'  ✓ Создан бренд: {brand.name} (без логотипа)')
+
+            brands.append(brand)
+
+        # Создать баннеры
+        self.stdout.write('\nСоздание баннеров...')
+        banners_data = [
+            {
+                'title': 'Новая коллекция смесителей GESSI Perle',
+                'description': 'Откройте мир роскошных смесителей. Ваш официальный дистрибьютор GESSI',
+                'button_text': 'Смотреть коллекцию',
+                'link': '/catalog/santehnika',
+                'order': 1,
+                'image': 'banner1.png'
+            },
+            {
+                'title': 'Эксклюзивная итальянская плитка',
+                'description': 'KRONOS ceramiche - керамика мирового класса для вашего интерьера',
+                'button_text': 'Каталог плитки',
+                'link': '/catalog/plitka',
+                'order': 2,
+                'image': 'banner2.png'
+            },
+        ]
+
+        for banner_data in banners_data:
+            banner = Banner.objects.create(
+                title=banner_data['title'],
+                description=banner_data['description'],
+                button_text=banner_data['button_text'],
+                link=banner_data['link'],
+                order=banner_data['order'],
+                is_active=True
+            )
+
+            # Добавляем изображение, если оно существует
+            photo_path = self.get_photo_path(banner_data['image'])
+            if photo_path:
+                with open(photo_path, 'rb') as f:
+                    banner.image.save(banner_data['image'], File(f), save=True)
+                self.stdout.write(f'  ✓ Создан баннер: {banner.title} (с изображением)')
+            else:
+                self.stdout.write(f'  ✓ Создан баннер: {banner.title} (без изображения)')
+
+        # Создать товары (1 товар в 5 дубликатах)
         self.stdout.write('\nСоздание товаров...')
-        products_data = [
-            # Электроника - Смартфоны
-            {'name': 'iPhone 15 Pro', 'category': 'Смартфоны', 'price': 99990, 'discount': 94990, 'stock': 15},
-            {'name': 'Samsung Galaxy S24', 'category': 'Смартфоны', 'price': 79990, 'stock': 20},
-            {'name': 'Xiaomi 14 Pro', 'category': 'Смартфоны', 'price': 59990, 'discount': 54990, 'stock': 25},
-            {'name': 'Google Pixel 8', 'category': 'Смартфоны', 'price': 69990, 'stock': 10},
-            
-            # Электроника - Ноутбуки
-            {'name': 'MacBook Pro 16"', 'category': 'Ноутбуки', 'price': 249990, 'stock': 8},
-            {'name': 'Dell XPS 15', 'category': 'Ноутбуки', 'price': 149990, 'discount': 139990, 'stock': 12},
-            {'name': 'Lenovo ThinkPad X1', 'category': 'Ноутбуки', 'price': 129990, 'stock': 15},
-            {'name': 'ASUS ROG Strix', 'category': 'Ноутбуки', 'price': 179990, 'discount': 169990, 'stock': 7},
-            
-            # Электроника - Наушники
-            {'name': 'AirPods Pro 2', 'category': 'Наушники', 'price': 24990, 'stock': 30},
-            {'name': 'Sony WH-1000XM5', 'category': 'Наушники', 'price': 29990, 'discount': 27990, 'stock': 25},
-            {'name': 'Bose QuietComfort', 'category': 'Наушники', 'price': 27990, 'stock': 20},
-            
-            # Одежда - Мужская
-            {'name': 'Мужская куртка', 'category': 'Мужская одежда', 'price': 8990, 'discount': 6990, 'stock': 40},
-            {'name': 'Мужские джинсы', 'category': 'Мужская одежда', 'price': 4990, 'stock': 50},
-            {'name': 'Мужская рубашка', 'category': 'Мужская одежда', 'price': 2990, 'stock': 60},
-            
-            # Одежда - Женская
-            {'name': 'Женское платье', 'category': 'Женская одежда', 'price': 5990, 'discount': 4990, 'stock': 35},
-            {'name': 'Женская блузка', 'category': 'Женская одежда', 'price': 3490, 'stock': 45},
-            {'name': 'Женские брюки', 'category': 'Женская одежда', 'price': 4490, 'stock': 40},
-            
-            # Дом и сад - Мебель
-            {'name': 'Диван угловой', 'category': 'Мебель', 'price': 49990, 'discount': 44990, 'stock': 5},
-            {'name': 'Кресло офисное', 'category': 'Мебель', 'price': 12990, 'stock': 15},
-            {'name': 'Стол письменный', 'category': 'Мебель', 'price': 8990, 'stock': 20},
-            
-            # Дом и сад - Декор
-            {'name': 'Картина настенная', 'category': 'Декор', 'price': 2990, 'stock': 30},
-            {'name': 'Ваза декоративная', 'category': 'Декор', 'price': 1490, 'discount': 990, 'stock': 40},
-            {'name': 'Светильник настольный', 'category': 'Декор', 'price': 3490, 'stock': 25},
-            
-            # Спорт - Фитнес
-            {'name': 'Гантели 10кг', 'category': 'Фитнес', 'price': 2990, 'stock': 50},
-            {'name': 'Коврик для йоги', 'category': 'Фитнес', 'price': 1490, 'discount': 1190, 'stock': 60},
-            {'name': 'Фитнес-браслет', 'category': 'Фитнес', 'price': 4990, 'stock': 35},
-            
-            # Спорт - Велосипеды
-            {'name': 'Горный велосипед', 'category': 'Велосипеды', 'price': 34990, 'discount': 29990, 'stock': 10},
-            {'name': 'Городской велосипед', 'category': 'Велосипеды', 'price': 24990, 'stock': 15},
-            {'name': 'Детский велосипед', 'category': 'Велосипеды', 'price': 9990, 'stock': 20},
-        ]
-        
-        descriptions = [
-            'Высокое качество и надежность. Отличный выбор для повседневного использования.',
-            'Современный дизайн и передовые технологии. Идеально подходит для требовательных пользователей.',
-            'Отличное соотношение цены и качества. Проверено временем.',
-            'Премиум качество по доступной цене. Гарантия производителя 2 года.',
-            'Инновационное решение для вашего комфорта. Рекомендуем!',
-        ]
-        
+
+        description = '''Кухонный смеситель Omoikiri Shinagawa-C - это воплощение японского минимализма и функциональности.
+
+Особенности:
+• Высококачественная латунь с хромированным покрытием
+• Керамический картридж 35 мм для плавной регулировки
+• Поворот излива на 360°
+• Аэратор для экономии воды
+• Простая установка и обслуживание
+• Гарантия 5 лет
+
+Технические характеристики:
+- Высота: 295 мм
+- Вылет излива: 220 мм
+- Присоединительный размер: 1/2"
+- Рабочее давление: 0.5-6 бар'''
+
         products = []
-        for prod_data in products_data:
-            category = categories[prod_data['category']]
+        gessi_brand = brands[0]  # GESSI
+        santehnika_category = categories[0]  # Сантехника
+
+        for i in range(5):
+            # Добавляем уникальный суффикс к названию для каждого дубликата, кроме первого
+            product_name = 'Кухонный смеситель Omoikiri Shinagawa-C'
+            if i > 0:
+                product_name = f'{product_name} #{i+1}'
+
             product = Product.objects.create(
-                name=prod_data['name'],
-                description=random.choice(descriptions),
-                category=category,
-                price=Decimal(prod_data['price']),
-                discount_price=Decimal(prod_data['discount']) if 'discount' in prod_data else None,
-                stock_quantity=prod_data['stock'],
+                name=product_name,
+                description=description,
+                category=santehnika_category,
+                brand=gessi_brand,
+                price=Decimal('33000'),
+                discount_price=Decimal('29990'),
+                stock_quantity=10,
                 is_active=True
             )
             products.append(product)
             self.stdout.write(f'  ✓ Создан товар: {product.name} ({product.final_price} ₽)')
         
-        # Создать изображения товаров (placeholder URLs)
+        # Создать изображения товаров
         self.stdout.write('\nСоздание изображений товаров...')
-        images_created = 0
-        placeholder_base = 'https://placehold.co/600x600'
-        
-        for product in products:
-            # Создаем 1-3 изображения для каждого товара
-            num_images = random.randint(1, 3)
-            for i in range(num_images):
-                # Используем разные цвета для разных изображений
-                colors = ['png/3B82F6/FFFFFF', 'png/10B981/FFFFFF', 'png/F59E0B/FFFFFF',
-                         'png/EF4444/FFFFFF', 'png/8B5CF6/FFFFFF']
-                color = random.choice(colors)
-                
-                ProductImage.objects.create(
-                    product=product,
-                    image=f'{placeholder_base}/{color}?text={product.name[:20]}',
-                    alt_text=f'{product.name} - изображение {i+1}',
-                    is_main=(i == 0)  # Первое изображение - главное
-                )
-                images_created += 1
-        
-        self.stdout.write(self.style.SUCCESS(f'✓ Создано изображений: {images_created}'))
+
+        product_image_filename = 'product.png'
+        photo_path = self.get_photo_path(product_image_filename)
+
+        if photo_path:
+            images_created = 0
+            for product in products:
+                with open(photo_path, 'rb') as f:
+                    product_image = ProductImage.objects.create(
+                        product=product,
+                        alt_text=product.name,
+                        is_main=True
+                    )
+                    product_image.image.save(f'{product.slug}.png', File(f), save=True)
+                    images_created += 1
+
+            self.stdout.write(self.style.SUCCESS(f'✓ Создано изображений: {images_created}'))
+        else:
+            self.stdout.write(self.style.WARNING(f'⚠ Файл {product_image_filename} не найден в папке photo, изображения не созданы'))
         
         # Создать отзывы
         self.stdout.write('\nСоздание отзывов...')
@@ -302,26 +326,57 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'✓ Создано заказов: {orders_created}'))
         
         # Итоговая статистика
-        self.stdout.write('\n' + '='*60)
+        self.stdout.write('\n' + '='*70)
         self.stdout.write(self.style.SUCCESS('✓ Тестовые данные успешно созданы!'))
-        self.stdout.write('='*60)
+        self.stdout.write('='*70)
         self.stdout.write(f'Пользователей: {len(test_users)}')
         self.stdout.write(f'Категорий: {Category.objects.count()}')
+        self.stdout.write(f'Брендов: {Brand.objects.count()}')
+        self.stdout.write(f'Баннеров: {Banner.objects.count()}')
         self.stdout.write(f'Товаров: {Product.objects.count()}')
         self.stdout.write(f'Изображений: {ProductImage.objects.count()}')
         self.stdout.write(f'Отзывов: {ProductReview.objects.count()}')
         self.stdout.write(f'Заказов: {Order.objects.count()}')
         self.stdout.write(f'Позиций в заказах: {OrderItem.objects.count()}')
-        
-        self.stdout.write('\n' + '='*60)
+
+        self.stdout.write('\n' + '='*70)
+        self.stdout.write(self.style.SUCCESS('Созданные категории:'))
+        self.stdout.write('='*70)
+        for cat in Category.objects.all():
+            self.stdout.write(f'  • {cat.name} ({cat.slug})')
+
+        self.stdout.write('\n' + '='*70)
+        self.stdout.write(self.style.SUCCESS('Созданные бренды:'))
+        self.stdout.write('='*70)
+        for brand in Brand.objects.all():
+            self.stdout.write(f'  • {brand.name}')
+
+        self.stdout.write('\n' + '='*70)
+        self.stdout.write(self.style.SUCCESS('Созданные баннеры:'))
+        self.stdout.write('='*70)
+        for banner in Banner.objects.all():
+            self.stdout.write(f'  • {banner.title}')
+
+        self.stdout.write('\n' + '='*70)
         self.stdout.write(self.style.SUCCESS('Тестовые пользователи (пароль для всех: testpass123):'))
-        self.stdout.write('='*60)
+        self.stdout.write('='*70)
         for user in test_users:
             self.stdout.write(f'  📧 {user.email}')
-        
-        self.stdout.write('\n' + '='*60)
+
+        self.stdout.write('\n' + '='*70)
+        self.stdout.write('ℹ️  Изображения загружаются из папки:')
+        self.stdout.write('  backend/apps/catalog/management/commands/photo/')
+        self.stdout.write('')
+        self.stdout.write('Необходимые файлы:')
+        self.stdout.write('  • Категории: santehnika.png, kuhni.png, unitazy.png, plitka.png, vanny.png, mebel.png')
+        self.stdout.write('  • Бренды: gessi.png, cielo.png, jorger.png, kronos.png, devon.png')
+        self.stdout.write('  • Баннеры: banner1.png, banner2.png')
+        self.stdout.write('  • Товар: product.png')
+        self.stdout.write('='*70)
+
+        self.stdout.write('\n' + '='*70)
         self.stdout.write('Для доступа к админ-панели создайте суперпользователя:')
         self.stdout.write('  python manage.py createsuperuser')
         self.stdout.write('\nИли используйте Docker:')
         self.stdout.write('  docker-compose exec backend python manage.py createsuperuser')
-        self.stdout.write('='*60)
+        self.stdout.write('='*70)

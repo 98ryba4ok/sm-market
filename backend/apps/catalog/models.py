@@ -5,6 +5,52 @@ from django.conf import settings
 import uuid
 
 
+class Brand(models.Model):
+    """Бренд товаров"""
+    name = models.CharField(max_length=200, unique=True, verbose_name="Название")
+    slug = models.SlugField(max_length=200, unique=True, verbose_name="URL slug")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    order = models.PositiveIntegerField(default=0, verbose_name="Порядок отображения")
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Бренд"
+        verbose_name_plural = "Бренды"
+        ordering = ['order', 'name']
+        indexes = [
+            models.Index(fields=['slug']),
+            models.Index(fields=['is_active', 'order']),
+        ]
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Транслитерация для русских названий
+            base_slug = slugify(self.name)
+            if not base_slug:
+                # Используем транслитерацию
+                translit_map = {
+                    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+                    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+                    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+                    'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+                    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+                }
+                name_lower = self.name.lower()
+                translit = ''.join(translit_map.get(c, c) for c in name_lower)
+                base_slug = slugify(translit)
+
+            if not base_slug:
+                base_slug = f'brand-{uuid.uuid4().hex[:8]}'
+
+            self.slug = base_slug
+        super().save(*args, **kwargs)
+
+
 class Category(models.Model):
     """Категория товаров с поддержкой вложенности"""
     name = models.CharField(max_length=200, verbose_name="Название")
@@ -82,6 +128,14 @@ class Product(models.Model):
         related_name='products',
         verbose_name="Категория"
     )
+    brand = models.ForeignKey(
+        Brand,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='products',
+        verbose_name="Бренд"
+    )
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -115,6 +169,7 @@ class Product(models.Model):
         indexes = [
             models.Index(fields=['slug']),
             models.Index(fields=['category', 'is_active']),
+            models.Index(fields=['brand', 'is_active']),
             models.Index(fields=['price']),
             models.Index(fields=['-created_at']),
         ]
@@ -283,3 +338,42 @@ class Wishlist(models.Model):
     def is_in_wishlist(self, product):
         """Проверить, есть ли товар в избранном"""
         return self.products.filter(pk=product.pk).exists()
+
+
+class Banner(models.Model):
+    """Баннер для главной страницы (Hero Slider)"""
+    title = models.CharField(max_length=200, verbose_name="Заголовок")
+    description = models.TextField(verbose_name="Описание")
+    image = models.ImageField(
+        upload_to='hero/',
+        verbose_name="Изображение"
+    )
+    link = models.URLField(
+        blank=True,
+        null=True,
+        verbose_name="Ссылка"
+    )
+    button_text = models.CharField(
+        max_length=100,
+        blank=True,
+        default="Подробнее",
+        verbose_name="Текст кнопки"
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Порядок отображения"
+    )
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Баннер"
+        verbose_name_plural = "Баннеры"
+        ordering = ['order', '-created_at']
+        indexes = [
+            models.Index(fields=['is_active', 'order']),
+        ]
+
+    def __str__(self):
+        return self.title

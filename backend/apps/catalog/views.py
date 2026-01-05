@@ -4,14 +4,16 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Avg
-from .models import Category, Product, ProductReview, Wishlist
+from .models import Category, Product, ProductReview, Wishlist, Banner, Brand
 from .serializers import (
     CategorySerializer,
     ProductListSerializer,
     ProductDetailSerializer,
     ProductReviewSerializer,
     WishlistSerializer,
-    WishlistAddRemoveSerializer
+    WishlistAddRemoveSerializer,
+    BannerSerializer,
+    BrandSerializer
 )
 
 
@@ -357,3 +359,30 @@ class WishlistViewSet(viewsets.ViewSet):
                 {'detail': 'Список желаний пуст'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class BrandViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet для брендов
+
+    list: Получить список активных брендов
+    retrieve: Получить конкретный бренд
+    """
+    queryset = Brand.objects.filter(is_active=True).order_by('order', 'name')
+    serializer_class = BrandSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = None  # Отключаем пагинацию для брендов
+    lookup_field = 'slug'
+
+
+class BannerViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet для баннеров главной страницы
+
+    list: Получить список активных баннеров
+    retrieve: Получить конкретный баннер
+    """
+    queryset = Banner.objects.filter(is_active=True).order_by('order', '-created_at')
+    serializer_class = BannerSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = None  # Отключаем пагинацию для баннеров

@@ -1,0 +1,137 @@
+.hero-slider {
+  position: relative;
+  height: 400px;
+  background-color: rgb(17, 24, 39);
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .hero-slider {
+    height: 500px;
+  }
+}
+
+.hero-slider__slide {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.5s;
+  opacity: 0;
+}
+
+.hero-slider__slide--active {
+  opacity: 1;
+}
+
+.hero-slider__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+}
+
+.hero-slider__background {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgb(31, 41, 55), rgb(17, 24, 39));
+}
+
+.hero-slider__container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+.hero-slider__content {
+  max-width: 42rem;
+  color: white;
+}
+
+.hero-slider__title {
+  font-size: 2.25rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .hero-slider__title {
+    font-size: 3rem;
+  }
+}
+
+.hero-slider__description {
+  font-size: 1.125rem;
+  color: rgb(229, 231, 235);
+}
+
+@media (min-width: 768px) {
+  .hero-slider__description {
+    font-size: 1.25rem;
+  }
+}
+
+.hero-slider__nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3rem;
+  height: 3rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  backdrop-filter: blur(4px);
+  z-index: 20;
+  cursor: pointer;
+}
+
+.hero-slider__nav-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.hero-slider__nav-btn--prev {
+  left: 1rem;
+}
+
+.hero-slider__nav-btn--next {
+  right: 1rem;
+}
+
+.hero-slider__nav-btn svg {
+  color: white;
+}
+
+.hero-slider__dots {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 20;
+}
+
+.hero-slider__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hero-slider__dot:hover {
+  background-color: rgba(255, 255, 255, 0.75);
+}
+
+.hero-slider__dot--active {
+  width: 2rem;
+  background-color: white;
+}

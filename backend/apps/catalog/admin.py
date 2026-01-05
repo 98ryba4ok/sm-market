@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Category, Product, ProductImage, ProductReview, Wishlist
+from django.utils.safestring import mark_safe
+from .models import Category, Product, ProductImage, ProductReview, Wishlist, Banner, Brand
 
 
 class ProductImageInline(admin.TabularInline):
@@ -61,11 +62,11 @@ class CategoryAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     """Админка для товаров"""
     list_display = [
-        'name', 'slug', 'category', 'price', 'discount_price',
-        'final_price_display', 'stock_quantity', 'in_stock',
+        'name', 'slug', 'category', 'brand', 'price', 'discount_price',
+        'final_price_display', 'stock_quantity', 'in_stock_display',
         'is_active', 'views_count', 'created_at'
     ]
-    list_filter = ['is_active', 'category', 'created_at']
+    list_filter = ['is_active', 'category', 'brand', 'created_at']
     search_fields = ['name', 'slug', 'description']
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = [
@@ -73,10 +74,10 @@ class ProductAdmin(admin.ModelAdmin):
         'final_price', 'discount_percentage', 'in_stock'
     ]
     inlines = [ProductImageInline]
-    
+
     fieldsets = (
         ('Основная информация', {
-            'fields': ('name', 'slug', 'category', 'description')
+            'fields': ('name', 'slug', 'category', 'brand', 'description')
         }),
         ('Цены', {
             'fields': ('price', 'discount_price', 'final_price', 'discount_percentage')
@@ -97,17 +98,13 @@ class ProductAdmin(admin.ModelAdmin):
         """Отображение финальной цены"""
         return f'{obj.final_price} ₽'
     final_price_display.short_description = 'Финальная цена'
-    
-    def in_stock(self, obj):
+
+    def in_stock_display(self, obj):
         """Индикатор наличия на складе"""
         if obj.in_stock:
-            return format_html(
-                '<span style="color: green;">✓ В наличии</span>'
-            )
-        return format_html(
-            '<span style="color: red;">✗ Нет в наличии</span>'
-        )
-    in_stock.short_description = 'Наличие'
+            return mark_safe('<span style="color: green;">✓ В наличии</span>')
+        return mark_safe('<span style="color: red;">✗ Нет в наличии</span>')
+    in_stock_display.short_description = 'Наличие'
 
 
 @admin.register(ProductImage)
@@ -217,3 +214,68 @@ class WishlistAdmin(admin.ModelAdmin):
         """Количество товаров в списке желаний"""
         return obj.products.count()
     products_count.short_description = 'Количество товаров'
+
+
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
+    """Админка для брендов"""
+    list_display = ['name', 'order', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['name', 'description']
+    readonly_fields = ['slug', 'created_at', 'updated_at']
+    list_editable = ['order', 'is_active']
+
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'slug', 'description')
+        }),
+        ('Настройки', {
+            'fields': ('order', 'is_active')
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(Banner)
+class BannerAdmin(admin.ModelAdmin):
+    """Админка для баннеров главной страницы"""
+    list_display = [
+        'title', 'image_preview', 'order', 'is_active',
+        'link', 'created_at'
+    ]
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['title', 'description']
+    readonly_fields = ['created_at', 'updated_at', 'image_preview']
+    list_editable = ['order', 'is_active']
+
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('title', 'description', 'button_text')
+        }),
+        ('Изображение', {
+            'fields': ('image', 'image_preview')
+        }),
+        ('Ссылка', {
+            'fields': ('link',)
+        }),
+        ('Настройки', {
+            'fields': ('order', 'is_active')
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def image_preview(self, obj):
+        """Превью изображения баннера"""
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="max-height: 150px; max-width: 300px;" />',
+                obj.image.url
+            )
+        return '-'
+    image_preview.short_description = 'Превью изображения'

@@ -1,0 +1,59 @@
+.button {
+  font-weight: 500;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s, color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.button--primary {
+  background-color: rgb(37, 99, 235);
+  color: white;
+}
+
+.button--primary:hover {
+  background-color: rgb(29, 78, 216);
+}
+
+.button--secondary {
+  background-color: rgb(229, 231, 235);
+  color: rgb(17, 24, 39);
+}
+
+.button--secondary:hover {
+  background-color: rgb(209, 213, 219);
+}
+
+.button--outline {
+  border: 2px solid rgb(37, 99, 235);
+  color: rgb(37, 99, 235);
+  background-color: transparent;
+}
+
+.button--outline:hover {
+  background-color: rgb(239, 246, 255);
+}
+
+.button--ghost {
+  color: rgb(55, 65, 81);
+  background-color: transparent;
+}
+
+.button--ghost:hover {
+  background-color: rgb(243, 244, 246);
+}
+
+.button--sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.button--md {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+.button--lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+}
