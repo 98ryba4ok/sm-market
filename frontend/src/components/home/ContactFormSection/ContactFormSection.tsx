@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Input } from "../../ui/Input/Input";
+
+import helpImage from "../../../assets/help.png";
 import { Button } from "../../ui/Button/Button";
+import { Input } from "../../ui/Input/Input";
 import "./ContactFormSection.css";
 
 export const ContactFormSection = () => {
@@ -22,12 +24,11 @@ export const ContactFormSection = () => {
         <div className="contact-form-section__grid">
           {/* Image */}
           <div className="contact-form-section__image">
-            <div className="contact-form-section__image-background">
-              {/* Placeholder for service person image */}
-              <div className="contact-form-section__image-placeholder">
-                ?
-              </div>
-            </div>
+            <img
+              src={helpImage}
+              alt="Помощь"
+              className="contact-form-section__image-img"
+            />
           </div>
 
           {/* Form */}

@@ -7,9 +7,9 @@
 }
 
 .header__container {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0;
 }
 
 .header__content {
@@ -23,27 +23,44 @@
 .header__logo {
   display: flex;
   align-items: center;
-  
   text-decoration: none;
 }
+
+.header__logo-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 82px;
+  height: 56px;
+  background-color: #2563EB;
+  border-radius: 10px;
+  padding: 10px 5px;
+}
+
+.header__logo-text {
+  width: 41px;
+  height: auto;
+}
+
 .header__logo-catalog-wrapper{
   display: flex;
   align-items: center;
   gap: 1rem;
 }
-.header__logo-icon {
-  width: 40px;
-  height: 30px;
-}
 .header__catalog-btn {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  justify-content: flex-start;
+  gap: 5px;
+  width: 180px;
+  height: 34px;
+  padding: 5px 41px;
   background-color: rgb(37, 99, 235);
   color: white;
   border: none;
-  border-radius: 0.25rem;
+  border-radius: 6px;
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   flex-shrink: 0;
   transition: background-color 0.2s;
@@ -55,6 +72,8 @@
 
 .header__catalog-text {
   display: none;
+  font-weight: 700;
+  font-size: 16px;
 }
 
 @media (min-width: 640px) {
@@ -79,6 +98,7 @@
   border: 1px solid rgb(209, 213, 219);
   border-radius: 0.25rem;
   outline: none;
+  font-size: 16px;
 }
 
 .header__search-input:focus {
@@ -105,8 +125,9 @@
 .header__actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 2rem;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .header__action-link {
@@ -116,6 +137,7 @@
   color: rgb(55, 65, 81);
   text-decoration: none;
   transition: color 0.2s;
+  font-size: 1.125rem;
 }
 
 .header__action-link:hover {
@@ -124,6 +146,11 @@
 
 .header__action-link--icon-only {
   position: relative;
+}
+
+.header__action-link--icon-only svg {
+  width: 28px;
+  height: 28px;
 }
 
 .header__action-text {
@@ -157,6 +184,12 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  font-size: 1.125rem;
+}
+
+.header__action-btn svg {
+  width: 28px;
+  height: 28px;
 }
 
 .header__register-btn {

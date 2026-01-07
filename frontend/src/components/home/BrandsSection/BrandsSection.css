@@ -1,6 +1,6 @@
 .brands-section {
-  padding: 2rem 0;
-  background-color: white;
+  padding: 3rem 0;
+  background-color: #F9FAFB;
 }
 
 .brands-section__container {
@@ -10,41 +10,31 @@
 }
 
 .brands-section__grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
-@media (min-width: 768px) {
-  .brands-section__grid {
-    grid-template-columns: repeat(6, 1fr);
-    gap: 2rem;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 100px;
+  flex-wrap: wrap;
 }
 
 .brands-section__brand {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  transition: opacity 0.2s;
-  cursor: pointer;
-}
-
-.brands-section__brand:hover {
-  opacity: 0.75;
 }
 
 .brands-section__logo {
-  color: rgb(156, 163, 175);
-  font-size: 1.125rem;
-  font-weight: 300;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  max-width: 120px;
+  max-height: 40px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.6;
 }
 
 @media (min-width: 768px) {
   .brands-section__logo {
-    font-size: 1.25rem;
+    max-width: 150px;
+    max-height: 50px;
   }
 }

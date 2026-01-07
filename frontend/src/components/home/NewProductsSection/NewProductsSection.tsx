@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ProductCard } from "../../ui/ProductCard/ProductCard";
+
 import { productsApi } from "../../../api";
 import type { ProductListItem } from "../../../types";
+import { ProductCard } from "../../ui/ProductCard/ProductCard";
 import "./NewProductsSection.css";
 
 export const NewProductsSection = () => {
@@ -62,7 +63,7 @@ export const NewProductsSection = () => {
 
         {/* Products Grid */}
         <div className="new-products-section__grid">
-          {products.map((product) => (
+          {products.slice(0, 4).map((product) => (
             <ProductCard
               key={product.id}
               product={product}

@@ -125,6 +125,7 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s;
+  padding: 0;
 }
 
 .hero-slider__dot:hover {
@@ -132,6 +133,6 @@
 }
 
 .hero-slider__dot--active {
-  width: 2rem;
   background-color: white;
+  transform: scale(1.2);
 }

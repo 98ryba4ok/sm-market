@@ -1,6 +1,6 @@
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "../Button/Button";
+
 import type { ProductListItem } from "../../../types";
 import "./ProductCard.css";
 
@@ -30,9 +30,14 @@ export const ProductCard = ({
   };
 
   return (
-    <Link to={`/products/${product.slug}`} className="product-card">
+    <div className="product-card">
+      {/* New Badge */}
+      <div className="product-card__new-badge">
+        Новинка!
+      </div>
+
       {/* Image */}
-      <div className="product-card__image-wrapper">
+      <Link to={`/products/${product.slug}`} className="product-card__image-wrapper">
         {product.main_image && (
           <img
             src={product.main_image}
@@ -40,21 +45,21 @@ export const ProductCard = ({
             className="product-card__image"
           />
         )}
-        {hasDiscount && (
-          <div className="product-card__discount-badge">
-            -{product.discount_percentage}%
-          </div>
-        )}
-        <div className="product-card__new-badge">
-          Новинка!
-        </div>
-      </div>
+      </Link>
 
       {/* Content */}
       <div className="product-card__content">
-        <h3 className="product-card__title">
-          {product.name}
-        </h3>
+        <Link to={`/products/${product.slug}`} className="product-card__title-link">
+          <h3 className="product-card__title">
+            {product.name}
+          </h3>
+        </Link>
+
+        <p className="product-card__sku">
+          Код товара: {product.sku || 'ABC-12345'}
+        </p>
+
+        <div className="product-card__divider"></div>
 
         {/* Price */}
         <div className="product-card__price-wrapper">
@@ -62,31 +67,34 @@ export const ProductCard = ({
             {Number(product.final_price).toLocaleString("ru-RU")} ₽
           </span>
           {hasDiscount && (
-            <span className="product-card__old-price">
-              {Number(product.price).toLocaleString("ru-RU")} ₽
-            </span>
+            <>
+              <span className="product-card__old-price">
+                {Number(product.price).toLocaleString("ru-RU")} ₽
+              </span>
+              <span className="product-card__discount-badge">
+                -{product.discount_percentage}%
+              </span>
+            </>
           )}
         </div>
 
         {/* Buttons */}
         <div className="product-card__actions">
-          <Button
-            variant="primary"
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          <button
+            className="product-card__cart-btn"
             onClick={handleAddToCart}
           >
-            <ShoppingCart size={16} />
             Добавить в корзину
-          </Button>
+          </button>
           <button
             className="product-card__wishlist-btn"
             onClick={handleAddToWishlist}
-            aria-label="В избранное"
           >
-            <Heart size={16} className="product-card__wishlist-icon" />
+            <Heart size={20} className="product-card__wishlist-icon" />
+            В избранное
           </button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };

@@ -26,6 +26,7 @@ export interface ProductListItem {
   id: number;
   name: string;
   slug: string;
+  sku: string;
   category: number;
   category_name: string;
   brand_id: number | null;

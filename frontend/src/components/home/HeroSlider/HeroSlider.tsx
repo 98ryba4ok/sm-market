@@ -1,31 +1,31 @@
-import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { bannersApi } from "../../../api";
-import type { Banner } from "../../../types";
+import { useState } from "react";
+
+import collectionImage from "../../../assets/collection.png";
 import "./HeroSlider.css";
 
 export const HeroSlider = () => {
-  const [banners, setBanners] = useState<Banner[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchBanners = async () => {
-      try {
-        setLoading(true);
-        const { data } = await bannersApi.list();
-        setBanners(data);
-      } catch (err) {
-        console.error("Failed to fetch banners:", err);
-        // Fallback to empty array if loading fails
-        setBanners([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBanners();
-  }, []);
+  // Статические баннеры с изображением collection.png
+  const banners = [
+    {
+      id: 1,
+      title: "Новая коллекция",
+      description: "Откройте для себя нашу новую коллекцию товаров",
+      image: collectionImage,
+      link: "/products",
+      button_text: "Смотреть каталог"
+    },
+    {
+      id: 2,
+      title: "Специальные предложения",
+      description: "Лучшие цены на популярные товары",
+      image: collectionImage,
+      link: "/products",
+      button_text: "Узнать больше"
+    }
+  ];
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % banners.length);
@@ -34,22 +34,6 @@ export const HeroSlider = () => {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
-
-  if (loading) {
-    return (
-      <div className="hero-slider">
-        <div className="hero-slider__container">
-          <div className="hero-slider__content">
-            <p className="hero-slider__description">Загрузка баннеров...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (banners.length === 0) {
-    return null;
-  }
 
   return (
     <div className="hero-slider">

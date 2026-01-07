@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { Heart, ShoppingCart, ChevronRight, Star, Edit2, Trash2, X } from "lucide-react";
+import { Check, ChevronRight, Edit2, Heart, ShoppingCart, Star, Trash2, Truck, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+
+import { cartApi } from "../../api/cartApi";
 import { productsApi } from "../../api/productsApi";
 import { reviewsApi } from "../../api/reviewsApi";
-import { cartApi } from "../../api/cartApi";
 import { wishlistApi } from "../../api/wishlistApi";
+import smesitelImage from "../../assets/смеситель.png";
 import { Button } from "../../components/ui/Button/Button";
 import { ProductCard } from "../../components/ui/ProductCard/ProductCard";
-import type { Product, ProductReview, ProductListItem } from "../../types";
+import type { Product, ProductListItem, ProductReview } from "../../types";
 import "./ProductDetailPage.css";
 
 export const ProductDetailPage = () => {
@@ -247,69 +249,92 @@ export const ProductDetailPage = () => {
 
         {/* Main Content */}
         <div className="product-detail-page__main">
-          {/* Left: Image Gallery */}
-          <div className="product-detail-page__gallery">
-            <div className="product-detail-page__main-image">
-              {selectedImage && (
-                <img src={selectedImage} alt={product.name} />
-              )}
-              {hasDiscount && (
-                <div className="product-detail-page__discount-badge">
-                  -{discountPercentage}%
-                </div>
-              )}
-            </div>
-
-            {/* Thumbnails */}
-            {product.images.length > 1 && (
-              <div className="product-detail-page__thumbnails">
-                {product.images.map((img) => (
-                  <button
-                    key={img.id}
-                    className={`product-detail-page__thumbnail ${
-                      selectedImage === img.image ? "product-detail-page__thumbnail--active" : ""
-                    }`}
-                    onClick={() => setSelectedImage(img.image)}
-                  >
-                    <img src={img.image} alt={img.alt_text || product.name} />
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* Left: Thumbnails */}
+          <div className="product-detail-page__thumbnails-vertical">
+            {[smesitelImage, smesitelImage, smesitelImage, smesitelImage, smesitelImage, smesitelImage].map((img, idx) => (
+              <button
+                key={idx}
+                className={`product-detail-page__thumbnail-vertical ${
+                  idx === 0 ? "product-detail-page__thumbnail-vertical--active" : ""
+                }`}
+                onClick={() => setSelectedImage(img)}
+              >
+                <img src={img} alt={`${product.name} ${idx + 1}`} />
+              </button>
+            ))}
           </div>
 
-          {/* Right: Product Info */}
+          {/* Center: Main Image */}
+          <div className="product-detail-page__main-image-container">
+            <div className="product-detail-page__main-image">
+              <img src={smesitelImage} alt={product.name} />
+            </div>
+          </div>
+
+          {/* Right: Product Info - Split into 2 columns */}
           <div className="product-detail-page__info">
-            <h1 className="product-detail-page__title">{product.name}</h1>
+            {/* Left Column: Product Details */}
+            <div className="product-detail-page__info-left">
+              <h1 className="product-detail-page__title">{product.name}</h1>
+              
+              {product.sku && (
+                <div className="product-detail-page__sku">
+                  Код товара: {product.sku}
+                </div>
+              )}
 
-            {product.sku && (
-              <div className="product-detail-page__sku">
-                Код товара: {product.sku}
-              </div>
-            )}
-
-            {/* Rating */}
-            {product.average_rating !== null && (
-              <div className="product-detail-page__rating">
-                <div className="product-detail-page__stars">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      size={16}
-                      fill={i < Math.round(product.average_rating || 0) ? "currentColor" : "none"}
-                    />
-                  ))}
+              {product.average_rating !== null && (
+                <div className="product-detail-page__rating">
+                  <Star size={16} fill="#fbbf24" color="#fbbf24" />
                   <span>{product.average_rating.toFixed(1)}</span>
-                  <span className="product-detail-page__reviews-count">
-                    ({product.reviews_count} {product.reviews_count === 1 ? 'отзыв' : 'отзывов'})
-                  </span>
+                </div>
+              )}
+
+              {/* Color Selector */}
+              <div className="product-detail-page__color-section">
+                <div className="product-detail-page__label">Цвет: Серебряный</div>
+                <div className="product-detail-page__color-options">
+                  {[smesitelImage, smesitelImage, smesitelImage].map((img, idx) => (
+                    <button
+                      key={idx}
+                      className={`product-detail-page__color-option ${
+                        idx === 0 ? "product-detail-page__color-option--active" : ""
+                      }`}
+                    >
+                      <img src={img} alt={`Цвет ${idx + 1}`} />
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
 
-            {/* Price */}
-            <div className="product-detail-page__price-section">
-              <div className="product-detail-page__price-wrapper">
+              {/* About Product Section */}
+              <div className="product-detail-page__about">
+                <div className="product-detail-page__about-header">
+                  <h3>О товаре</h3>
+                  <div className="product-detail-page__about-link">Все характеристики</div>
+                </div>
+                <table className="product-detail-page__specs-table-compact">
+                  <tbody>
+                    {product.brand && (
+                      <tr>
+                        <td>Бренд</td>
+                        <td>{product.brand.name}</td>
+                      </tr>
+                    )}
+                    {Object.entries(product.specifications || {}).slice(0, 5).map(([key, value]) => (
+                      <tr key={key}>
+                        <td>{key}</td>
+                        <td>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Right Column: Price & Actions */}
+            <div className="product-detail-page__info-right">
+              <div className="product-detail-page__price-row">
                 <span className="product-detail-page__price">
                   {Number(product.final_price).toLocaleString("ru-RU")} ₽
                 </span>
@@ -318,81 +343,52 @@ export const ProductDetailPage = () => {
                     <span className="product-detail-page__old-price">
                       {Number(product.price).toLocaleString("ru-RU")} ₽
                     </span>
-                    <span className="product-detail-page__discount-percent">
+                    <span className="product-detail-page__discount-badge-new">
                       -{discountPercentage}%
                     </span>
                   </>
                 )}
               </div>
-            </div>
 
-            {/* Actions */}
-            <div className="product-detail-page__actions">
               <Button
                 variant="primary"
                 onClick={handleAddToCart}
                 disabled={!product.in_stock}
-                style={{ flex: 1 }}
+                className="product-detail-page__cart-button"
               >
                 <ShoppingCart size={20} />
-                {product.in_stock ? "Добавить в корзину" : "Нет в наличии"}
+                Добавить в корзину
               </Button>
+
               <button
-                className="product-detail-page__wishlist-btn"
+                className="product-detail-page__wishlist-button"
                 onClick={handleAddToWishlist}
-                aria-label="В избранное"
               >
                 <Heart size={20} />
+                В избранное
               </button>
-            </div>
 
-            {/* Status */}
-            {product.in_stock ? (
-              <div className="product-detail-page__stock-status product-detail-page__stock-status--in">
-                ✓ В наличии
-              </div>
-            ) : (
-              <div className="product-detail-page__stock-status product-detail-page__stock-status--out">
-                ✗ Нет в наличии
-              </div>
-            )}
+              {/* Status Items */}
+              <div className="product-detail-page__status-list">
+                {product.in_stock && (
+                  <div className="product-detail-page__status-item">
+                    <Check size={20} className="product-detail-page__status-icon" />
+                    <span>В наличии</span>
+                  </div>
+                )}
 
-            {/* Delivery & Warranty */}
-            <div className="product-detail-page__meta">
-              <div className="product-detail-page__meta-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="1" y="3" width="15" height="13"></rect>
-                  <path d="M16 8h5l3 3v5h-2"></path>
-                  <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                  <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                </svg>
-                <span>Доставка 1-2 дня</span>
-              </div>
-              <div className="product-detail-page__meta-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Гарантия {product.warranty_months >= 12 ? `${product.warranty_months / 12} ${product.warranty_months === 12 ? 'год' : 'лет'}` : `${product.warranty_months} мес.`}</span>
+                <div className="product-detail-page__status-item">
+                  <Truck size={20} className="product-detail-page__status-icon-green" />
+                  <span>Доставка за 1 - 2 дня</span>
+                </div>
+
+                <div className="product-detail-page__status-item">
+                  <Check size={20} className="product-detail-page__status-icon-green" />
+                  <span>Гарантия {product.warranty_months >= 12 ? `${product.warranty_months / 12} ${product.warranty_months === 12 ? 'год' : 'лет'}` : `${product.warranty_months} мес.`}</span>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Brand Card (Right Sidebar) */}
-          {product.brand && (
-            <div className="product-detail-page__brand-card">
-              <h3 className="product-detail-page__brand-title">{product.brand.name}</h3>
-              {product.country_of_origin && (
-                <div className="product-detail-page__brand-meta">
-                  <strong>Страна производителя:</strong> {product.country_of_origin}
-                </div>
-              )}
-              {product.brand.description && (
-                <p className="product-detail-page__brand-description">
-                  {product.brand.description}
-                </p>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Tabs Section */}

@@ -1,6 +1,6 @@
 .button {
   font-weight: 500;
-  border-radius: 0.25rem;
+  border-radius: 8px;
   transition: background-color 0.2s, color 0.2s;
   border: none;
   cursor: pointer;

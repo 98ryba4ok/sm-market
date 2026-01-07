@@ -1,13 +1,13 @@
-import { Search, User, Heart, ShoppingCart, LogOut, ChevronDown } from "lucide-react";
+import { ChevronDown, Heart, LogOut, Search, ShoppingCart, User } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+
+import { authApi } from "../../../api/authApi";
+import categoryLogo from "../../../assets/categoryLogo.svg";
+import logo from "../../../assets/logo.svg";
 import { LoginModal } from "../../features/auth/LoginModal/LoginModal";
 import { RegisterModal } from "../../features/auth/RegisterModal/RegisterModal";
-import { authApi } from "../../../api/authApi";
-
 import "./Header.css";
-import logo from "../../../assets/logo.png";
-import categoryLogo from "../../../assets/categoryLogo.svg";
 
 export const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,7 +64,9 @@ export const Header = () => {
           <div className="header__logo-catalog-wrapper">
             {/* Logo */}
             <Link to="/" className="header__logo">
-              <img className="header__logo-icon" src={logo} alt="Logo" />
+              <div className="header__logo-box">
+                <img className="header__logo-text" src={logo} alt="CM" />
+              </div>
             </Link>
 
             {/* Catalog Button */}
@@ -120,12 +122,12 @@ export const Header = () => {
                   <User size={20} />
                   <span className="header__action-text">Войти</span>
                 </button>
-                <button
+                {/* <button
                   className="header__action-link header__action-btn header__register-btn"
                   onClick={() => setIsRegisterModalOpen(true)}
                 >
                   <span className="header__action-text">Регистрация</span>
-                </button>
+                </button> */}
               </>
             )}
 
