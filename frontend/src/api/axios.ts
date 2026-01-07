@@ -6,7 +6,7 @@ const api = axios.create({
 
 // Request interceptor - добавляем токен к каждому запросу
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access");
+  const token = localStorage.getItem("accessToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -65,12 +65,12 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem("refresh");
+      const refreshToken = localStorage.getItem("refreshToken");
 
       if (!refreshToken) {
         // Нет refresh токена - редирект на логин
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         window.location.href = "/login";
         return Promise.reject(error);
       }
@@ -84,7 +84,7 @@ api.interceptors.response.use(
 
         const { access } = response.data;
 
-        localStorage.setItem("access", access);
+        localStorage.setItem("accessToken", access);
 
         // Обновляем токен в заголовке оригинального запроса
         if (originalRequest.headers) {
@@ -101,8 +101,8 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // Не удалось обновить токен - очищаем данные и редирект на логин
         processQueue(refreshError as Error, null);
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         window.location.href = "/login";
         isRefreshing = false;
         return Promise.reject(refreshError);

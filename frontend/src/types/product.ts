@@ -67,6 +67,10 @@ export interface Product {
   stock_quantity: number;
   in_stock: boolean;
   is_active: boolean;
+  sku: string;
+  specifications: Record<string, string>;
+  country_of_origin: string;
+  warranty_months: number;
   images: ProductImage[];
   reviews: ProductReview[];
   average_rating: number | null;

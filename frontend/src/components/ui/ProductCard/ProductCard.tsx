@@ -1,4 +1,5 @@
 import { Heart, ShoppingCart } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "../Button/Button";
 import type { ProductListItem } from "../../../types";
 import "./ProductCard.css";
@@ -16,8 +17,20 @@ export const ProductCard = ({
 }: ProductCardProps) => {
   const hasDiscount = product.discount_price !== null;
 
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onAddToCart?.(product.id);
+  };
+
+  const handleAddToWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onAddToWishlist?.(product.id);
+  };
+
   return (
-    <div className="product-card">
+    <Link to={`/products/${product.slug}`} className="product-card">
       {/* Image */}
       <div className="product-card__image-wrapper">
         {product.main_image && (
@@ -60,20 +73,20 @@ export const ProductCard = ({
           <Button
             variant="primary"
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-            onClick={() => onAddToCart?.(product.id)}
+            onClick={handleAddToCart}
           >
             <ShoppingCart size={16} />
             Добавить в корзину
           </Button>
           <button
             className="product-card__wishlist-btn"
-            onClick={() => onAddToWishlist?.(product.id)}
+            onClick={handleAddToWishlist}
             aria-label="В избранное"
           >
             <Heart size={16} className="product-card__wishlist-icon" />
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };

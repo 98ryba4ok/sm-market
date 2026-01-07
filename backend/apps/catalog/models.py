@@ -154,6 +154,26 @@ class Product(models.Model):
         default=0,
         verbose_name="Количество на складе"
     )
+    sku = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Артикул (Код товара)"
+    )
+    specifications = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="Характеристики товара",
+        help_text="JSON объект с характеристиками (например: {'Материал': 'Латунь', 'Механизм': 'Керамический картридж'})"
+    )
+    country_of_origin = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Страна бренда"
+    )
+    warranty_months = models.PositiveIntegerField(
+        default=12,
+        verbose_name="Гарантия (месяцев)"
+    )
     is_active = models.BooleanField(default=True, verbose_name="Активен")
     views_count = models.PositiveIntegerField(
         default=0,

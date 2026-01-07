@@ -130,11 +130,12 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'category', 'category_name', 'category_slug', 'brand',
             'price', 'discount_price', 'final_price', 'discount_percentage',
             'stock_quantity', 'in_stock', 'is_active',
+            'sku', 'specifications', 'country_of_origin', 'warranty_months',
             'images', 'reviews', 'average_rating', 'reviews_count',
             'views_count', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'slug', 'views_count', 'created_at', 'updated_at']
-    
+
     def get_average_rating(self, obj):
         """Средний рейтинг товара"""
         avg = obj.reviews.aggregate(Avg('rating'))['rating__avg']
