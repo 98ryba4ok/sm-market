@@ -9,12 +9,14 @@ import { wishlistApi } from "../../api/wishlistApi";
 import smesitelImage from "../../assets/смеситель.png";
 import { Button } from "../../components/ui/Button/Button";
 import { ProductCard } from "../../components/ui/ProductCard/ProductCard";
+import { useToast } from "../../contexts/ToastContext";
 import type { Product, ProductListItem, ProductReview } from "../../types";
 import "./ProductDetailPage.css";
 
 export const ProductDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"description" | "specifications" | "reviews">("description");
@@ -113,14 +115,14 @@ export const ProductDetailPage = () => {
 
     try {
       await cartApi.addItem({ product_id: product.id, quantity: 1 });
-      alert("Товар добавлен в корзину!");
+      showToast("Товар добавлен в корзину!", "success");
     } catch (err: any) {
       console.error("Error adding to cart:", err);
       if (err.response?.status === 401) {
-        alert("Войдите в систему для добавления товара в корзину");
+        showToast("Войдите в систему для добавления товара в корзину", "error");
         navigate("/login");
       } else {
-        alert("Ошибка при добавлении в корзину");
+        showToast("Ошибка при добавлении в корзину", "error");
       }
     }
   };
@@ -130,14 +132,14 @@ export const ProductDetailPage = () => {
 
     try {
       await wishlistApi.add({ product_id: product.id });
-      alert("Товар добавлен в избранное!");
+      showToast("Товар добавлен в избранное!", "success");
     } catch (err: any) {
       console.error("Error adding to wishlist:", err);
       if (err.response?.status === 401) {
-        alert("Войдите в систему для добавления товара в избранное");
+        showToast("Войдите в систему для добавления товара в избранное", "error");
         navigate("/login");
       } else {
-        alert("Ошибка при добавлении в избранное");
+        showToast("Ошибка при добавлении в избранное", "error");
       }
     }
   };
@@ -150,7 +152,7 @@ export const ProductDetailPage = () => {
       if (editingReview) {
         // Update existing review
         await reviewsApi.partialUpdate(editingReview.id, reviewFormData);
-        alert("Отзыв обновлен!");
+        showToast("Отзыв обновлен!", "success");
       } else {
         // Create new review
         await reviewsApi.create({
@@ -158,7 +160,7 @@ export const ProductDetailPage = () => {
           rating: reviewFormData.rating,
           comment: reviewFormData.comment,
         });
-        alert("Отзыв добавлен!");
+        showToast("Отзыв добавлен!", "success");
       }
 
       // Reload reviews
@@ -171,12 +173,12 @@ export const ProductDetailPage = () => {
     } catch (err: any) {
       console.error("Error submitting review:", err);
       if (err.response?.status === 401) {
-        alert("Войдите в систему для добавления отзыва");
+        showToast("Войдите в систему для добавления отзыва", "error");
         navigate("/login");
       } else if (err.response?.data?.detail) {
-        alert(err.response.data.detail);
+        showToast(err.response.data.detail, "error");
       } else {
-        alert("Ошибка при сохранении отзыва");
+        showToast("Ошибка при сохранении отзыва", "error");
       }
     }
   };
@@ -196,11 +198,11 @@ export const ProductDetailPage = () => {
 
     try {
       await reviewsApi.delete(reviewId);
-      alert("Отзыв удален!");
+      showToast("Отзыв удален!", "success");
       if (product) loadReviews(product.id);
     } catch (err) {
       console.error("Error deleting review:", err);
-      alert("Ошибка при удалении отзыва");
+      showToast("Ошибка при удалении отзыва", "error");
     }
   };
 
@@ -627,22 +629,26 @@ export const ProductDetailPage = () => {
                     onAddToCart={async (id) => {
                       try {
                         await cartApi.addItem({ product_id: id, quantity: 1 });
-                        alert("Товар добавлен в корзину!");
+                        showToast("Товар добавлен в корзину!", "success");
                       } catch (err: any) {
                         if (err.response?.status === 401) {
-                          alert("Войдите в систему");
+                          showToast("Войдите в систему", "error");
                           navigate("/login");
+                        } else {
+                          showToast("Ошибка при добавлении в корзину", "error");
                         }
                       }
                     }}
                     onAddToWishlist={async (id) => {
                       try {
                         await wishlistApi.add({ product_id: id });
-                        alert("Товар добавлен в избранное!");
+                        showToast("Товар добавлен в избранное!", "success");
                       } catch (err: any) {
                         if (err.response?.status === 401) {
-                          alert("Войдите в систему");
+                          showToast("Войдите в систему", "error");
                           navigate("/login");
+                        } else {
+                          showToast("Ошибка при добавлении в избранное", "error");
                         }
                       }
                     }}

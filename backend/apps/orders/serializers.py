@@ -100,6 +100,12 @@ class UpdateCartItemSerializer(serializers.Serializer):
                 f'Недостаточно товара на складе. Доступно: {cart_item.product.stock_quantity}'
             )
         return value
+    
+    def update(self, instance, validated_data):
+        """Обновить количество товара в корзине"""
+        instance.quantity = validated_data.get('quantity', instance.quantity)
+        instance.save()
+        return instance
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

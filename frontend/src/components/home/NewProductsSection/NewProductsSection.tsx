@@ -2,12 +2,14 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { productsApi } from "../../../api";
+import { cartApi, productsApi, wishlistApi } from "../../../api";
+import { useToast } from "../../../contexts/ToastContext";
 import type { ProductListItem } from "../../../types";
 import { ProductCard } from "../../ui/ProductCard/ProductCard";
 import "./NewProductsSection.css";
 
 export const NewProductsSection = () => {
+  const { showToast } = useToast();
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -23,14 +25,34 @@ export const NewProductsSection = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleAddToCart = (productId: number) => {
-    console.log("Add to cart:", productId);
-    // Здесь будет вызов API
+  const handleAddToCart = async (productId: number) => {
+    try {
+      await cartApi.addItem({ product_id: productId, quantity: 1 });
+      showToast("Товар добавлен в корзину!", "success");
+    } catch (err: unknown) {
+      console.error("Error adding to cart:", err);
+      const error = err as { response?: { status?: number; data?: unknown } };
+      if (error.response?.status === 401) {
+        showToast("Войдите в систему для добавления товара в корзину", "error");
+      } else {
+        showToast("Ошибка при добавлении в корзину", "error");
+      }
+    }
   };
 
-  const handleAddToWishlist = (productId: number) => {
-    console.log("Add to wishlist:", productId);
-    // Здесь будет вызов API
+  const handleAddToWishlist = async (productId: number) => {
+    try {
+      await wishlistApi.add({ product_id: productId });
+      showToast("Товар добавлен в избранное!", "success");
+    } catch (err: unknown) {
+      console.error("Error adding to wishlist:", err);
+      const error = err as { response?: { status?: number } };
+      if (error.response?.status === 401) {
+        showToast("Войдите в систему для добавления товара в избранное", "error");
+      } else {
+        showToast("Ошибка при добавлении в избранное", "error");
+      }
+    }
   };
 
   if (loading) {

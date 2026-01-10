@@ -100,9 +100,11 @@ class CartViewSet(viewsets.ViewSet):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
         )
     
-    @action(detail=False, methods=['patch'], url_path='items/(?P<item_id>[^/.]+)')
+    @action(detail=False, methods=['patch'], url_path='update-item/(?P<item_id>[^/.]+)')
     def update_item(self, request, item_id=None):
-        """Обновить количество товара в корзине"""
+        """Обновить количество товара в корзине
+        URL: /api/cart/update-item/{item_id}/
+        """
         cart = self._get_or_create_cart(request)
         
         try:
@@ -125,9 +127,11 @@ class CartViewSet(viewsets.ViewSet):
         cart_serializer = CartSerializer(cart)
         return Response(cart_serializer.data)
     
-    @action(detail=False, methods=['delete'], url_path='items/(?P<item_id>[^/.]+)')
+    @action(detail=False, methods=['delete'], url_path='remove-item/(?P<item_id>[^/.]+)')
     def remove_item(self, request, item_id=None):
-        """Удалить товар из корзины"""
+        """Удалить товар из корзины
+        URL: /api/cart/remove-item/{item_id}/
+        """
         cart = self._get_or_create_cart(request)
         
         try:

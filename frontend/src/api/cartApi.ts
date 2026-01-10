@@ -1,12 +1,13 @@
 // Cart API
 
-import api from "./axios";
+import type { MessageResponse } from "../types/api";
 import type {
-  Cart,
   AddToCartPayload,
+  Cart,
   UpdateCartItemPayload,
 } from "../types/cart";
-import type { MessageResponse } from "../types/api";
+
+import api from "./axios";
 
 export const cartApi = {
   /**
