@@ -25,16 +25,16 @@ export const cartApi = {
 
   /**
    * Обновить количество товара в корзине
-   * PATCH /api/cart/items/{item_id}/
+   * PATCH /api/cart/update-item/{item_id}/
    */
   updateItem: (itemId: number, data: UpdateCartItemPayload) =>
-    api.patch<Cart>(`/cart/items/${itemId}/`, data),
+    api.patch<Cart>(`/cart/update-item/${itemId}/`, data),
 
   /**
    * Удалить товар из корзины
-   * DELETE /api/cart/items/{item_id}/
+   * DELETE /api/cart/remove-item/{item_id}/
    */
-  removeItem: (itemId: number) => api.delete<Cart>(`/cart/items/${itemId}/`),
+  removeItem: (itemId: number) => api.delete<Cart>(`/cart/remove-item/${itemId}/`),
 
   /**
    * Очистить корзину

@@ -71,6 +71,8 @@ export const CartPage = () => {
       console.log("Update response:", response.data);
       setCart(response.data);
       showToast("Количество обновлено", "success");
+      // Уведомляем Header об обновлении корзины
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (error) {
       console.error("Failed to update quantity:", error);
       showToast("Ошибка при обновлении количества", "error");
@@ -93,6 +95,8 @@ export const CartPage = () => {
         return newSet;
       });
       showToast("Товар удален из корзины", "success");
+      // Уведомляем Header об обновлении корзины
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (error) {
       console.error("Failed to remove item:", error);
       showToast("Ошибка при удалении товара", "error");
@@ -119,6 +123,8 @@ export const CartPage = () => {
       );
       await loadCart();
       setSelectedItems(new Set());
+      // Уведомляем Header об обновлении корзины
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (error) {
       console.error("Failed to delete selected items:", error);
     }

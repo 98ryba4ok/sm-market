@@ -29,6 +29,8 @@ export const NewProductsSection = () => {
     try {
       await cartApi.addItem({ product_id: productId, quantity: 1 });
       showToast("Товар добавлен в корзину!", "success");
+      // Уведомляем Header об обновлении корзины
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err: unknown) {
       console.error("Error adding to cart:", err);
       const error = err as { response?: { status?: number; data?: unknown } };

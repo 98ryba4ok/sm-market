@@ -116,6 +116,8 @@ export const ProductDetailPage = () => {
     try {
       await cartApi.addItem({ product_id: product.id, quantity: 1 });
       showToast("Товар добавлен в корзину!", "success");
+      // Уведомляем Header об обновлении корзины
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err: any) {
       console.error("Error adding to cart:", err);
       if (err.response?.status === 401) {
@@ -630,6 +632,8 @@ export const ProductDetailPage = () => {
                       try {
                         await cartApi.addItem({ product_id: id, quantity: 1 });
                         showToast("Товар добавлен в корзину!", "success");
+                        // Уведомляем Header об обновлении корзины
+                        window.dispatchEvent(new Event('cartUpdated'));
                       } catch (err: any) {
                         if (err.response?.status === 401) {
                           showToast("Войдите в систему", "error");

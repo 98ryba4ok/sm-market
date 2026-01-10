@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { authApi } from "../../../api/authApi";
+import { cartApi } from "../../../api/cartApi";
 import categoryLogo from "../../../assets/categoryLogo.svg";
 import logo from "../../../assets/logo.svg";
 import { LoginModal } from "../../features/auth/LoginModal/LoginModal";
@@ -16,6 +17,7 @@ export const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [cartItemsCount, setCartItemsCount] = useState(0);
 
   useEffect(() => {
     // Проверяем авторизацию при загрузке
@@ -30,6 +32,30 @@ export const Header = () => {
     };
 
     checkAuth();
+    loadCartCount();
+  }, []);
+
+  const loadCartCount = async () => {
+    try {
+      const response = await cartApi.get();
+      setCartItemsCount(response.data.total_items || 0);
+    } catch (error) {
+      console.error("Failed to load cart count:", error);
+    }
+  };
+
+  // Обновляем количество товаров при изменении корзины
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      loadCartCount();
+    };
+
+    // Слушаем кастомное событие обновления корзины
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
   }, []);
 
   const handleLoginSuccess = () => {
@@ -135,8 +161,11 @@ export const Header = () => {
               <Heart size={20} />
             </Link>
 
-            <Link to="/cart" className="header__action-link header__action-link--icon-only">
+            <Link to="/cart" className="header__action-link header__action-link--icon-only header__cart-link">
               <ShoppingCart size={20} />
+              {cartItemsCount > 0 && (
+                <span className="header__badge">{cartItemsCount}</span>
+              )}
             </Link>
           </div>
         </div>
