@@ -16,8 +16,29 @@
 .catalog-page__sidebar {
   flex-shrink: 0;
   width: 280px;
-  position: sticky;                                                          
-  top: 120px;     
+  position: sticky;
+  top: 120px;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.catalog-page__sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.catalog-page__sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.catalog-page__sidebar::-webkit-scrollbar-thumb {
+  background: rgba(209, 213, 219, 1);
+  border-radius: 3px;
+}
+
+.catalog-page__sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 1);
 }
 
 .catalog-page__main {

@@ -210,6 +210,11 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
                 avg_rating=Avg('reviews__rating')
             ).filter(avg_rating__gte=min_rating)
         
+        # Фильтр по бренду
+        brand_id = self.request.query_params.get('brand')
+        if brand_id:
+            queryset = queryset.filter(brand_id=brand_id)
+        
         return queryset
     
     def retrieve(self, request, *args, **kwargs):

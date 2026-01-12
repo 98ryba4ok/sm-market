@@ -1,4 +1,4 @@
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { CategoryListItem } from "../../../types/category";
 import "./CategoryFilter.css";
@@ -14,9 +14,12 @@ export const CategoryFilter = ({
   selectedCategories,
   onToggleCategory,
 }: CategoryFilterProps) => {
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
+    new Set(categories.map(c => c.id))
+  );
 
-  const toggleExpandCategory = (categoryId: number) => {
+  const toggleExpandCategory = (categoryId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
     setExpandedCategories((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(categoryId)) {
@@ -31,85 +34,75 @@ export const CategoryFilter = ({
   return (
     <div className="category-filter">
       <h3 className="category-filter__title">Категории</h3>
+      <div className="category-filter__divider"></div>
       <ul className="category-filter__list">
         {categories.map((category) => {
           const isSelected = selectedCategories.includes(category.id);
           const hasSubcategories = category.subcategories && category.subcategories.length > 0;
           const isExpanded = expandedCategories.has(category.id);
-          const subcategoriesToShow = isExpanded
-            ? category.subcategories
-            : category.subcategories?.slice(0, 1) || [];
-          const remainingCount = (category.subcategories?.length || 0) - 1;
 
           return (
             <li key={category.id} className="category-filter__item">
-              <button
-                className={`category-filter__button ${
-                  isSelected ? "category-filter__button--active" : ""
-                }`}
-                onClick={() => onToggleCategory(category.id)}
-              >
-                <span className="category-filter__name">{category.name}</span>
-                <span
-                  className={`category-filter__checkbox ${
-                    isSelected ? "category-filter__checkbox--checked" : ""
-                  }`}
+              <div className="category-filter__parent-wrapper">
+                {hasSubcategories && (
+                  <button
+                    className="category-filter__accordion-btn"
+                    onClick={(e) => toggleExpandCategory(category.id, e)}
+                    aria-label={isExpanded ? "Свернуть" : "Развернуть"}
+                  >
+                    {isExpanded ? (
+                      <ChevronDown size={18} strokeWidth={2.5} />
+                    ) : (
+                      <ChevronRight size={18} strokeWidth={2.5} />
+                    )}
+                  </button>
+                )}
+                
+                <button
+                  className={`category-filter__button ${
+                    isSelected ? "category-filter__button--active" : ""
+                  } ${!hasSubcategories ? "category-filter__button--no-subs" : ""}`}
+                  onClick={() => onToggleCategory(category.id)}
                 >
-                  {isSelected && <Check size={16} strokeWidth={3} />}
-                </span>
-              </button>
+                  <span className="category-filter__name">{category.name}</span>
+                  <span
+                    className={`category-filter__checkbox ${
+                      isSelected ? "category-filter__checkbox--checked" : ""
+                    }`}
+                  >
+                    {isSelected && <Check size={16} strokeWidth={3} />}
+                  </span>
+                </button>
+              </div>
 
-              {/* Подкатегории */}
-              {hasSubcategories && (
-                <>
-                  <ul className="category-filter__sublist">
-                    {subcategoriesToShow.map((subcategory) => {
-                      const isSubSelected = selectedCategories.includes(subcategory.id);
+              {hasSubcategories && isExpanded && (
+                <ul className="category-filter__sublist">
+                  {category.subcategories?.map((subcategory) => {
+                    const isSubSelected = selectedCategories.includes(subcategory.id);
 
-                      return (
-                        <li key={subcategory.id} className="category-filter__subitem">
-                          <button
-                            className={`category-filter__button category-filter__button--sub ${
-                              isSubSelected ? "category-filter__button--active" : ""
+                    return (
+                      <li key={subcategory.id} className="category-filter__subitem">
+                        <button
+                          className={`category-filter__button category-filter__button--sub ${
+                            isSubSelected ? "category-filter__button--active" : ""
+                          }`}
+                          onClick={() => onToggleCategory(subcategory.id)}
+                        >
+                          <span className="category-filter__name category-filter__name--sub">
+                            {subcategory.name}
+                          </span>
+                          <span
+                            className={`category-filter__checkbox category-filter__checkbox--small ${
+                              isSubSelected ? "category-filter__checkbox--checked" : ""
                             }`}
-                            onClick={() => onToggleCategory(subcategory.id)}
                           >
-                            <span className="category-filter__name category-filter__name--sub">
-                              {subcategory.name}
-                            </span>
-                            <span
-                              className={`category-filter__checkbox category-filter__checkbox--small ${
-                                isSubSelected ? "category-filter__checkbox--checked" : ""
-                              }`}
-                            >
-                              {isSubSelected && <Check size={14} strokeWidth={3} />}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-
-                  {/* Кнопка "Показать еще" */}
-                  {remainingCount > 0 && (
-                    <button
-                      className="category-filter__expand-btn"
-                      onClick={() => toggleExpandCategory(category.id)}
-                    >
-                      <span className="category-filter__expand-text">
-                        {isExpanded
-                          ? "Скрыть"
-                          : `Показать еще ${remainingCount}`}
-                      </span>
-                      <ChevronDown
-                        size={16}
-                        className={`category-filter__expand-icon ${
-                          isExpanded ? "category-filter__expand-icon--rotated" : ""
-                        }`}
-                      />
-                    </button>
-                  )}
-                </>
+                            {isSubSelected && <Check size={14} strokeWidth={3} />}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
             </li>
           );

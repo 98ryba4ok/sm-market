@@ -88,6 +88,7 @@ export interface ProductFilters {
   in_stock?: boolean;
   on_sale?: boolean;
   min_rating?: number;
+  brand?: number | number[];
   search?: string;
   ordering?: string;
   page?: number;

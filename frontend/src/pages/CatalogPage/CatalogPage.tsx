@@ -4,13 +4,16 @@ import { X } from "lucide-react";
 
 import { productsApi } from "../../api/productsApi";
 import { categoriesApi } from "../../api/categoriesApi";
+import { brandsApi } from "../../api/brandsApi";
 import { cartApi } from "../../api/cartApi";
 import { wishlistApi } from "../../api/wishlistApi";
 import { CategoryFilter } from "../../components/catalog/CategoryFilter/CategoryFilter";
+import { ProductFilters } from "../../components/catalog/ProductFilters/ProductFilters";
 import { ProductCard } from "../../components/ui/ProductCard/ProductCard";
 import { useToast } from "../../contexts/ToastContext";
-import type { ProductListItem, ProductFilters } from "../../types/product";
+import type { ProductListItem, ProductFilters as ProductFiltersType } from "../../types/product";
 import type { CategoryListItem } from "../../types/category";
+import type { Brand } from "../../types";
 import "./CatalogPage.css";
 
 export const CatalogPage = () => {
@@ -19,13 +22,20 @@ export const CatalogPage = () => {
   const { showToast } = useToast();
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [categories, setCategories] = useState<CategoryListItem[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [ordering, setOrdering] = useState<string>("-created_at");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Загрузка категорий
+  const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
+  const [inStock, setInStock] = useState<boolean>(false);
+  const [onSale, setOnSale] = useState<boolean>(false);
+  const [minRating, setMinRating] = useState<number | undefined>(undefined);
+  const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -36,7 +46,17 @@ export const CatalogPage = () => {
       }
     };
 
+    const fetchBrands = async () => {
+      try {
+        const response = await brandsApi.list();
+        setBrands(response.data);
+      } catch (err) {
+        console.error("Ошибка загрузки брендов:", err);
+      }
+    };
+
     fetchCategories();
+    fetchBrands();
   }, []);
 
   // Обработка параметров category и search из URL
@@ -72,16 +92,14 @@ export const CatalogPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, categories]);
 
-  // Загрузка товаров с учетом фильтров
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const filters: ProductFilters = {};
+        const filters: ProductFiltersType = {};
 
-        // Получаем slug первой выбранной категории (бэкенд поддерживает только одну)
         if (selectedCategories.length > 0) {
           const allCategories: CategoryListItem[] = [];
           categories.forEach((cat) => {
@@ -107,6 +125,30 @@ export const CatalogPage = () => {
           filters.ordering = ordering;
         }
 
+        if (minPrice !== undefined) {
+          filters.min_price = minPrice;
+        }
+
+        if (maxPrice !== undefined) {
+          filters.max_price = maxPrice;
+        }
+
+        if (inStock) {
+          filters.in_stock = true;
+        }
+
+        if (onSale) {
+          filters.on_sale = true;
+        }
+
+        if (minRating !== undefined) {
+          filters.min_rating = minRating;
+        }
+
+        if (selectedBrands.length > 0) {
+          filters.brand = selectedBrands.length === 1 ? selectedBrands[0] : selectedBrands;
+        }
+
         const response = await productsApi.list(filters);
         setProducts(response.data.results);
       } catch (err) {
@@ -118,19 +160,50 @@ export const CatalogPage = () => {
     };
 
     fetchProducts();
-  }, [selectedCategories, searchQuery, ordering, categories]);
+  }, [
+    selectedCategories,
+    searchQuery,
+    ordering,
+    categories,
+    minPrice,
+    maxPrice,
+    inStock,
+    onSale,
+    minRating,
+    selectedBrands,
+  ]);
 
   const handleToggleCategory = (categoryId: number) => {
     setSelectedCategories((prev) => {
-      // Если категория уже выбрана, снимаем выбор
+      const allCategories: CategoryListItem[] = [];
+      categories.forEach((cat) => {
+        allCategories.push(cat);
+        if (cat.subcategories) {
+          allCategories.push(...cat.subcategories);
+        }
+      });
+
+      const clickedCategory = allCategories.find((cat) => cat.id === categoryId);
+      if (!clickedCategory) return prev;
+
+      const parentCategory = categories.find((cat) => cat.id === categoryId);
+      const isParentCategory = !!parentCategory;
+
       if (prev.includes(categoryId)) {
-        return [];
+        if (isParentCategory && parentCategory.subcategories) {
+          const subcategoryIds = parentCategory.subcategories.map((sub) => sub.id);
+          return prev.filter((id) => id !== categoryId && !subcategoryIds.includes(id));
+        }
+        return prev.filter((id) => id !== categoryId);
+      } else {
+        if (isParentCategory && parentCategory.subcategories) {
+          const subcategoryIds = parentCategory.subcategories.map((sub) => sub.id);
+          return [...prev, categoryId, ...subcategoryIds];
+        }
+        return [...prev, categoryId];
       }
-      // Иначе выбираем только эту категорию (заменяя предыдущую)
-      return [categoryId];
     });
 
-    // Очищаем параметр category из URL при изменении фильтров
     if (searchParams.has("category")) {
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("category");
@@ -220,6 +293,21 @@ export const CatalogPage = () => {
             categories={categories}
             selectedCategories={selectedCategories}
             onToggleCategory={handleToggleCategory}
+          />
+          <ProductFilters
+            brands={brands}
+            minPrice={minPrice}
+            maxPrice={maxPrice}
+            inStock={inStock}
+            onSale={onSale}
+            minRating={minRating}
+            selectedBrands={selectedBrands}
+            onMinPriceChange={setMinPrice}
+            onMaxPriceChange={setMaxPrice}
+            onInStockChange={setInStock}
+            onSaleChange={setOnSale}
+            onMinRatingChange={setMinRating}
+            onBrandsChange={setSelectedBrands}
           />
         </aside>
 
