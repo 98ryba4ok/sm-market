@@ -6,10 +6,10 @@ import { cartApi } from "../../api/cartApi";
 import { productsApi } from "../../api/productsApi";
 import { reviewsApi } from "../../api/reviewsApi";
 import { wishlistApi } from "../../api/wishlistApi";
-import smesitelImage from "../../assets/смеситель.png";
 import { Button } from "../../components/ui/Button/Button";
 import { ProductCard } from "../../components/ui/ProductCard/ProductCard";
 import { useToast } from "../../contexts/ToastContext";
+import { getImageUrl } from "../../utils/imageUrl";
 import type { Product, ProductListItem, ProductReview } from "../../types";
 import "./ProductDetailPage.css";
 
@@ -63,7 +63,8 @@ export const ProductDetailPage = () => {
 
         // Set main image or first image as selected
         const mainImg = response.data.images.find(img => img.is_main);
-        setSelectedImage(mainImg?.image || response.data.images[0]?.image || "");
+        const initialImage = mainImg?.image || response.data.images[0]?.image || "";
+        setSelectedImage(getImageUrl(initialImage));
 
         // Load reviews
         loadReviews(response.data.id);
@@ -254,24 +255,35 @@ export const ProductDetailPage = () => {
         {/* Main Content */}
         <div className="product-detail-page__main">
           {/* Left: Thumbnails */}
-          <div className="product-detail-page__thumbnails-vertical">
-            {[smesitelImage, smesitelImage, smesitelImage, smesitelImage, smesitelImage, smesitelImage].map((img, idx) => (
-              <button
-                key={idx}
-                className={`product-detail-page__thumbnail-vertical ${
-                  idx === 0 ? "product-detail-page__thumbnail-vertical--active" : ""
-                }`}
-                onClick={() => setSelectedImage(img)}
-              >
-                <img src={img} alt={`${product.name} ${idx + 1}`} />
-              </button>
-            ))}
-          </div>
+          {product.images && product.images.length > 1 && (
+            <div className="product-detail-page__thumbnails-vertical">
+              {product.images.map((img) => {
+                const imageUrl = getImageUrl(img.image);
+                return (
+                  <button
+                    key={img.id}
+                    className={`product-detail-page__thumbnail-vertical ${
+                      selectedImage === imageUrl ? "product-detail-page__thumbnail-vertical--active" : ""
+                    }`}
+                    onClick={() => setSelectedImage(imageUrl)}
+                  >
+                    <img src={imageUrl} alt={img.alt_text || product.name} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Center: Main Image */}
           <div className="product-detail-page__main-image-container">
             <div className="product-detail-page__main-image">
-              <img src={smesitelImage} alt={product.name} />
+              {selectedImage ? (
+                <img src={selectedImage} alt={product.name} />
+              ) : (
+                <div className="product-detail-page__no-image">
+                  Нет изображения
+                </div>
+              )}
             </div>
           </div>
 
@@ -294,22 +306,28 @@ export const ProductDetailPage = () => {
                 </div>
               )}
 
-              {/* Color Selector */}
-              <div className="product-detail-page__color-section">
-                <div className="product-detail-page__label">Цвет: Серебряный</div>
-                <div className="product-detail-page__color-options">
-                  {[smesitelImage, smesitelImage, smesitelImage].map((img, idx) => (
-                    <button
-                      key={idx}
-                      className={`product-detail-page__color-option ${
-                        idx === 0 ? "product-detail-page__color-option--active" : ""
-                      }`}
-                    >
-                      <img src={img} alt={`Цвет ${idx + 1}`} />
-                    </button>
-                  ))}
+              {/* Color Selector - показываем только если есть несколько изображений */}
+              {product.images && product.images.length > 1 && (
+                <div className="product-detail-page__color-section">
+                  <div className="product-detail-page__label">Варианты</div>
+                  <div className="product-detail-page__color-options">
+                    {product.images.slice(0, 5).map((img) => {
+                      const imageUrl = getImageUrl(img.image);
+                      return (
+                        <button
+                          key={img.id}
+                          className={`product-detail-page__color-option ${
+                            selectedImage === imageUrl ? "product-detail-page__color-option--active" : ""
+                          }`}
+                          onClick={() => setSelectedImage(imageUrl)}
+                        >
+                          <img src={imageUrl} alt={img.alt_text || product.name} />
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* About Product Section */}
               <div className="product-detail-page__about">

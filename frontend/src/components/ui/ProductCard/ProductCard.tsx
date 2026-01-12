@@ -2,6 +2,7 @@ import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import type { ProductListItem } from "../../../types";
+import { getImageUrl } from "../../../utils/imageUrl";
 import "./ProductCard.css";
 
 interface ProductCardProps {
@@ -40,7 +41,7 @@ export const ProductCard = ({
       <Link to={`/products/${product.slug}`} className="product-card__image-wrapper">
         {product.main_image && (
           <img
-            src={product.main_image}
+            src={getImageUrl(product.main_image)}
             alt={product.name}
             className="product-card__image"
           />

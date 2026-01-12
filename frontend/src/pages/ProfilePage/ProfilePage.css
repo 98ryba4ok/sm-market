@@ -1,0 +1,378 @@
+.profile-page {
+  min-height: 100vh;
+  background: rgba(249, 250, 251, 1);
+  padding: 32px 0;
+}
+
+.profile-page__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.profile-page__title {
+  font-family: Montserrat, sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: rgba(31, 41, 55, 1);
+  margin: 0 0 32px 0;
+  line-height: 120%;
+}
+
+.profile-page__loading,
+.profile-page__error {
+  text-align: center;
+  padding: 64px 32px;
+  font-family: Montserrat, sans-serif;
+  font-size: 16px;
+  color: rgba(107, 114, 128, 1);
+}
+
+.profile-page__error {
+  color: rgba(239, 68, 68, 1);
+}
+
+/* Grid Layout */
+.profile-page__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* Profile Card */
+.profile-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.profile-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(229, 231, 235, 1);
+}
+
+.profile-card__icon {
+  color: rgba(37, 99, 235, 1);
+}
+
+.profile-card__title {
+  font-family: Montserrat, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(31, 41, 55, 1);
+  margin: 0;
+}
+
+.profile-card__content {
+  padding: 24px;
+}
+
+/* Profile Info */
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-info__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.profile-info__icon {
+  color: rgba(107, 114, 128, 1);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.profile-info__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.profile-info__label {
+  font-family: Montserrat, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(107, 114, 128, 1);
+}
+
+.profile-info__value {
+  font-family: Montserrat, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(31, 41, 55, 1);
+}
+
+/* Profile Actions */
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: rgba(243, 244, 246, 1);
+  border: 1px solid rgba(229, 231, 235, 1);
+  border-radius: 8px;
+  font-family: Montserrat, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(31, 41, 55, 1);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.profile-action-btn:hover {
+  background: rgba(229, 231, 235, 1);
+  border-color: rgba(209, 213, 219, 1);
+}
+
+.profile-action-btn--danger {
+  color: rgba(239, 68, 68, 1);
+}
+
+.profile-action-btn--danger:hover {
+  background: rgba(254, 242, 242, 1);
+  border-color: rgba(254, 226, 226, 1);
+}
+
+/* Orders Section */
+.profile-orders {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+.profile-orders__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.profile-orders__title {
+  font-family: Montserrat, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(31, 41, 55, 1);
+  margin: 0;
+}
+
+.profile-orders__view-all {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(37, 99, 235, 1);
+  border-radius: 8px;
+  font-family: Montserrat, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(37, 99, 235, 1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.profile-orders__view-all:hover {
+  background: rgba(37, 99, 235, 1);
+  color: white;
+}
+
+.profile-orders__loading {
+  text-align: center;
+  padding: 32px;
+  font-family: Montserrat, sans-serif;
+  font-size: 16px;
+  color: rgba(107, 114, 128, 1);
+}
+
+.profile-orders__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px 32px;
+  text-align: center;
+}
+
+.profile-orders__empty-icon {
+  color: rgba(209, 213, 219, 1);
+}
+
+.profile-orders__empty-text {
+  font-family: Montserrat, sans-serif;
+  font-size: 16px;
+  color: rgba(107, 114, 128, 1);
+  margin: 0;
+}
+
+.profile-orders__empty-btn {
+  padding: 10px 24px;
+  background: rgba(37, 99, 235, 1);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: Montserrat, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.profile-orders__empty-btn:hover {
+  background: rgba(29, 78, 216, 1);
+}
+
+.profile-orders__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Order Card */
+.order-card {
+  border: 1px solid rgba(229, 231, 235, 1);
+  border-radius: 8px;
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+
+.order-card:hover {
+  border-color: rgba(209, 213, 219, 1);
+}
+
+.order-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(243, 244, 246, 1);
+}
+
+.order-card__number {
+  font-family: Montserrat, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(31, 41, 55, 1);
+}
+
+.order-card__status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-family: Montserrat, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.order-card__status--pending {
+  background: rgba(254, 243, 199, 1);
+  color: rgba(180, 83, 9, 1);
+}
+
+.order-card__status--confirmed {
+  background: rgba(219, 234, 254, 1);
+  color: rgba(30, 64, 175, 1);
+}
+
+.order-card__status--shipped {
+  background: rgba(224, 231, 255, 1);
+  color: rgba(67, 56, 202, 1);
+}
+
+.order-card__status--delivered {
+  background: rgba(220, 252, 231, 1);
+  color: rgba(22, 101, 52, 1);
+}
+
+.order-card__status--cancelled {
+  background: rgba(254, 226, 226, 1);
+  color: rgba(153, 27, 27, 1);
+}
+
+.order-card__info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.order-card__info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-card__info-label {
+  font-family: Montserrat, sans-serif;
+  font-size: 13px;
+  color: rgba(107, 114, 128, 1);
+}
+
+.order-card__info-value {
+  font-family: Montserrat, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(31, 41, 55, 1);
+}
+
+.order-card__items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(243, 244, 246, 1);
+}
+
+.order-card__item {
+  font-family: Montserrat, sans-serif;
+  font-size: 14px;
+  color: rgba(75, 85, 99, 1);
+}
+
+.order-card__item-more {
+  font-family: Montserrat, sans-serif;
+  font-size: 13px;
+  color: rgba(107, 114, 128, 1);
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .profile-page__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 24px 0;
+  }
+
+  .profile-page__container {
+    padding: 0 16px;
+  }
+
+  .profile-page__title {
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+
+  .order-card__info {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

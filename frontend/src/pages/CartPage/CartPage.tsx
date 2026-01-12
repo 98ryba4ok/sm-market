@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/Button/Button";
 import { Input } from "../../components/ui/Input/Input";
 import { useToast } from "../../contexts/ToastContext";
 import type { Cart } from "../../types/cart";
+import { getImageUrl } from "../../utils/imageUrl";
 import "./CartPage.css";
 
 export const CartPage = () => {
@@ -231,7 +232,7 @@ export const CartPage = () => {
 
                   <div className="cart-item__image">
                     <img
-                      src={item.product_detail.main_image || "/placeholder.png"}
+                      src={getImageUrl(item.product_detail.main_image) || "/placeholder.png"}
                       alt={item.product_detail.name}
                     />
                   </div>

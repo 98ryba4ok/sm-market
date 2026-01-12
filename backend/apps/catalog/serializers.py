@@ -21,7 +21,13 @@ class CategorySerializer(serializers.ModelSerializer):
     def get_image(self, obj):
         """Вернуть относительный URL изображения"""
         if obj.image:
-            return obj.image.url
+            url = obj.image.url
+            # Если URL начинается с http, извлекаем только путь
+            if url.startswith('http://') or url.startswith('https://'):
+                from urllib.parse import urlparse
+                parsed = urlparse(url)
+                return parsed.path
+            return url
         return None
     
     def get_subcategories(self, obj):
@@ -41,11 +47,25 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductImageSerializer(serializers.ModelSerializer):
     """Сериализатор изображения товара"""
-    
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
         fields = ['id', 'image', 'is_main', 'order', 'alt_text']
         read_only_fields = ['id']
+
+    def get_image(self, obj):
+        """Вернуть только относительный URL без домена"""
+        if obj.image:
+            # Используем .url который возвращает полный путь, затем убираем схему и хост
+            url = obj.image.url
+            # Если URL начинается с http, извлекаем только путь
+            if url.startswith('http://') or url.startswith('https://'):
+                from urllib.parse import urlparse
+                parsed = urlparse(url)
+                return parsed.path
+            return url
+        return None
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -104,7 +124,13 @@ class ProductListSerializer(serializers.ModelSerializer):
         """Получить главное изображение товара"""
         main_image = obj.images.filter(is_main=True).first()
         if main_image:
-            return main_image.image.url
+            url = main_image.image.url
+            # Если URL начинается с http, извлекаем только путь
+            if url.startswith('http://') or url.startswith('https://'):
+                from urllib.parse import urlparse
+                parsed = urlparse(url)
+                return parsed.path
+            return url
         return None
     
     def get_average_rating(self, obj):
@@ -180,5 +206,11 @@ class BannerSerializer(serializers.ModelSerializer):
     def get_image(self, obj):
         """Вернуть относительный URL изображения"""
         if obj.image:
-            return obj.image.url
+            url = obj.image.url
+            # Если URL начинается с http, извлекаем только путь
+            if url.startswith('http://') or url.startswith('https://'):
+                from urllib.parse import urlparse
+                parsed = urlparse(url)
+                return parsed.path
+            return url
         return None

@@ -82,15 +82,35 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
         on_sale = request.query_params.get('on_sale')
         if on_sale == 'true':
             queryset = queryset.filter(discount_price__isnull=False)
-        
+
         # Сортировка
         ordering = request.query_params.get('ordering', '-created_at')
-        allowed_orderings = [
-            'price', '-price', 'name', '-name',
-            'created_at', '-created_at', 'views_count', '-views_count'
-        ]
-        if ordering in allowed_orderings:
-            queryset = queryset.order_by(ordering)
+
+        # Для сортировки по проценту скидки добавляем аннотацию
+        if ordering in ['discount_percentage', '-discount_percentage']:
+            from django.db.models import F, ExpressionWrapper, DecimalField, Case, When, Value
+
+            queryset = queryset.annotate(
+                discount_percent=Case(
+                    When(
+                        discount_price__isnull=False,
+                        discount_price__lt=F('price'),
+                        then=ExpressionWrapper(
+                            (F('price') - F('discount_price')) * 100 / F('price'),
+                            output_field=DecimalField()
+                        )
+                    ),
+                    default=Value(0),
+                    output_field=DecimalField()
+                )
+            ).order_by('-discount_percent' if ordering == '-discount_percentage' else 'discount_percent')
+        else:
+            allowed_orderings = [
+                'price', '-price', 'name', '-name',
+                'created_at', '-created_at', 'views_count', '-views_count'
+            ]
+            if ordering in allowed_orderings:
+                queryset = queryset.order_by(ordering)
         
         return queryset
 

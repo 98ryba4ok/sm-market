@@ -1,6 +1,6 @@
 import { ChevronDown, Heart, LogOut, Search, ShoppingCart, User } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { authApi } from "../../../api/authApi";
 import { cartApi } from "../../../api/cartApi";
@@ -11,6 +11,7 @@ import { RegisterModal } from "../../features/auth/RegisterModal/RegisterModal";
 import "./Header.css";
 
 export const Header = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -83,6 +84,19 @@ export const Header = () => {
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/catalog?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch(e);
+    }
+  };
+
   return (
     <header className="header">
       <div className="header__container">
@@ -96,26 +110,27 @@ export const Header = () => {
             </Link>
 
             {/* Catalog Button */}
-            <button className="header__catalog-btn">
+            <Link to="/catalog" className="header__catalog-btn">
               <img src={categoryLogo} alt="" />
               <span className="header__catalog-text">Каталог</span>
-            </button>
+            </Link>
           </div>
 
           {/* Search */}
           <div className="header__search">
-            <div className="header__search-wrapper">
+            <form className="header__search-wrapper" onSubmit={handleSearch}>
               <input
                 type="text"
                 placeholder="Найти товары"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
                 className="header__search-input"
               />
-              <button className="header__search-btn">
+              <button type="submit" className="header__search-btn">
                 <Search size={20} />
               </button>
-            </div>
+            </form>
           </div>
 
           {/* Actions */}
@@ -132,6 +147,22 @@ export const Header = () => {
                 </button>
                 {showUserMenu && (
                   <div className="header__user-dropdown">
+                    <Link
+                      to="/profile"
+                      className="header__user-dropdown-item"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <User size={18} />
+                      Мой профиль
+                    </Link>
+                    <Link
+                      to="/orders"
+                      className="header__user-dropdown-item"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <ShoppingCart size={18} />
+                      Мои заказы
+                    </Link>
                     <button className="header__user-dropdown-item" onClick={handleLogout}>
                       <LogOut size={18} />
                       Выйти

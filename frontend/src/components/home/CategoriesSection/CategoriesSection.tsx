@@ -26,7 +26,7 @@ export const CategoriesSection = () => {
           {categories.map((category) => (
             <Link
               key={category.id}
-              to={`/category/${category.slug}`}
+              to={`/catalog?category=${category.slug}`}
               className={`category-card category-card--${category.size}`}
             >
               <img

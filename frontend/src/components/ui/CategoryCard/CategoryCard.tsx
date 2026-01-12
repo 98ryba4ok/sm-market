@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { CategoryListItem } from "../../../types";
+import { getImageUrl } from "../../../utils/imageUrl";
 import "./CategoryCard.css";
 
 interface CategoryCardProps {
@@ -14,7 +15,7 @@ export const CategoryCard = ({ category }: CategoryCardProps) => {
       <div className="category-card__background">
         {category.image && (
           <img
-            src={category.image}
+            src={getImageUrl(category.image)}
             alt={category.name}
             className="category-card__image"
           />
