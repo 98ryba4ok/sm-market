@@ -85,7 +85,6 @@ The frontend is organized in a feature-based architecture:
 **`src/api/`** - API layer
 - `axios.ts` - Configured axios instance with JWT interceptors
 - Auto-refresh access tokens on 401 responses
-- Auto-redirect to /login if refresh fails
 - Queue system prevents duplicate refresh requests
 - Individual API modules: `authApi`, `productsApi`, `categoriesApi`, `cartApi`, `ordersApi`, `reviewsApi`, `wishlistApi`, `bannersApi`
 
@@ -118,7 +117,6 @@ The frontend is organized in a feature-based architecture:
 4. Axios interceptor adds `Authorization: Bearer {access}` to all requests
 5. On 401 error, interceptor automatically calls `POST /api/auth/refresh/` with refresh token
 6. New access token saved to localStorage and original request retried
-7. If refresh fails, user redirected to /login and tokens cleared
 
 ### Database Models Overview
 

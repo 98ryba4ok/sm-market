@@ -32,7 +32,7 @@ export const WishlistPage = () => {
       console.error("Error loading wishlist:", err);
       if (err.response?.status === 401) {
         showToast("Войдите в систему для просмотра избранного", "error");
-        navigate("/login");
+        window.dispatchEvent(new CustomEvent("openLoginModal"));
       } else {
         setError("Не удалось загрузить избранное");
       }
@@ -63,7 +63,7 @@ export const WishlistPage = () => {
       console.error("Error adding to cart:", err);
       if (err.response?.status === 401) {
         showToast("Войдите в систему", "error");
-        navigate("/login");
+        window.dispatchEvent(new CustomEvent("openLoginModal"));
       } else {
         showToast("Не удалось добавить товар в корзину", "error");
       }

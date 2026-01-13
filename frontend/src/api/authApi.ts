@@ -4,6 +4,7 @@ import api from "./axios";
 import type {
   LoginPayload,
   RegisterPayload,
+  RegisterResponse,
   TokenResponse,
   RefreshTokenPayload,
   LogoutPayload,
@@ -16,7 +17,7 @@ export const authApi = {
    * POST /api/auth/register/
    */
   register: (data: RegisterPayload) =>
-    api.post<{ id: number; email: string; phone: string }>("/auth/register/", data),
+    api.post<RegisterResponse>("/auth/register/", data),
 
   /**
    * Вход (получение токенов)

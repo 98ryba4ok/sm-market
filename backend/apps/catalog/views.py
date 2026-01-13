@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Avg
-from .models import Category, Product, ProductReview, Wishlist, Banner, Brand
+from .models import Category, Product, ProductReview, Wishlist, Banner, Brand, ConsultationRequest
 from .serializers import (
     CategorySerializer,
     ProductListSerializer,
@@ -13,7 +13,8 @@ from .serializers import (
     WishlistSerializer,
     WishlistAddRemoveSerializer,
     BannerSerializer,
-    BrandSerializer
+    BrandSerializer,
+    ConsultationRequestSerializer
 )
 
 
@@ -411,3 +412,39 @@ class BannerViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BannerSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = None  # Отключаем пагинацию для баннеров
+
+
+class ConsultationRequestViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для заявок на консультацию
+    
+    create: Создать новую заявку
+    list: Получить список всех заявок (только для администраторов)
+    retrieve: Получить детальную информацию о заявке (только для администраторов)
+    """
+    queryset = ConsultationRequest.objects.all()
+    serializer_class = ConsultationRequestSerializer
+    
+    def get_permissions(self):
+        """
+        Создание заявки доступно всем
+        Просмотр заявок только для администраторов
+        """
+        if self.action == 'create':
+            from rest_framework.permissions import AllowAny
+            return [AllowAny()]
+        return [IsAuthenticated()]
+    
+    def create(self, request, *args, **kwargs):
+        """Создание новой заявки на консультацию"""
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        return Response(
+            {
+                'detail': 'Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.',
+                'data': serializer.data
+            },
+            status=status.HTTP_201_CREATED
+        )

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Avg
-from .models import Category, Product, ProductImage, ProductReview, Wishlist, Banner, Brand
+from .models import Category, Product, ProductImage, ProductReview, Wishlist, Banner, Brand, ConsultationRequest
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -73,7 +73,7 @@ class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
         fields = [
-            'id', 'name', 'slug', 'description',
+            'id', 'name', 'slug', 'description', 'country_of_origin',
             'order', 'is_active', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
@@ -113,7 +113,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'name', 'slug', 'category', 'category_name',
-            'brand_id', 'brand_name',
+            'brand_id', 'brand_name', 'sku',
             'price', 'discount_price', 'final_price', 'discount_percentage',
             'stock_quantity', 'in_stock', 'main_image',
             'average_rating', 'reviews_count', 'views_count'
@@ -214,3 +214,48 @@ class BannerSerializer(serializers.ModelSerializer):
                 return parsed.path
             return url
         return None
+
+class ConsultationRequestSerializer(serializers.ModelSerializer):
+    """Сериализатор для заявок на консультацию"""
+
+    class Meta:
+        model = ConsultationRequest
+        fields = [
+            'id', 'name', 'phone', 'email', 'message',
+            'status', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'status', 'created_at', 'updated_at']
+
+    def validate_phone(self, value):
+        """Валидация номера телефона"""
+        # Убираем все символы кроме цифр и +
+        phone = ''.join(c for c in value if c.isdigit() or c == '+')
+
+        if not phone:
+            raise serializers.ValidationError("Введите корректный номер телефона")
+
+        # Проверяем длину
+        digits = phone.replace('+', '')
+        if len(digits) < 10 or len(digits) > 15:
+            raise serializers.ValidationError("Номер телефона должен содержать от 10 до 15 цифр")
+
+        return phone
+
+    def create(self, validated_data):
+        """Создание заявки с дополнительной информацией"""
+        request = self.context.get('request')
+
+        # Добавляем IP адрес и User Agent
+        if request:
+            # Получаем IP адрес
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(',')[0]
+            else:
+                ip = request.META.get('REMOTE_ADDR')
+            validated_data['ip_address'] = ip
+
+            # Получаем User Agent
+            validated_data['user_agent'] = request.META.get('HTTP_USER_AGENT', '')
+
+        return super().create(validated_data)

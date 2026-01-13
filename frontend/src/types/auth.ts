@@ -20,6 +20,13 @@ export interface RegisterPayload {
   password: string;
 }
 
+export interface RegisterResponse {
+  email: string;
+  phone: string;
+  access: string;
+  refresh: string;
+}
+
 export interface TokenResponse {
   access: string;
   refresh: string;

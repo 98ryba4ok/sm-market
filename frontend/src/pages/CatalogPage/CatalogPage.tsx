@@ -243,7 +243,7 @@ export const CatalogPage = () => {
       console.error("Ошибка добавления в корзину:", err);
       if (err.response?.status === 401) {
         showToast("Войдите в систему для добавления товара в корзину", "error");
-        navigate("/login");
+        window.dispatchEvent(new CustomEvent("openLoginModal"));
       } else {
         showToast("Не удалось добавить товар в корзину", "error");
       }
@@ -258,7 +258,7 @@ export const CatalogPage = () => {
       console.error("Ошибка добавления в избранное:", err);
       if (err.response?.status === 401) {
         showToast("Войдите в систему для добавления товара в избранное", "error");
-        navigate("/login");
+        window.dispatchEvent(new CustomEvent("openLoginModal"));
       } else if (err.response?.status === 400 && err.response?.data?.detail?.includes("уже в списке")) {
         showToast("Товар уже в избранном", "info");
       } else {

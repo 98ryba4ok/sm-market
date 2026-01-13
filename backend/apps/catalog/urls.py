@@ -6,7 +6,8 @@ from .views import (
     ProductReviewViewSet,
     WishlistViewSet,
     BrandViewSet,
-    BannerViewSet
+    BannerViewSet,
+    ConsultationRequestViewSet
 )
 
 app_name = 'catalog'
@@ -18,6 +19,7 @@ router.register(r'reviews', ProductReviewViewSet, basename='review')
 router.register(r'wishlist', WishlistViewSet, basename='wishlist')
 router.register(r'brands', BrandViewSet, basename='brand')
 router.register(r'banners', BannerViewSet, basename='banner')
+router.register(r'consultation-requests', ConsultationRequestViewSet, basename='consultation-request')
 
 urlpatterns = [
     path('', include(router.urls)),

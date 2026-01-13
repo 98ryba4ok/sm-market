@@ -66,26 +66,17 @@ export const RegisterModal = ({
     }
 
     try {
-      // Регистрация
-      await authApi.register({
+      // Регистрация (теперь возвращает токены сразу)
+      const registerResponse = await authApi.register({
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
       });
 
-      // Автоматический вход после регистрации
-      const loginResponse = await authApi.login({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      // Сохраняем токены
-      localStorage.setItem("accessToken", loginResponse.data.access);
-      localStorage.setItem("refreshToken", loginResponse.data.refresh);
-
-      // Получаем данные пользователя
-      const userResponse = await authApi.me();
-      localStorage.setItem("userEmail", userResponse.data.email);
+      // Сохраняем токены из response регистрации
+      localStorage.setItem("accessToken", registerResponse.data.access);
+      localStorage.setItem("refreshToken", registerResponse.data.refresh);
+      localStorage.setItem("userEmail", registerResponse.data.email);
 
       // Успех
       setFormData({ email: "", phone: "", password: "", confirmPassword: "" });

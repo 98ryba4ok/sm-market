@@ -69,10 +69,11 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem("refreshToken");
 
       if (!refreshToken) {
-        // Нет refresh токена - редирект на логин
+        // Нет refresh токена - открываем модалку логина
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        // Отправляем событие для открытия модалки логина
+        window.dispatchEvent(new CustomEvent("openLoginModal"));
         return Promise.reject(error);
       }
 
@@ -100,11 +101,12 @@ api.interceptors.response.use(
         // Повторяем оригинальный запрос
         return api(originalRequest);
       } catch (refreshError) {
-        // Не удалось обновить токен - очищаем данные и редирект на логин
+        // Не удалось обновить токен - очищаем данные и открываем модалку логина
         processQueue(refreshError as Error, null);
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        // Отправляем событие для открытия модалки логина
+        window.dispatchEvent(new CustomEvent("openLoginModal"));
         isRefreshing = false;
         return Promise.reject(refreshError);
       }

@@ -53,9 +53,22 @@ export const Header = () => {
 
     // Слушаем кастомное событие обновления корзины
     window.addEventListener('cartUpdated', handleCartUpdate);
-    
+
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
+  }, []);
+
+  // Слушаем событие открытия модалки логина (из axios interceptor)
+  useEffect(() => {
+    const handleOpenLoginModal = () => {
+      setIsLoginModalOpen(true);
+    };
+
+    window.addEventListener('openLoginModal', handleOpenLoginModal);
+
+    return () => {
+      window.removeEventListener('openLoginModal', handleOpenLoginModal);
     };
   }, []);
 
@@ -63,6 +76,10 @@ export const Header = () => {
     const storedEmail = localStorage.getItem("userEmail");
     setIsAuthenticated(true);
     setUserEmail(storedEmail);
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(false);
+    // Обновляем количество товаров в корзине после входа
+    loadCartCount();
   };
 
   const handleLogout = async () => {

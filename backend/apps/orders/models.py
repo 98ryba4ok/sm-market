@@ -86,6 +86,8 @@ class CartItem(models.Model):
     @property
     def subtotal(self):
         """Подытог для этого элемента"""
+        if self.product is None:
+            return Decimal('0')
         return self.product.final_price * self.quantity
 
     def clean(self):
@@ -196,6 +198,19 @@ class Order(models.Model):
     def save(self, *args, **kwargs):
         if not self.order_number:
             self.order_number = self.generate_order_number()
+
+        # Auto-calculate total_amount from order items if not provided
+        # This happens when creating orders manually in admin
+        if self.total_amount is None or self.total_amount == 0:
+            # If order already exists, calculate from existing items
+            if self.pk:
+                self.total_amount = sum(
+                    item.subtotal for item in self.items.all()
+                )
+            # For new orders without items yet, set to 0 temporarily
+            else:
+                self.total_amount = Decimal('0')
+
         super().save(*args, **kwargs)
 
     @staticmethod
@@ -226,6 +241,11 @@ class Order(models.Model):
         if self.status == 'pending':
             self.status = 'processing'
         self.save(update_fields=['payment_status', 'status'])
+
+    def recalculate_total(self):
+        """Пересчитать общую сумму заказа из элементов"""
+        self.total_amount = sum(item.subtotal for item in self.items.all())
+        self.save(update_fields=['total_amount'])
 
 
 class OrderItem(models.Model):
@@ -269,6 +289,8 @@ class OrderItem(models.Model):
     @property
     def subtotal(self):
         """Подытог для этого элемента"""
+        if self.price_at_purchase is None or self.quantity is None:
+            return Decimal('0')
         return self.price_at_purchase * self.quantity
 
     def save(self, *args, **kwargs):
@@ -278,3 +300,15 @@ class OrderItem(models.Model):
         if not self.product_name:
             self.product_name = self.product.name
         super().save(*args, **kwargs)
+
+        # Пересчитать общую сумму заказа после сохранения элемента
+        if self.order_id:
+            self.order.recalculate_total()
+
+    def delete(self, *args, **kwargs):
+        """Переопределяем удаление для пересчета суммы заказа"""
+        order = self.order
+        super().delete(*args, **kwargs)
+        # Пересчитать общую сумму заказа после удаления элемента
+        if order:
+            order.recalculate_total()

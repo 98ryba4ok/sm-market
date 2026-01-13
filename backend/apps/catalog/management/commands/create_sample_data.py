@@ -104,11 +104,11 @@ class Command(BaseCommand):
         # Создать бренды
         self.stdout.write('\nСоздание брендов...')
         brands_data = [
-            {'name': 'GESSI', 'description': 'Итальянский производитель премиум сантехники', 'order': 1, 'logo': 'gessi.png'},
-            {'name': 'cielo', 'description': 'Дизайнерская керамика и сантехника', 'order': 2, 'logo': 'cielo.png'},
-            {'name': 'Jorger', 'description': 'Эксклюзивная сантехника класса люкс', 'order': 3, 'logo': 'jorger.png'},
-            {'name': 'KRONOS ceramiche', 'description': 'Итальянская керамическая плитка', 'order': 4, 'logo': 'kronos.png'},
-            {'name': 'DevoN&DevoN', 'description': 'Мебель для ванных комнат', 'order': 5, 'logo': 'devon.png'},
+            {'name': 'GESSI', 'description': 'Итальянский производитель премиум сантехники', 'country': 'Италия', 'order': 1, 'logo': 'gessi.png'},
+            {'name': 'cielo', 'description': 'Дизайнерская керамика и сантехника', 'country': 'Италия', 'order': 2, 'logo': 'cielo.png'},
+            {'name': 'Jorger', 'description': 'Эксклюзивная сантехника класса люкс', 'country': 'Германия', 'order': 3, 'logo': 'jorger.png'},
+            {'name': 'KRONOS ceramiche', 'description': 'Итальянская керамическая плитка', 'country': 'Италия', 'order': 4, 'logo': 'kronos.png'},
+            {'name': 'DevoN&DevoN', 'description': 'Мебель для ванных комнат', 'country': 'Россия', 'order': 5, 'logo': 'devon.png'},
         ]
 
         brands = []
@@ -116,6 +116,7 @@ class Command(BaseCommand):
             brand = Brand.objects.create(
                 name=brand_data['name'],
                 description=brand_data['description'],
+                country_of_origin=brand_data['country'],
                 order=brand_data['order'],
                 is_active=True
             )
@@ -208,10 +209,22 @@ class Command(BaseCommand):
                 price=Decimal('33000'),
                 discount_price=Decimal('29990'),
                 stock_quantity=10,
+                sku=f'GSI-SHN-{1000 + i}',
+                specifications={
+                    "Материал": "Латунь",
+                    "Покрытие": "Хром",
+                    "Механизм": "Керамический картридж 35 мм",
+                    "Высота": "295 мм",
+                    "Вылет излива": "220 мм",
+                    "Поворот излива": "360°",
+                    "Присоединительный размер": "1/2\"",
+                    "Рабочее давление": "0.5-6 бар"
+                },
+                warranty_months=60,
                 is_active=True
             )
             products.append(product)
-            self.stdout.write(f'  ✓ Создан товар: {product.name} ({product.final_price} ₽)')
+            self.stdout.write(f'  ✓ Создан товар: {product.name} (SKU: {product.sku}, {product.final_price} ₽)')
         
         # Создать изображения товаров
         self.stdout.write('\nСоздание изображений товаров...')

@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
+from apps.orders.utils import merge_guest_cart_with_user_cart
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -23,7 +24,25 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        user = User.objects.create_user(**validated_data)
+
+        # Слияние гостевой корзины с корзиной нового пользователя
+        request = self.context.get('request')
+        if request and hasattr(request, 'session'):
+            session_key = request.session.session_key
+            if session_key:
+                merge_guest_cart_with_user_cart(session_key, user)
+
+        # Генерируем токены для автоматического входа после регистрации
+        refresh = RefreshToken.for_user(user)
+
+        # Добавляем токены к данным пользователя
+        user.tokens = {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        }
+
+        return user
 
 
 class LoginSerializer(serializers.Serializer):
@@ -38,6 +57,13 @@ class LoginSerializer(serializers.Serializer):
 
         if not user:
             raise serializers.ValidationError("Email или пароль неверны.")  # более дружелюбное сообщение
+
+        # Слияние гостевой корзины с корзиной пользователя
+        request = self.context.get('request')
+        if request and hasattr(request, 'session'):
+            session_key = request.session.session_key
+            if session_key:
+                merge_guest_cart_with_user_cart(session_key, user)
 
         refresh = RefreshToken.for_user(user)
 

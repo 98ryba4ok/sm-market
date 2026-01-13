@@ -3,19 +3,51 @@ import { useState } from "react";
 import helpImage from "../../../assets/help.png";
 import { Button } from "../../ui/Button/Button";
 import { Input } from "../../ui/Input/Input";
+import { consultationApi } from "../../../api/consultationApi";
+import { useToast } from "../../../contexts/ToastContext";
 import "./ContactFormSection.css";
 
 export const ContactFormSection = () => {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     comment: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Здесь будет вызов API
+    setIsSubmitting(true);
+
+    try {
+      const response = await consultationApi.create({
+        name: formData.name,
+        phone: formData.phone,
+        message: formData.comment,
+      });
+
+      showToast(response.data.detail, "success");
+
+      // Очищаем форму после успешной отправки
+      setFormData({
+        name: "",
+        phone: "",
+        comment: "",
+      });
+    } catch (error: any) {
+      console.error("Error submitting consultation request:", error);
+
+      if (error.response?.data?.phone) {
+        showToast(error.response.data.phone[0], "error");
+      } else if (error.response?.data?.detail) {
+        showToast(error.response.data.detail, "error");
+      } else {
+        showToast("Не удалось отправить заявку. Попробуйте позже", "error");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -73,8 +105,13 @@ export const ContactFormSection = () => {
               </div>
 
               <div className="contact-form-section__submit-wrapper">
-                <Button type="submit" size="lg" style={{ flexShrink: 0 }}>
-                  Отправить
+                <Button
+                  type="submit"
+                  size="lg"
+                  style={{ flexShrink: 0 }}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Отправка..." : "Отправить"}
                 </Button>
                 <p className="contact-form-section__disclaimer">
                   Нажимая кнопку Отправить, Вы соглашаетесь с политикой

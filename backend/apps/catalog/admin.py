@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Category, Product, ProductImage, ProductReview, Wishlist, Banner, Brand
+from .models import Category, Product, ProductImage, ProductReview, Wishlist, Banner, Brand, ConsultationRequest
 
 
 class ProductImageInline(admin.TabularInline):
@@ -67,23 +67,27 @@ class ProductAdmin(admin.ModelAdmin):
         'is_active', 'views_count', 'created_at'
     ]
     list_filter = ['is_active', 'category', 'brand', 'created_at']
-    search_fields = ['name', 'slug', 'description']
+    search_fields = ['name', 'slug', 'description', 'sku']
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = [
         'created_at', 'updated_at', 'views_count',
-        'final_price', 'discount_percentage', 'in_stock'
+        'final_price', 'discount_percentage', 'in_stock', 'country_of_origin'
     ]
     inlines = [ProductImageInline]
 
     fieldsets = (
         ('Основная информация', {
-            'fields': ('name', 'slug', 'category', 'brand', 'description')
+            'fields': ('name', 'slug', 'category', 'brand', 'description', 'sku')
         }),
         ('Цены', {
             'fields': ('price', 'discount_price', 'final_price', 'discount_percentage')
         }),
         ('Склад', {
             'fields': ('stock_quantity', 'in_stock')
+        }),
+        ('Характеристики товара', {
+            'fields': ('specifications', 'warranty_months', 'country_of_origin'),
+            'description': 'Технические характеристики и информация о товаре'
         }),
         ('Настройки', {
             'fields': ('is_active',)
@@ -219,15 +223,15 @@ class WishlistAdmin(admin.ModelAdmin):
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
     """Админка для брендов"""
-    list_display = ['name', 'order', 'is_active', 'created_at']
-    list_filter = ['is_active', 'created_at']
-    search_fields = ['name', 'description']
+    list_display = ['name', 'country_of_origin', 'order', 'is_active', 'created_at']
+    list_filter = ['is_active', 'country_of_origin', 'created_at']
+    search_fields = ['name', 'description', 'country_of_origin']
     readonly_fields = ['slug', 'created_at', 'updated_at']
     list_editable = ['order', 'is_active']
 
     fieldsets = (
         ('Основная информация', {
-            'fields': ('name', 'slug', 'description')
+            'fields': ('name', 'slug', 'description', 'country_of_origin')
         }),
         ('Настройки', {
             'fields': ('order', 'is_active')
@@ -279,3 +283,69 @@ class BannerAdmin(admin.ModelAdmin):
             )
         return '-'
     image_preview.short_description = 'Превью изображения'
+
+
+@admin.register(ConsultationRequest)
+class ConsultationRequestAdmin(admin.ModelAdmin):
+    """Админка для заявок на консультацию"""
+    list_display = [
+        'id', 'name', 'phone', 'email', 'status', 
+        'created_at', 'formatted_ip'
+    ]
+    list_filter = ['status', 'created_at']
+    search_fields = ['name', 'phone', 'email', 'message', 'ip_address']
+    readonly_fields = [
+        'id', 'created_at', 'updated_at', 
+        'ip_address', 'user_agent', 'formatted_ip'
+    ]
+    list_editable = ['status']
+    date_hierarchy = 'created_at'
+    
+    fieldsets = (
+        ('Информация о клиенте', {
+            'fields': ('name', 'phone', 'email', 'message')
+        }),
+        ('Статус', {
+            'fields': ('status', 'admin_notes')
+        }),
+        ('Техническая информация', {
+            'fields': ('ip_address', 'formatted_ip', 'user_agent', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def formatted_ip(self, obj):
+        """Форматированный IP адрес с ссылкой на geolocation"""
+        if obj.ip_address:
+            return format_html(
+                '<a href="https://www.ip-api.com/{}" target="_blank">{}</a>',
+                obj.ip_address,
+                obj.ip_address
+            )
+        return '-'
+    formatted_ip.short_description = 'IP адрес (с геолокацией)'
+    
+    def get_queryset(self, request):
+        """Оптимизация запросов"""
+        qs = super().get_queryset(request)
+        return qs.select_related()
+    
+    actions = ['mark_as_in_progress', 'mark_as_contacted', 'mark_as_completed']
+    
+    def mark_as_in_progress(self, request, queryset):
+        """Отметить как 'В обработке'"""
+        updated = queryset.update(status='in_progress')
+        self.message_user(request, f'{updated} заявок отмечено как "В обработке"')
+    mark_as_in_progress.short_description = 'Отметить как "В обработке"'
+    
+    def mark_as_contacted(self, request, queryset):
+        """Отметить как 'Связались'"""
+        updated = queryset.update(status='contacted')
+        self.message_user(request, f'{updated} заявок отмечено как "Связались"')
+    mark_as_contacted.short_description = 'Отметить как "Связались"'
+    
+    def mark_as_completed(self, request, queryset):
+        """Отметить как 'Завершена'"""
+        updated = queryset.update(status='completed')
+        self.message_user(request, f'{updated} заявок отмечено как "Завершена"')
+    mark_as_completed.short_description = 'Отметить как "Завершена"'

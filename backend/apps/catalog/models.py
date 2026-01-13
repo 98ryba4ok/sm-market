@@ -10,6 +10,11 @@ class Brand(models.Model):
     name = models.CharField(max_length=200, unique=True, verbose_name="Название")
     slug = models.SlugField(max_length=200, unique=True, verbose_name="URL slug")
     description = models.TextField(blank=True, verbose_name="Описание")
+    country_of_origin = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Страна бренда"
+    )
     order = models.PositiveIntegerField(default=0, verbose_name="Порядок отображения")
     is_active = models.BooleanField(default=True, verbose_name="Активен")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
@@ -165,11 +170,6 @@ class Product(models.Model):
         verbose_name="Характеристики товара",
         help_text="JSON объект с характеристиками (например: {'Материал': 'Латунь', 'Механизм': 'Керамический картридж'})"
     )
-    country_of_origin = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name="Страна бренда"
-    )
     warranty_months = models.PositiveIntegerField(
         default=12,
         verbose_name="Гарантия (месяцев)"
@@ -236,6 +236,11 @@ class Product(models.Model):
     def in_stock(self):
         """Проверка наличия товара на складе"""
         return self.stock_quantity > 0
+
+    @property
+    def country_of_origin(self):
+        """Получить страну бренда"""
+        return self.brand.country_of_origin if self.brand else ""
 
     def increment_views(self):
         """Увеличить счетчик просмотров"""
@@ -397,3 +402,18 @@ class Banner(models.Model):
 
     def __str__(self):
         return self.title
+
+
+# Импортируем модель заявок на консультацию
+from .models_consultation import ConsultationRequest
+
+__all__ = [
+    'Brand',
+    'Category',
+    'Product',
+    'ProductImage',
+    'ProductReview',
+    'Wishlist',
+    'Banner',
+    'ConsultationRequest',
+]

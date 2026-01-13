@@ -1,6 +1,6 @@
 import { Check, ChevronRight, Edit2, Heart, ShoppingCart, Star, Trash2, Truck, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import { cartApi } from "../../api/cartApi";
 import { productsApi } from "../../api/productsApi";
@@ -15,7 +15,6 @@ import "./ProductDetailPage.css";
 
 export const ProductDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
   const { showToast } = useToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
@@ -123,7 +122,7 @@ export const ProductDetailPage = () => {
       console.error("Error adding to cart:", err);
       if (err.response?.status === 401) {
         showToast("Войдите в систему для добавления товара в корзину", "error");
-        navigate("/login");
+        window.dispatchEvent(new CustomEvent("openLoginModal"));
       } else {
         showToast("Ошибка при добавлении в корзину", "error");
       }
@@ -140,7 +139,7 @@ export const ProductDetailPage = () => {
       console.error("Error adding to wishlist:", err);
       if (err.response?.status === 401) {
         showToast("Войдите в систему для добавления товара в избранное", "error");
-        navigate("/login");
+        window.dispatchEvent(new CustomEvent("openLoginModal"));
       } else {
         showToast("Ошибка при добавлении в избранное", "error");
       }
@@ -177,7 +176,7 @@ export const ProductDetailPage = () => {
       console.error("Error submitting review:", err);
       if (err.response?.status === 401) {
         showToast("Войдите в систему для добавления отзыва", "error");
-        navigate("/login");
+        window.dispatchEvent(new CustomEvent("openLoginModal"));
       } else if (err.response?.data?.detail) {
         showToast(err.response.data.detail, "error");
       } else {
@@ -655,7 +654,7 @@ export const ProductDetailPage = () => {
                       } catch (err: any) {
                         if (err.response?.status === 401) {
                           showToast("Войдите в систему", "error");
-                          navigate("/login");
+                          window.dispatchEvent(new CustomEvent("openLoginModal"));
                         } else {
                           showToast("Ошибка при добавлении в корзину", "error");
                         }
@@ -668,7 +667,7 @@ export const ProductDetailPage = () => {
                       } catch (err: any) {
                         if (err.response?.status === 401) {
                           showToast("Войдите в систему", "error");
-                          navigate("/login");
+                          window.dispatchEvent(new CustomEvent("openLoginModal"));
                         } else {
                           showToast("Ошибка при добавлении в избранное", "error");
                         }
