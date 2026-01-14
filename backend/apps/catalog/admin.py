@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Category, Product, ProductImage, ProductReview, Wishlist, Banner, Brand, ConsultationRequest
+from .models import Room, Category, Product, ProductImage, ProductReview, Wishlist, Banner, Brand, ConsultationRequest
 
 
 class ProductImageInline(admin.TabularInline):
@@ -22,24 +22,67 @@ class ProductImageInline(admin.TabularInline):
     image_preview.short_description = 'Превью'
 
 
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    """Админка для категорий"""
-    list_display = ['name', 'slug', 'parent', 'image_preview', 'is_active', 'created_at']
-    list_filter = ['is_active', 'parent', 'created_at']
+@admin.register(Room)
+class RoomAdmin(admin.ModelAdmin):
+    """Админка для помещений"""
+    list_display = ['name', 'slug', 'image_preview', 'order', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
     search_fields = ['name', 'slug', 'description']
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at', 'image_preview']
+    list_editable = ['order', 'is_active']
     
     fieldsets = (
         ('Основная информация', {
-            'fields': ('name', 'slug', 'parent', 'description')
+            'fields': ('name', 'slug', 'description')
         }),
         ('Изображение', {
             'fields': ('image', 'image_preview')
         }),
         ('Настройки', {
-            'fields': ('is_active',)
+            'fields': ('order', 'is_active')
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def image_preview(self, obj):
+        """Превью изображения помещения"""
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="max-height: 150px; max-width: 200px;" />',
+                obj.image.url
+            )
+        return '-'
+    image_preview.short_description = 'Превью изображения'
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    """Админка для категорий оборудования"""
+    list_display = ['name', 'slug', 'image_preview', 'order', 'is_active', 'created_at']
+    list_filter = ['is_active', 'rooms', 'created_at']
+    search_fields = ['name', 'slug', 'description']
+    prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ['created_at', 'updated_at', 'image_preview']
+    filter_horizontal = ['rooms']
+    list_editable = ['order', 'is_active']
+    
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'slug', 'description')
+        }),
+        ('Помещения', {
+            'fields': ('rooms',),
+            'description': 'Выберите помещения, для которых доступна эта категория'
+        }),
+        ('Изображение', {
+            'fields': ('image', 'image_preview')
+        }),
+        ('Настройки', {
+            'fields': ('order', 'is_active')
         }),
         ('Даты', {
             'fields': ('created_at', 'updated_at'),
@@ -62,11 +105,11 @@ class CategoryAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     """Админка для товаров"""
     list_display = [
-        'name', 'slug', 'category', 'brand', 'price', 'discount_price',
+        'name', 'slug', 'room', 'category', 'brand', 'label', 'price', 'discount_price',
         'final_price_display', 'stock_quantity', 'in_stock_display',
         'is_active', 'views_count', 'created_at'
     ]
-    list_filter = ['is_active', 'category', 'brand', 'created_at']
+    list_filter = ['is_active', 'room', 'category', 'brand', 'label', 'created_at']
     search_fields = ['name', 'slug', 'description', 'sku']
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = [
@@ -77,7 +120,7 @@ class ProductAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Основная информация', {
-            'fields': ('name', 'slug', 'category', 'brand', 'description', 'sku')
+            'fields': ('name', 'slug', 'room', 'category', 'brand', 'label', 'description', 'sku')
         }),
         ('Цены', {
             'fields': ('price', 'discount_price', 'final_price', 'discount_percentage')

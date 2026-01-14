@@ -1,53 +1,77 @@
 import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
+
 import type { CategoryListItem } from "../../../types/category";
+import type { Room } from "../../../types/room";
 import "./CategoryFilter.css";
 
 interface CategoryFilterProps {
+  rooms: Room[];
+  selectedRoom: string | null;
   categories: CategoryListItem[];
   selectedCategories: number[];
+  onSelectRoom: (roomSlug: string | null) => void;
   onToggleCategory: (categoryId: number) => void;
 }
 
 export const CategoryFilter = ({
+  rooms,
+  selectedRoom,
   categories,
   selectedCategories,
+  onSelectRoom,
   onToggleCategory,
 }: CategoryFilterProps) => {
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
-    new Set(categories.map(c => c.id))
-  );
+  const [manuallyCollapsed, setManuallyCollapsed] = useState<Set<string>>(new Set());
 
-  const toggleExpandCategory = (categoryId: number, e: React.MouseEvent) => {
+  const toggleExpandRoom = (roomSlug: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpandedCategories((prev) => {
+    setManuallyCollapsed((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(categoryId)) {
-        newSet.delete(categoryId);
+      if (newSet.has(roomSlug)) {
+        newSet.delete(roomSlug);
       } else {
-        newSet.add(categoryId);
+        newSet.add(roomSlug);
       }
       return newSet;
     });
   };
 
+  const handleRoomClick = (roomSlug: string) => {
+    // Если помещение уже выбрано, снимаем выбор
+    if (selectedRoom === roomSlug) {
+      onSelectRoom(null);
+      setManuallyCollapsed(new Set());
+    } else {
+      // Выбираем помещение
+      onSelectRoom(roomSlug);
+      // Убираем из списка свернутых, чтобы оно развернулось
+      setManuallyCollapsed((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(roomSlug);
+        return newSet;
+      });
+    }
+  };
+
   return (
     <div className="category-filter">
-      <h3 className="category-filter__title">Категории</h3>
+      <h3 className="category-filter__title">Помещения и категории</h3>
       <div className="category-filter__divider"></div>
       <ul className="category-filter__list">
-        {categories.map((category) => {
-          const isSelected = selectedCategories.includes(category.id);
-          const hasSubcategories = category.subcategories && category.subcategories.length > 0;
-          const isExpanded = expandedCategories.has(category.id);
+        {rooms.map((room) => {
+          const isRoomSelected = selectedRoom === room.slug;
+          // Автоматически разворачиваем выбранное помещение, если оно не свернуто вручную
+          const isExpanded = isRoomSelected && !manuallyCollapsed.has(room.slug);
+          const hasCategories = isRoomSelected && categories && categories.length > 0;
 
           return (
-            <li key={category.id} className="category-filter__item">
+            <li key={room.id} className="category-filter__item">
               <div className="category-filter__parent-wrapper">
-                {hasSubcategories && (
+                {hasCategories && (
                   <button
                     className="category-filter__accordion-btn"
-                    onClick={(e) => toggleExpandCategory(category.id, e)}
+                    onClick={(e) => toggleExpandRoom(room.slug, e)}
                     aria-label={isExpanded ? "Свернуть" : "Развернуть"}
                   >
                     {isExpanded ? (
@@ -60,43 +84,43 @@ export const CategoryFilter = ({
                 
                 <button
                   className={`category-filter__button ${
-                    isSelected ? "category-filter__button--active" : ""
-                  } ${!hasSubcategories ? "category-filter__button--no-subs" : ""}`}
-                  onClick={() => onToggleCategory(category.id)}
+                    isRoomSelected ? "category-filter__button--active" : ""
+                  } ${!hasCategories ? "category-filter__button--no-subs" : ""}`}
+                  onClick={() => handleRoomClick(room.slug)}
                 >
-                  <span className="category-filter__name">{category.name}</span>
+                  <span className="category-filter__name">{room.name}</span>
                   <span
                     className={`category-filter__checkbox ${
-                      isSelected ? "category-filter__checkbox--checked" : ""
+                      isRoomSelected ? "category-filter__checkbox--checked" : ""
                     }`}
                   >
-                    {isSelected && <Check size={16} strokeWidth={3} />}
+                    {isRoomSelected && <Check size={16} strokeWidth={3} />}
                   </span>
                 </button>
               </div>
 
-              {hasSubcategories && isExpanded && (
+              {hasCategories && isExpanded && (
                 <ul className="category-filter__sublist">
-                  {category.subcategories?.map((subcategory) => {
-                    const isSubSelected = selectedCategories.includes(subcategory.id);
+                  {categories.map((category) => {
+                    const isCategorySelected = selectedCategories.includes(category.id);
 
                     return (
-                      <li key={subcategory.id} className="category-filter__subitem">
+                      <li key={category.id} className="category-filter__subitem">
                         <button
                           className={`category-filter__button category-filter__button--sub ${
-                            isSubSelected ? "category-filter__button--active" : ""
+                            isCategorySelected ? "category-filter__button--active" : ""
                           }`}
-                          onClick={() => onToggleCategory(subcategory.id)}
+                          onClick={() => onToggleCategory(category.id)}
                         >
                           <span className="category-filter__name category-filter__name--sub">
-                            {subcategory.name}
+                            {category.name}
                           </span>
                           <span
                             className={`category-filter__checkbox category-filter__checkbox--small ${
-                              isSubSelected ? "category-filter__checkbox--checked" : ""
+                              isCategorySelected ? "category-filter__checkbox--checked" : ""
                             }`}
                           >
-                            {isSubSelected && <Check size={14} strokeWidth={3} />}
+                            {isCategorySelected && <Check size={14} strokeWidth={3} />}
                           </span>
                         </button>
                       </li>
@@ -104,6 +128,7 @@ export const CategoryFilter = ({
                   })}
                 </ul>
               )}
+
             </li>
           );
         })}

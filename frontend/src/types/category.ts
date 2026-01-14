@@ -5,10 +5,11 @@ export interface Category {
   name: string;
   slug: string;
   description: string;
-  parent: number | null;
-  subcategories: Category[];
+  room_ids: number[];
   image: string | null;
+  order: number;
   is_active: boolean;
+  products_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -18,10 +19,10 @@ export interface CategoryListItem {
   name: string;
   slug: string;
   description: string;
-  parent: number | null;
+  room_ids: number[];
   image: string | null;
+  order: number;
   is_active: boolean;
-  subcategories: CategoryListItem[];
   products_count: number;
   created_at: string;
   updated_at: string;

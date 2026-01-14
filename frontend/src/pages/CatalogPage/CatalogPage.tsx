@@ -1,48 +1,60 @@
-import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { X } from "lucide-react";
+import { Search, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
-import { productsApi } from "../../api/productsApi";
-import { categoriesApi } from "../../api/categoriesApi";
 import { brandsApi } from "../../api/brandsApi";
 import { cartApi } from "../../api/cartApi";
+import { categoriesApi } from "../../api/categoriesApi";
+import { productsApi } from "../../api/productsApi";
+import { getRoomCategories, getRooms } from "../../api/roomsApi";
 import { wishlistApi } from "../../api/wishlistApi";
 import { CategoryFilter } from "../../components/catalog/CategoryFilter/CategoryFilter";
 import { ProductFilters } from "../../components/catalog/ProductFilters/ProductFilters";
 import { ProductCard } from "../../components/ui/ProductCard/ProductCard";
 import { useToast } from "../../contexts/ToastContext";
-import type { ProductListItem, ProductFilters as ProductFiltersType } from "../../types/product";
-import type { CategoryListItem } from "../../types/category";
 import type { Brand } from "../../types";
+import type { CategoryListItem } from "../../types/category";
+import type { ProductFilters as ProductFiltersType, ProductListItem } from "../../types/product";
+import type { Room } from "../../types/room";
 import "./CatalogPage.css";
 
 export const CatalogPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { showToast } = useToast();
+  
+  // Данные
   const [products, setProducts] = useState<ProductListItem[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [categories, setCategories] = useState<CategoryListItem[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  
+  // Фильтры
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [ordering, setOrdering] = useState<string>("-created_at");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  
+  // Фильтры цены и прочее
   const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
   const [inStock, setInStock] = useState<boolean>(false);
   const [onSale, setOnSale] = useState<boolean>(false);
   const [minRating, setMinRating] = useState<number | undefined>(undefined);
   const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+  
+  // Состояние загрузки
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Загрузка помещений и брендов при монтировании
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchRooms = async () => {
       try {
-        const response = await categoriesApi.list();
-        setCategories(response.data.results);
+        const response = await getRooms();
+        setRooms(response.results);
       } catch (err) {
-        console.error("Ошибка загрузки категорий:", err);
+        console.error("Ошибка загрузки помещений:", err);
       }
     };
 
@@ -55,43 +67,71 @@ export const CatalogPage = () => {
       }
     };
 
-    fetchCategories();
+    fetchRooms();
     fetchBrands();
   }, []);
 
-  // Обработка параметров category и search из URL
+  // Загрузка категорий при изменении выбранного помещения
   useEffect(() => {
-    const categorySlug = searchParams.get("category");
+    const fetchCategories = async () => {
+      try {
+        if (selectedRoom) {
+          // Загружаем категории выбранного помещения
+          const response = await getRoomCategories(selectedRoom);
+          setCategories(response.categories);
+        } else {
+          // Загружаем все категории
+          const response = await categoriesApi.list();
+          setCategories(response.data.results);
+        }
+      } catch (err) {
+        console.error("Ошибка загрузки категорий:", err);
+      }
+    };
+
+    fetchCategories();
+    // Сбрасываем выбранные категории при смене помещения
+    setSelectedCategories([]);
+  }, [selectedRoom]);
+
+  // Синхронизация с URL параметрами
+  useEffect(() => {
+    const roomParam = searchParams.get("room");
+    const categoryParam = searchParams.get("category");
+    const labelParam = searchParams.get("label");
     const searchParam = searchParams.get("search");
 
-    // Обработка категории
-    if (categorySlug && categories.length > 0) {
-      // Находим категорию по slug
-      const allCategories: CategoryListItem[] = [];
-      categories.forEach((cat) => {
-        allCategories.push(cat);
-        if (cat.subcategories) {
-          allCategories.push(...cat.subcategories);
-        }
-      });
-
-      const foundCategory = allCategories.find((cat) => cat.slug === categorySlug);
-      if (foundCategory && !selectedCategories.includes(foundCategory.id)) {
-        setSelectedCategories([foundCategory.id]);
-      }
-    } else if (!categorySlug && selectedCategories.length > 0) {
-      // Если параметра category нет, но есть выбранные категории, очищаем их
-      setSelectedCategories([]);
+    // Синхронизация помещения
+    if (roomParam !== selectedRoom) {
+      setSelectedRoom(roomParam);
     }
 
-    // Обработка поиска - всегда синхронизируем с URL
+    // Синхронизация поиска
     const newSearchQuery = searchParam || "";
     if (newSearchQuery !== searchQuery) {
       setSearchQuery(newSearchQuery);
     }
+
+    // Синхронизация лейбла
+    if (labelParam && !selectedLabels.includes(labelParam)) {
+      setSelectedLabels([labelParam]);
+    } else if (!labelParam && selectedLabels.length > 0) {
+      setSelectedLabels([]);
+    }
+
+    // Синхронизация категории
+    if (categoryParam && categories.length > 0) {
+      const foundCategory = categories.find((cat) => cat.slug === categoryParam);
+      if (foundCategory && !selectedCategories.includes(foundCategory.id)) {
+        setSelectedCategories([foundCategory.id]);
+      }
+    } else if (!categoryParam && selectedCategories.length > 0) {
+      setSelectedCategories([]);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, categories]);
 
+  // Загрузка товаров при изменении фильтров
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -100,51 +140,54 @@ export const CatalogPage = () => {
       try {
         const filters: ProductFiltersType = {};
 
-        if (selectedCategories.length > 0) {
-          const allCategories: CategoryListItem[] = [];
-          categories.forEach((cat) => {
-            allCategories.push(cat);
-            if (cat.subcategories) {
-              allCategories.push(...cat.subcategories);
-            }
-          });
+        // Фильтр по помещению
+        if (selectedRoom) {
+          filters.room = selectedRoom;
+        }
 
-          const firstCategory = allCategories.find(
-            (cat) => cat.id === selectedCategories[0]
-          );
-          if (firstCategory) {
-            filters.category = firstCategory.slug;
+        // Фильтр по категории
+        if (selectedCategories.length > 0) {
+          const category = categories.find((cat) => cat.id === selectedCategories[0]);
+          if (category) {
+            filters.category = category.slug;
           }
         }
 
+        // Фильтр по лейблам (берем первый, так как backend поддерживает только один)
+        if (selectedLabels.length > 0) {
+          filters.label = selectedLabels[0];
+        }
+
+        // Поиск
         if (searchQuery) {
           filters.search = searchQuery;
         }
 
+        // Сортировка
         if (ordering && ordering !== "-created_at") {
           filters.ordering = ordering;
         }
 
+        // Фильтры цены
         if (minPrice !== undefined) {
           filters.min_price = minPrice;
         }
-
         if (maxPrice !== undefined) {
           filters.max_price = maxPrice;
         }
 
+        // Дополнительные фильтры
         if (inStock) {
           filters.in_stock = true;
         }
-
         if (onSale) {
           filters.on_sale = true;
         }
-
         if (minRating !== undefined) {
           filters.min_rating = minRating;
         }
 
+        // Фильтр по брендам
         if (selectedBrands.length > 0) {
           filters.brand = selectedBrands.length === 1 ? selectedBrands[0] : selectedBrands;
         }
@@ -161,7 +204,9 @@ export const CatalogPage = () => {
 
     fetchProducts();
   }, [
+    selectedRoom,
     selectedCategories,
+    selectedLabels,
     searchQuery,
     ordering,
     categories,
@@ -173,75 +218,81 @@ export const CatalogPage = () => {
     selectedBrands,
   ]);
 
+  // Обработчики
+  const handleSelectRoom = (roomSlug: string | null) => {
+    setSelectedRoom(roomSlug);
+    
+    const newParams = new URLSearchParams(searchParams);
+    if (roomSlug) {
+      newParams.set("room", roomSlug);
+    } else {
+      newParams.delete("room");
+    }
+    // Сбрасываем категорию при смене помещения
+    newParams.delete("category");
+    setSearchParams(newParams);
+  };
+
   const handleToggleCategory = (categoryId: number) => {
     setSelectedCategories((prev) => {
-      const allCategories: CategoryListItem[] = [];
-      categories.forEach((cat) => {
-        allCategories.push(cat);
-        if (cat.subcategories) {
-          allCategories.push(...cat.subcategories);
-        }
-      });
-
-      const clickedCategory = allCategories.find((cat) => cat.id === categoryId);
-      if (!clickedCategory) return prev;
-
-      const parentCategory = categories.find((cat) => cat.id === categoryId);
-      const isParentCategory = !!parentCategory;
-
       if (prev.includes(categoryId)) {
-        if (isParentCategory && parentCategory.subcategories) {
-          const subcategoryIds = parentCategory.subcategories.map((sub) => sub.id);
-          return prev.filter((id) => id !== categoryId && !subcategoryIds.includes(id));
-        }
         return prev.filter((id) => id !== categoryId);
       } else {
-        if (isParentCategory && parentCategory.subcategories) {
-          const subcategoryIds = parentCategory.subcategories.map((sub) => sub.id);
-          return [...prev, categoryId, ...subcategoryIds];
-        }
-        return [...prev, categoryId];
+        return [categoryId];
       }
     });
 
-    if (searchParams.has("category")) {
+    // Обновляем URL
+    const category = categories.find((cat) => cat.id === categoryId);
+    if (category) {
       const newParams = new URLSearchParams(searchParams);
-      newParams.delete("category");
+      if (selectedCategories.includes(categoryId)) {
+        newParams.delete("category");
+      } else {
+        newParams.set("category", category.slug);
+      }
       setSearchParams(newParams);
     }
   };
 
   const handleRemoveCategory = (categoryId: number) => {
     setSelectedCategories((prev) => prev.filter((id) => id !== categoryId));
+    
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("category");
+    setSearchParams(newParams);
+  };
 
-    // Очищаем параметр category из URL
-    if (searchParams.has("category")) {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("category");
-      setSearchParams(newParams);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    const newParams = new URLSearchParams(searchParams);
+    if (value) {
+      newParams.set("search", value);
+    } else {
+      newParams.delete("search");
     }
+    setSearchParams(newParams);
   };
 
   const handleClearSearch = () => {
     setSearchQuery("");
-
-    // Очищаем параметр search из URL
-    if (searchParams.has("search")) {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("search");
-      setSearchParams(newParams);
-    }
+    
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("search");
+    setSearchParams(newParams);
   };
 
   const handleAddToCart = async (productId: number) => {
     try {
       await cartApi.addItem({ product_id: productId, quantity: 1 });
       showToast("Товар добавлен в корзину!", "success");
-      // Уведомляем Header об обновлении корзины
       window.dispatchEvent(new Event('cartUpdated'));
-    } catch (err: any) {
+    } catch (err) {
       console.error("Ошибка добавления в корзину:", err);
-      if (err.response?.status === 401) {
+      const error = err as { response?: { status?: number } };
+      if (error.response?.status === 401) {
         showToast("Войдите в систему для добавления товара в корзину", "error");
         window.dispatchEvent(new CustomEvent("openLoginModal"));
       } else {
@@ -254,12 +305,13 @@ export const CatalogPage = () => {
     try {
       await wishlistApi.add({ product_id: productId });
       showToast("Товар добавлен в избранное!", "success");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Ошибка добавления в избранное:", err);
-      if (err.response?.status === 401) {
+      const error = err as { response?: { status?: number; data?: { detail?: string } } };
+      if (error.response?.status === 401) {
         showToast("Войдите в систему для добавления товара в избранное", "error");
         window.dispatchEvent(new CustomEvent("openLoginModal"));
-      } else if (err.response?.status === 400 && err.response?.data?.detail?.includes("уже в списке")) {
+      } else if (error.response?.status === 400 && error.response?.data?.detail?.includes("уже в списке")) {
         showToast("Товар уже в избранном", "info");
       } else {
         showToast("Не удалось добавить товар в избранное", "error");
@@ -267,22 +319,11 @@ export const CatalogPage = () => {
     }
   };
 
-  // Получаем имена выбранных категорий для отображения чипов
-  const getSelectedCategoryNames = () => {
-    const allCategories: CategoryListItem[] = [];
-    categories.forEach((cat) => {
-      allCategories.push(cat);
-      if (cat.subcategories) {
-        allCategories.push(...cat.subcategories);
-      }
-    });
-
-    return selectedCategories
-      .map((id) => allCategories.find((cat) => cat.id === id))
-      .filter((cat): cat is CategoryListItem => cat !== undefined);
-  };
-
-  const selectedCategoryNames = getSelectedCategoryNames();
+  // Получаем имена для отображения
+  const selectedRoomName = selectedRoom ? rooms.find(r => r.slug === selectedRoom)?.name : null;
+  const selectedCategoryNames = selectedCategories
+    .map((id) => categories.find((cat) => cat.id === id))
+    .filter((cat): cat is CategoryListItem => cat !== undefined);
 
   return (
     <div className="catalog-page">
@@ -290,23 +331,31 @@ export const CatalogPage = () => {
         {/* Боковая панель с фильтрами */}
         <aside className="catalog-page__sidebar">
           <CategoryFilter
+            rooms={rooms}
+            selectedRoom={selectedRoom}
             categories={categories}
             selectedCategories={selectedCategories}
+            onSelectRoom={handleSelectRoom}
             onToggleCategory={handleToggleCategory}
           />
           <ProductFilters
             brands={brands}
+            rooms={rooms}
             minPrice={minPrice}
             maxPrice={maxPrice}
             inStock={inStock}
             onSale={onSale}
             minRating={minRating}
+            selectedRoom={selectedRoom}
+            selectedLabels={selectedLabels}
             selectedBrands={selectedBrands}
             onMinPriceChange={setMinPrice}
             onMaxPriceChange={setMaxPrice}
             onInStockChange={setInStock}
             onSaleChange={setOnSale}
             onMinRatingChange={setMinRating}
+            onRoomChange={handleSelectRoom}
+            onLabelsChange={setSelectedLabels}
             onBrandsChange={setSelectedBrands}
           />
         </aside>
@@ -318,8 +367,30 @@ export const CatalogPage = () => {
               ? `Результаты поиска: "${searchQuery}"`
               : selectedCategoryNames.length > 0
               ? selectedCategoryNames[0].name
+              : selectedRoomName
+              ? selectedRoomName
               : "Каталог"}
           </h1>
+
+          {/* Поле поиска */}
+          <div className="catalog-page__search">
+            <Search className="catalog-page__search-icon" size={20} />
+            <input
+              type="text"
+              placeholder="Поиск товаров..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="catalog-page__search-input"
+            />
+            {searchQuery && (
+              <button
+                onClick={handleClearSearch}
+                className="catalog-page__search-clear"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
 
           {/* Панель сортировки */}
           <div className="catalog-page__sort-panel">
@@ -351,19 +422,29 @@ export const CatalogPage = () => {
               >
                 По размеру скидки
               </button>
+              <button
+                className={`catalog-page__sort-button ${
+                  ordering === "-orders_count"
+                    ? "catalog-page__sort-button--active"
+                    : ""
+                }`}
+                onClick={() => setOrdering("-orders_count")}
+              >
+                По популярности
+              </button>
             </div>
           </div>
 
           {/* Активные фильтры */}
-          {(selectedCategoryNames.length > 0 || searchQuery) && (
+          {(selectedRoomName || selectedCategoryNames.length > 0 || searchQuery) && (
             <div className="catalog-page__active-filters">
-              {/* Поисковый запрос */}
-              {searchQuery && (
+              {/* Помещение */}
+              {selectedRoomName && (
                 <button
-                  className="catalog-page__filter-chip catalog-page__filter-chip--search"
-                  onClick={handleClearSearch}
+                  className="catalog-page__filter-chip"
+                  onClick={() => handleSelectRoom(null)}
                 >
-                  <span>Поиск: {searchQuery}</span>
+                  <span>{selectedRoomName}</span>
                   <X size={16} strokeWidth={2.5} />
                 </button>
               )}
@@ -379,6 +460,17 @@ export const CatalogPage = () => {
                   <X size={16} strokeWidth={2.5} />
                 </button>
               ))}
+
+              {/* Поисковый запрос */}
+              {searchQuery && (
+                <button
+                  className="catalog-page__filter-chip catalog-page__filter-chip--search"
+                  onClick={handleClearSearch}
+                >
+                  <span>Поиск: {searchQuery}</span>
+                  <X size={16} strokeWidth={2.5} />
+                </button>
+              )}
             </div>
           )}
 

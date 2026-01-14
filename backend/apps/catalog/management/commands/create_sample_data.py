@@ -5,7 +5,7 @@ from decimal import Decimal
 import random
 import shutil
 from pathlib import Path
-from apps.catalog.models import Category, Product, ProductImage, ProductReview, Brand, Banner
+from apps.catalog.models import Room, Category, Product, ProductImage, ProductReview, Brand, Banner
 from apps.orders.models import Order, OrderItem
 
 User = get_user_model()
@@ -43,6 +43,7 @@ class Command(BaseCommand):
             Banner.objects.all().delete()
             Brand.objects.all().delete()
             Category.objects.all().delete()
+            Room.objects.all().delete()
             # Удаляем тестовых пользователей (кроме суперпользователей)
             User.objects.filter(is_superuser=False, is_staff=False).delete()
             self.stdout.write(self.style.SUCCESS('✓ Данные очищены'))
@@ -71,15 +72,48 @@ class Command(BaseCommand):
                 self.stdout.write(f'  ✓ Создан пользователь: {user.email}')
             test_users.append(user)
         
+        # Создать помещения
+        self.stdout.write('Создание помещений...')
+        rooms_data = [
+            {'name': 'Ванная комната', 'description': 'Оборудование и мебель для ванной комнаты', 'order': 1, 'image': 'bathroom.png'},
+            {'name': 'Кухня', 'description': 'Кухонное оборудование и аксессуары', 'order': 2, 'image': 'kitchen.png'},
+            {'name': 'Гостиная', 'description': 'Мебель и декор для гостиной', 'order': 3, 'image': 'living.png'},
+            {'name': 'Спальня', 'description': 'Мебель и аксессуары для спальни', 'order': 4, 'image': 'bedroom.png'},
+        ]
+
+        rooms = []
+        for room_data in rooms_data:
+            room = Room.objects.create(
+                name=room_data['name'],
+                description=room_data['description'],
+                order=room_data['order'],
+                is_active=True
+            )
+
+            # Добавляем изображение, если оно существует
+            photo_path = self.get_photo_path(room_data['image'])
+            if photo_path:
+                with open(photo_path, 'rb') as f:
+                    room.image.save(room_data['image'], File(f), save=True)
+                self.stdout.write(f'  ✓ Создано помещение: {room.name} (с изображением)')
+            else:
+                self.stdout.write(f'  ✓ Создано помещение: {room.name} (без изображения)')
+
+            rooms.append(room)
+
         # Создать категории
-        self.stdout.write('Создание категорий...')
+        self.stdout.write('\nСоздание категорий...')
         categories_data = [
-            {'name': 'Сантехника', 'description': 'Сантехническое оборудование для дома', 'image': 'santehnika.png'},
-            {'name': 'Кухни', 'description': 'Кухонное оборудование и мебель', 'image': 'kuhni.png'},
-            {'name': 'Унитазы', 'description': 'Унитазы и комплектующие', 'image': 'unitazy.png'},
-            {'name': 'Плитка', 'description': 'Плитка для ванной и кухни', 'image': 'plitka.png'},
-            {'name': 'Ванны', 'description': 'Ванны и душевые кабины', 'image': 'vanny.png'},
-            {'name': 'Мебель для ванны', 'description': 'Мебель и аксессуары для ванной комнаты', 'image': 'mebel.png'},
+            {'name': 'Смесители', 'description': 'Смесители для ванной и кухни', 'rooms': [0, 1], 'image': 'santehnika.png'},
+            {'name': 'Унитазы', 'description': 'Унитазы и комплектующие', 'rooms': [0], 'image': 'unitazy.png'},
+            {'name': 'Плитка', 'description': 'Плитка для ванной и кухни', 'rooms': [0, 1], 'image': 'plitka.png'},
+            {'name': 'Ванны', 'description': 'Ванны и душевые кабины', 'rooms': [0], 'image': 'vanny.png'},
+            {'name': 'Мебель для ванны', 'description': 'Мебель и аксессуары для ванной комнаты', 'rooms': [0], 'image': 'mebel.png'},
+            {'name': 'Кухонные мойки', 'description': 'Мойки для кухни', 'rooms': [1], 'image': 'kuhni.png'},
+            {'name': 'Диваны', 'description': 'Диваны и кресла для гостиной', 'rooms': [2], 'image': 'sofa.png'},
+            {'name': 'Столы', 'description': 'Столы и стулья для гостиной', 'rooms': [2], 'image': 'tables.png'},
+            {'name': 'Кровати', 'description': 'Кровати и матрасы', 'rooms': [3], 'image': 'beds.png'},
+            {'name': 'Шкафы', 'description': 'Шкафы и комоды для спальни', 'rooms': [3], 'image': 'wardrobes.png'},
         ]
 
         categories = []
@@ -89,6 +123,10 @@ class Command(BaseCommand):
                 description=cat_data['description'],
                 is_active=True
             )
+
+            # Привязываем категорию к помещениям
+            for room_idx in cat_data['rooms']:
+                category.rooms.add(rooms[room_idx])
 
             # Добавляем изображение, если оно существует
             photo_path = self.get_photo_path(cat_data['image'])
@@ -193,23 +231,37 @@ class Command(BaseCommand):
 
         products = []
         gessi_brand = brands[0]  # GESSI
-        santehnika_category = categories[0]  # Сантехника
+        smesiteli_category = categories[0]  # Смесители
+        bathroom_room = rooms[0]  # Ванная комната
+        kitchen_room = rooms[1]  # Кухня
 
-        for i in range(5):
+        # Лейблы для товаров
+        labels = ['new', 'hit', 'sale', 'exclusive', '']
+
+        for i in range(10):
             # Добавляем уникальный суффикс к названию для каждого дубликата, кроме первого
             product_name = 'Кухонный смеситель Omoikiri Shinagawa-C'
             if i > 0:
                 product_name = f'{product_name} #{i+1}'
 
+            # Выбираем случайный лейбл
+            label = labels[i % len(labels)]
+            
+            # Чередуем помещения
+            room = bathroom_room if i % 2 == 0 else kitchen_room
+
             product = Product.objects.create(
                 name=product_name,
                 description=description,
-                category=santehnika_category,
+                category=smesiteli_category,
+                room=room,
                 brand=gessi_brand,
                 price=Decimal('33000'),
-                discount_price=Decimal('29990'),
+                discount_price=Decimal('29990') if i % 3 == 0 else None,
                 stock_quantity=10,
                 sku=f'GSI-SHN-{1000 + i}',
+                label=label,
+                orders_count=random.randint(0, 50),  # Случайное количество заказов для сортировки
                 specifications={
                     "Материал": "Латунь",
                     "Покрытие": "Хром",
@@ -224,7 +276,8 @@ class Command(BaseCommand):
                 is_active=True
             )
             products.append(product)
-            self.stdout.write(f'  ✓ Создан товар: {product.name} (SKU: {product.sku}, {product.final_price} ₽)')
+            label_text = f", лейбл: {label}" if label else ""
+            self.stdout.write(f'  ✓ Создан товар: {product.name} (SKU: {product.sku}, {product.final_price} ₽{label_text})')
         
         # Создать изображения товаров
         self.stdout.write('\nСоздание изображений товаров...')
@@ -343,6 +396,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('✓ Тестовые данные успешно созданы!'))
         self.stdout.write('='*70)
         self.stdout.write(f'Пользователей: {len(test_users)}')
+        self.stdout.write(f'Помещений: {Room.objects.count()}')
         self.stdout.write(f'Категорий: {Category.objects.count()}')
         self.stdout.write(f'Брендов: {Brand.objects.count()}')
         self.stdout.write(f'Баннеров: {Banner.objects.count()}')
@@ -353,10 +407,17 @@ class Command(BaseCommand):
         self.stdout.write(f'Позиций в заказах: {OrderItem.objects.count()}')
 
         self.stdout.write('\n' + '='*70)
+        self.stdout.write(self.style.SUCCESS('Созданные помещения:'))
+        self.stdout.write('='*70)
+        for room in Room.objects.all():
+            self.stdout.write(f'  • {room.name} ({room.slug})')
+
+        self.stdout.write('\n' + '='*70)
         self.stdout.write(self.style.SUCCESS('Созданные категории:'))
         self.stdout.write('='*70)
         for cat in Category.objects.all():
-            self.stdout.write(f'  • {cat.name} ({cat.slug})')
+            room_names = ', '.join([r.name for r in cat.rooms.all()])
+            self.stdout.write(f'  • {cat.name} ({cat.slug}) - Помещения: {room_names}')
 
         self.stdout.write('\n' + '='*70)
         self.stdout.write(self.style.SUCCESS('Созданные бренды:'))
@@ -381,6 +442,7 @@ class Command(BaseCommand):
         self.stdout.write('  backend/apps/catalog/management/commands/photo/')
         self.stdout.write('')
         self.stdout.write('Необходимые файлы:')
+        self.stdout.write('  • Помещения: bathroom.png, kitchen.png, living.png, bedroom.png')
         self.stdout.write('  • Категории: santehnika.png, kuhni.png, unitazy.png, plitka.png, vanny.png, mebel.png')
         self.stdout.write('  • Бренды: gessi.png, cielo.png, jorger.png, kronos.png, devon.png')
         self.stdout.write('  • Баннеры: banner1.png, banner2.png')

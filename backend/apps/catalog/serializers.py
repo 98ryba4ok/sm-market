@@ -1,19 +1,89 @@
 from rest_framework import serializers
 from django.db.models import Avg
-from .models import Category, Product, ProductImage, ProductReview, Wishlist, Banner, Brand, ConsultationRequest
+from .models import Room, Category, Product, ProductImage, ProductReview, Wishlist, Banner, Brand, ConsultationRequest
+
+
+class RoomSerializer(serializers.ModelSerializer):
+    """Сериализатор помещения"""
+    image = serializers.SerializerMethodField()
+    products_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Room
+        fields = [
+            'id', 'name', 'slug', 'description', 'image',
+            'order', 'is_active', 'products_count',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def get_image(self, obj):
+        """Вернуть относительный URL изображения"""
+        if obj.image:
+            url = obj.image.url
+            if url.startswith('http://') or url.startswith('https://'):
+                from urllib.parse import urlparse
+                parsed = urlparse(url)
+                return parsed.path
+            return url
+        return None
+    
+    def get_products_count(self, obj):
+        """Количество активных товаров в помещении"""
+        return obj.products.filter(is_active=True).count()
+
+
+class RoomDetailSerializer(serializers.ModelSerializer):
+    """Детальный сериализатор помещения с категориями"""
+    image = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
+    products_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Room
+        fields = [
+            'id', 'name', 'slug', 'description', 'image',
+            'order', 'is_active', 'categories', 'products_count',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def get_image(self, obj):
+        """Вернуть относительный URL изображения"""
+        if obj.image:
+            url = obj.image.url
+            if url.startswith('http://') or url.startswith('https://'):
+                from urllib.parse import urlparse
+                parsed = urlparse(url)
+                return parsed.path
+            return url
+        return None
+    
+    def get_categories(self, obj):
+        """Получить категории для этого помещения"""
+        categories = obj.categories.filter(is_active=True)
+        return CategorySerializer(categories, many=True, context=self.context).data
+    
+    def get_products_count(self, obj):
+        """Количество активных товаров в помещении"""
+        return obj.products.filter(is_active=True).count()
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор категории с вложенными подкатегориями"""
-    subcategories = serializers.SerializerMethodField()
-    products_count = serializers.SerializerMethodField()
+    """Сериализатор категории оборудования"""
     image = serializers.SerializerMethodField()
+    products_count = serializers.SerializerMethodField()
+    room_ids = serializers.PrimaryKeyRelatedField(
+        source='rooms',
+        many=True,
+        read_only=True
+    )
 
     class Meta:
         model = Category
         fields = [
-            'id', 'name', 'slug', 'description', 'parent',
-            'image', 'is_active', 'subcategories', 'products_count',
+            'id', 'name', 'slug', 'description', 'room_ids',
+            'image', 'order', 'is_active', 'products_count',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -22,23 +92,12 @@ class CategorySerializer(serializers.ModelSerializer):
         """Вернуть относительный URL изображения"""
         if obj.image:
             url = obj.image.url
-            # Если URL начинается с http, извлекаем только путь
             if url.startswith('http://') or url.startswith('https://'):
                 from urllib.parse import urlparse
                 parsed = urlparse(url)
                 return parsed.path
             return url
         return None
-    
-    def get_subcategories(self, obj):
-        """Получить подкатегории (только первый уровень)"""
-        if obj.subcategories.exists():
-            return CategorySerializer(
-                obj.subcategories.filter(is_active=True),
-                many=True,
-                context=self.context
-            ).data
-        return []
     
     def get_products_count(self, obj):
         """Количество активных товаров в категории"""
@@ -102,6 +161,8 @@ class ProductReviewSerializer(serializers.ModelSerializer):
 
 class ProductListSerializer(serializers.ModelSerializer):
     """Легковесный сериализатор для списка товаров"""
+    room_id = serializers.IntegerField(source='room.id', read_only=True, allow_null=True)
+    room_name = serializers.CharField(source='room.name', read_only=True, allow_null=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
     brand_id = serializers.IntegerField(source='brand.id', read_only=True, allow_null=True)
     brand_name = serializers.CharField(source='brand.name', read_only=True, allow_null=True)
@@ -112,11 +173,12 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'slug', 'category', 'category_name',
-            'brand_id', 'brand_name', 'sku',
-            'price', 'discount_price', 'final_price', 'discount_percentage',
-            'stock_quantity', 'in_stock', 'main_image',
-            'average_rating', 'reviews_count', 'views_count'
+            'id', 'name', 'slug', 'room_id', 'room_name',
+            'category', 'category_name', 'brand_id', 'brand_name',
+            'label', 'sku', 'price', 'discount_price',
+            'final_price', 'discount_percentage', 'stock_quantity',
+            'in_stock', 'main_image', 'average_rating',
+            'reviews_count', 'views_count'
         ]
         read_only_fields = ['id', 'slug', 'views_count']
     
@@ -141,6 +203,7 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     """Полный сериализатор товара с изображениями и отзывами"""
+    room = RoomSerializer(read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
     category_slug = serializers.CharField(source='category.slug', read_only=True)
     brand = BrandSerializer(read_only=True)
@@ -152,9 +215,9 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'slug', 'description',
+            'id', 'name', 'slug', 'description', 'room',
             'category', 'category_name', 'category_slug', 'brand',
-            'price', 'discount_price', 'final_price', 'discount_percentage',
+            'label', 'price', 'discount_price', 'final_price', 'discount_percentage',
             'stock_quantity', 'in_stock', 'is_active',
             'sku', 'specifications', 'country_of_origin', 'warranty_months',
             'images', 'reviews', 'average_rating', 'reviews_count',

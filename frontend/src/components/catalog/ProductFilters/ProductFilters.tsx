@@ -1,49 +1,60 @@
 import { Star, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+
 import type { Brand } from "../../../types";
+import type { Room } from "../../../types/room";
 import "./ProductFilters.css";
 
 interface ProductFiltersProps {
   brands: Brand[];
+  rooms: Room[];
   minPrice: number | undefined;
   maxPrice: number | undefined;
   inStock: boolean;
   onSale: boolean;
   minRating: number | undefined;
+  selectedRoom: string | null;
+  selectedLabels: string[];
   onMinPriceChange: (value: number | undefined) => void;
   onMaxPriceChange: (value: number | undefined) => void;
   onInStockChange: (value: boolean) => void;
   onSaleChange: (value: boolean) => void;
   onMinRatingChange: (value: number | undefined) => void;
   onBrandsChange: (brandIds: number[]) => void;
+  onRoomChange: (roomSlug: string | null) => void;
+  onLabelsChange: (labels: string[]) => void;
   selectedBrands: number[];
 }
 
+const LABEL_INFO = {
+  new: { text: 'Новинки', emoji: '🟢' },
+  hit: { text: 'Хиты продаж', emoji: '🔴' },
+  sale: { text: 'Распродажа', emoji: '🟠' },
+  exclusive: { text: 'Эксклюзив', emoji: '🟣' },
+};
+
 export const ProductFilters = ({
   brands,
+  rooms,
   minPrice,
   maxPrice,
   inStock,
   onSale,
   minRating,
+  selectedRoom,
+  selectedLabels,
   onMinPriceChange,
   onMaxPriceChange,
   onInStockChange,
   onSaleChange,
   onMinRatingChange,
   onBrandsChange,
+  onRoomChange,
+  onLabelsChange,
   selectedBrands,
 }: ProductFiltersProps) => {
   const [minPriceInput, setMinPriceInput] = useState<string>(minPrice?.toString() || "");
   const [maxPriceInput, setMaxPriceInput] = useState<string>(maxPrice?.toString() || "");
-
-  useEffect(() => {
-    setMinPriceInput(minPrice?.toString() || "");
-  }, [minPrice]);
-
-  useEffect(() => {
-    setMaxPriceInput(maxPrice?.toString() || "");
-  }, [maxPrice]);
 
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -81,6 +92,14 @@ export const ProductFilters = ({
     }
   };
 
+  const handleLabelToggle = (label: string) => {
+    if (selectedLabels.includes(label)) {
+      onLabelsChange(selectedLabels.filter((l) => l !== label));
+    } else {
+      onLabelsChange([...selectedLabels, label]);
+    }
+  };
+
   const handleRatingClick = (rating: number) => {
     if (minRating === rating) {
       onMinRatingChange(undefined);
@@ -95,7 +114,9 @@ export const ProductFilters = ({
     inStock ||
     onSale ||
     minRating !== undefined ||
-    selectedBrands.length > 0;
+    selectedBrands.length > 0 ||
+    selectedRoom !== null ||
+    selectedLabels.length > 0;
 
   const handleResetFilters = () => {
     onMinPriceChange(undefined);
@@ -104,6 +125,8 @@ export const ProductFilters = ({
     onSaleChange(false);
     onMinRatingChange(undefined);
     onBrandsChange([]);
+    onRoomChange(null);
+    onLabelsChange([]);
     setMinPriceInput("");
     setMaxPriceInput("");
   };
@@ -120,6 +143,57 @@ export const ProductFilters = ({
         )}
       </div>
       <div className="product-filters__divider"></div>
+
+      {/* Фильтр по помещению */}
+      {rooms.length > 0 && (
+        <div className="product-filters__section">
+          <h4 className="product-filters__section-title">Помещение</h4>
+          <div className="product-filters__room-list">
+            {rooms.map((room) => (
+              <label key={room.id} className="product-filters__radio-label">
+                <input
+                  type="radio"
+                  name="room"
+                  checked={selectedRoom === room.slug}
+                  onChange={() => onRoomChange(room.slug)}
+                  className="product-filters__radio-input"
+                />
+                <span className="product-filters__radio-custom"></span>
+                <span className="product-filters__radio-text">{room.name}</span>
+              </label>
+            ))}
+            {selectedRoom && (
+              <button
+                className="product-filters__clear-room"
+                onClick={() => onRoomChange(null)}
+              >
+                Сбросить помещение
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Фильтр по лейблам */}
+      <div className="product-filters__section">
+        <h4 className="product-filters__section-title">Специальные предложения</h4>
+        <div className="product-filters__label-list">
+          {Object.entries(LABEL_INFO).map(([key, info]) => (
+            <label key={key} className="product-filters__checkbox-label">
+              <input
+                type="checkbox"
+                checked={selectedLabels.includes(key)}
+                onChange={() => handleLabelToggle(key)}
+                className="product-filters__checkbox-input"
+              />
+              <span className="product-filters__checkbox-custom"></span>
+              <span className="product-filters__checkbox-text">
+                {info.emoji} {info.text}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
 
       <div className="product-filters__section">
         <h4 className="product-filters__section-title">Цена, ₽</h4>

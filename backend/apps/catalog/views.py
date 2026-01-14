@@ -4,8 +4,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Avg
-from .models import Category, Product, ProductReview, Wishlist, Banner, Brand, ConsultationRequest
+from .models import Room, Category, Product, ProductReview, Wishlist, Banner, Brand, ConsultationRequest
 from .serializers import (
+    RoomSerializer,
+    RoomDetailSerializer,
     CategorySerializer,
     ProductListSerializer,
     ProductDetailSerializer,
@@ -18,38 +20,81 @@ from .serializers import (
 )
 
 
+class RoomViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet для помещений
+    
+    list: Получить список всех активных помещений
+    retrieve: Получить детальную информацию о помещении
+    categories: Получить категории для помещения
+    """
+    queryset = Room.objects.filter(is_active=True).prefetch_related('categories')
+    lookup_field = 'slug'
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
+    def get_serializer_class(self):
+        """Выбрать сериализатор в зависимости от действия"""
+        if self.action == 'retrieve':
+            return RoomDetailSerializer
+        return RoomSerializer
+    
+    @action(detail=True, methods=['get'])
+    def categories(self, request, slug=None):
+        """Получить категории для помещения"""
+        room = self.get_object()
+        categories = room.categories.filter(is_active=True)
+        serializer = CategorySerializer(categories, many=True)
+        # Возвращаем объект с информацией о помещении и его категориями
+        return Response({
+            'id': room.id,
+            'name': room.name,
+            'slug': room.slug,
+            'description': room.description,
+            'image': room.image.url if room.image else None,
+            'order': room.order,
+            'is_active': room.is_active,
+            'categories': serializer.data
+        })
+
+
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ViewSet для категорий товаров
+    ViewSet для категорий оборудования
     
     list: Получить список всех активных категорий
     retrieve: Получить детальную информацию о категории
     products: Получить товары категории
     """
-    queryset = Category.objects.filter(is_active=True).prefetch_related('subcategories')
+    queryset = Category.objects.filter(is_active=True).prefetch_related('rooms')
     serializer_class = CategorySerializer
     lookup_field = 'slug'
     permission_classes = [IsAuthenticatedOrReadOnly]
     
     def get_queryset(self):
-        """Получить только корневые категории для списка"""
-        if self.action == 'list':
-            return self.queryset.filter(parent=None)
-        return self.queryset
+        """Фильтрация категорий по помещению"""
+        queryset = super().get_queryset()
+        
+        # Фильтр по помещению
+        room_slug = self.request.query_params.get('room')
+        if room_slug:
+            try:
+                room = Room.objects.get(slug=room_slug, is_active=True)
+                queryset = queryset.filter(rooms=room)
+            except Room.DoesNotExist:
+                pass
+        
+        return queryset
     
     @action(detail=True, methods=['get'])
     def products(self, request, slug=None):
-        """Получить товары категории (включая подкатегории)"""
+        """Получить товары категории"""
         category = self.get_object()
         
-        # Получить все ID категорий (текущая + все дочерние)
-        category_ids = [category.id] + [c.id for c in category.get_all_children()]
-        
-        # Получить товары из этих категорий
+        # Получить товары этой категории
         products = Product.objects.filter(
-            category_id__in=category_ids,
+            category=category,
             is_active=True
-        ).select_related('category').prefetch_related('images')
+        ).select_related('category', 'room').prefetch_related('images')
         
         # Применить фильтры и сортировку
         products = self._apply_filters(products, request)
@@ -128,7 +173,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description']
-    ordering_fields = ['price', 'created_at', 'views_count', 'name']
+    ordering_fields = ['price', 'created_at', 'views_count', 'orders_count', 'name']
     ordering = ['-created_at']
     
     def get_object(self):
@@ -175,15 +220,28 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
                 'reviews__user'
             )
         
+        # Фильтр по помещению
+        room_slug = self.request.query_params.get('room')
+        if room_slug:
+            try:
+                room = Room.objects.get(slug=room_slug, is_active=True)
+                queryset = queryset.filter(room=room)
+            except Room.DoesNotExist:
+                pass
+        
         # Фильтр по категории
         category_slug = self.request.query_params.get('category')
         if category_slug:
             try:
-                category = Category.objects.get(slug=category_slug)
-                category_ids = [category.id] + [c.id for c in category.get_all_children()]
-                queryset = queryset.filter(category_id__in=category_ids)
+                category = Category.objects.get(slug=category_slug, is_active=True)
+                queryset = queryset.filter(category=category)
             except Category.DoesNotExist:
                 pass
+        
+        # Фильтр по лейблу
+        label = self.request.query_params.get('label')
+        if label:
+            queryset = queryset.filter(label=label)
         
         # Фильтр по цене
         min_price = self.request.query_params.get('min_price')

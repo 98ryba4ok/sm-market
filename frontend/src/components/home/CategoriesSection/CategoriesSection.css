@@ -1,3 +1,28 @@
+.categories-section__loading {
+  text-align: center;
+  padding: 64px 32px;
+  font-family: Montserrat, sans-serif;
+  font-size: 16px;
+  color: rgba(107, 114, 128, 1);
+}
+
+.categories-section__title {
+  font-family: Montserrat, sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: rgba(31, 41, 55, 1);
+  margin: 0 0 32px 0;
+  text-align: center;
+}
+
+.category-card__description {
+  font-family: Montserrat, sans-serif;
+  font-size: 14px;
+  color: rgba(107, 114, 128, 1);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
 .categories-section {
   padding: 3rem 0;
   background-color: white;

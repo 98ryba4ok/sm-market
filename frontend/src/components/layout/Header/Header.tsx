@@ -7,6 +7,7 @@ import { cartApi } from "../../../api/cartApi";
 import categoryLogo from "../../../assets/categoryLogo.svg";
 import logo from "../../../assets/logo.svg";
 import { LoginModal } from "../../features/auth/LoginModal/LoginModal";
+import { PasswordResetModal } from "../../features/auth/PasswordResetModal/PasswordResetModal";
 import { RegisterModal } from "../../features/auth/RegisterModal/RegisterModal";
 import "./Header.css";
 
@@ -15,6 +16,7 @@ export const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -228,6 +230,10 @@ export const Header = () => {
           setIsLoginModalOpen(false);
           setIsRegisterModalOpen(true);
         }}
+        onSwitchToPasswordReset={() => {
+          setIsLoginModalOpen(false);
+          setIsPasswordResetModalOpen(true);
+        }}
       />
       <RegisterModal
         isOpen={isRegisterModalOpen}
@@ -237,6 +243,10 @@ export const Header = () => {
           setIsRegisterModalOpen(false);
           setIsLoginModalOpen(true);
         }}
+      />
+      <PasswordResetModal
+        isOpen={isPasswordResetModalOpen}
+        onClose={() => setIsPasswordResetModalOpen(false)}
       />
     </header>
   );

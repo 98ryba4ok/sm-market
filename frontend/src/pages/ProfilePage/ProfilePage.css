@@ -376,3 +376,100 @@
     gap: 12px;
   }
 }
+
+/* Редактирование профиля */
+.profile-edit-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-edit-info__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-edit-info__row:last-of-type {
+  border-bottom: none;
+}
+
+.profile-edit-info__label {
+  font-family: Montserrat, sans-serif;
+  font-weight: 500;
+  color: #666;
+}
+
+.profile-edit-info__value {
+  font-family: Montserrat, sans-serif;
+  color: #333;
+  font-weight: 500;
+}
+
+.profile-edit-info__description {
+  font-family: Montserrat, sans-serif;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.profile-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.profile-edit-form__buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.profile-edit-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-family: Montserrat, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  flex: 1;
+  background-color: rgba(37, 99, 235, 1);
+  color: white;
+}
+
+.profile-edit-btn:hover {
+  background-color: rgba(29, 78, 216, 1);
+}
+
+.profile-edit-btn--primary {
+  background-color: rgba(37, 99, 235, 1);
+  color: white;
+}
+
+.profile-edit-btn--primary:hover {
+  background-color: rgba(29, 78, 216, 1);
+}
+
+.profile-edit-btn--secondary {
+  background-color: white;
+  color: rgba(37, 99, 235, 1);
+  border: 1px solid rgba(37, 99, 235, 1);
+}
+
+.profile-edit-btn--secondary:hover {
+  background-color: rgba(239, 246, 255, 1);
+}
+
+@media (max-width: 768px) {
+  .profile-edit-form__buttons {
+    flex-direction: column;
+  }
+  
+  .profile-edit-btn {
+    width: 100%;
+  }
+}

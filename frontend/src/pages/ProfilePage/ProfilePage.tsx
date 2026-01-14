@@ -1,43 +1,64 @@
+import { Calendar, Heart, Lock, LogOut, Mail, Package, Phone, ShoppingBag, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Phone, Calendar, ShoppingBag, Heart, LogOut, Package } from "lucide-react";
 
 import { authApi } from "../../api/authApi";
 import { ordersApi } from "../../api/ordersApi";
+import { Input } from "../../components/ui/Input/Input";
 import { useToast } from "../../contexts/ToastContext";
+import type { User as UserType } from "../../types/auth";
 import type { Order } from "../../types/order";
 import "./ProfilePage.css";
-
-interface UserProfile {
-  id: number;
-  email: string;
-  phone: string | null;
-  is_active: boolean;
-  is_staff: boolean;
-  date_joined: string;
-}
 
 export const ProfilePage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserType | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  
+  // Editing states
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
+  // Form states
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [phone, setPhone] = useState("");
+  
+  const [newEmail, setNewEmail] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     loadProfile();
     loadOrders();
   }, []);
 
+  useEffect(() => {
+    if (profile) {
+      setFirstName(profile.first_name || "");
+      setLastName(profile.last_name || "");
+      setMiddleName(profile.middle_name || "");
+      setPhone(profile.phone || "");
+    }
+  }, [profile]);
+
   const loadProfile = async () => {
     setLoading(true);
     try {
       const response = await authApi.me();
       setProfile(response.data);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error loading profile:", err);
-      if (err.response?.status === 401) {
+      const error = err as { response?: { status?: number } };
+      if (error.response?.status === 401) {
         showToast("Войдите в систему", "error");
         navigate("/");
       } else {
@@ -53,16 +74,76 @@ export const ProfilePage = () => {
     try {
       const response = await ordersApi.list();
       setOrders(response.data.results);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error loading orders:", err);
     } finally {
       setOrdersLoading(false);
     }
   };
 
+  const handleUpdateProfile = async () => {
+    try {
+      const response = await authApi.updateProfile({
+        first_name: firstName,
+        last_name: lastName,
+        middle_name: middleName,
+        phone: phone,
+      });
+      setProfile(response.data.user);
+      setIsEditingProfile(false);
+      showToast(response.data.detail, "success");
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      showToast("Не удалось обновить профиль", "error");
+    }
+  };
+
+  const handleChangeEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await authApi.changeEmail({
+        new_email: newEmail,
+        password: emailPassword,
+      });
+      if (profile) {
+        setProfile({ ...profile, email: response.data.email });
+      }
+      setIsChangingEmail(false);
+      setNewEmail("");
+      setEmailPassword("");
+      showToast(response.data.detail, "success");
+    } catch (err) {
+      console.error("Error changing email:", err);
+      showToast("Не удалось изменить email", "error");
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      showToast("Пароли не совпадают", "error");
+      return;
+    }
+    try {
+      const response = await authApi.changePassword({
+        old_password: oldPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+      setIsChangingPassword(false);
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      showToast(response.data.detail, "success");
+    } catch (err) {
+      console.error("Error changing password:", err);
+      showToast("Не удалось изменить пароль", "error");
+    }
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     showToast("Вы вышли из системы", "success");
     navigate("/");
   };
@@ -193,6 +274,227 @@ export const ProfilePage = () => {
                   <span>Выйти</span>
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Редактирование ФИО и телефона */}
+          <div className="profile-card">
+            <div className="profile-card__header">
+              <User size={24} className="profile-card__icon" />
+              <h2 className="profile-card__title">Редактировать профиль</h2>
+            </div>
+
+            <div className="profile-card__content">
+              {!isEditingProfile ? (
+                <div className="profile-edit-info">
+                  <div className="profile-edit-info__row">
+                    <span className="profile-edit-info__label">Имя:</span>
+                    <span className="profile-edit-info__value">{profile.first_name || "Не указано"}</span>
+                  </div>
+                  <div className="profile-edit-info__row">
+                    <span className="profile-edit-info__label">Фамилия:</span>
+                    <span className="profile-edit-info__value">{profile.last_name || "Не указано"}</span>
+                  </div>
+                  <div className="profile-edit-info__row">
+                    <span className="profile-edit-info__label">Отчество:</span>
+                    <span className="profile-edit-info__value">{profile.middle_name || "Не указано"}</span>
+                  </div>
+                  <div className="profile-edit-info__row">
+                    <span className="profile-edit-info__label">Телефон:</span>
+                    <span className="profile-edit-info__value">{profile.phone || "Не указан"}</span>
+                  </div>
+                  <button
+                    className="profile-edit-btn"
+                    onClick={() => setIsEditingProfile(true)}
+                  >
+                    Редактировать
+                  </button>
+                </div>
+              ) : (
+                <div className="profile-edit-form">
+                  <Input
+                    type="text"
+                    label="Имя"
+                    placeholder="Введите имя"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                  <Input
+                    type="text"
+                    label="Фамилия"
+                    placeholder="Введите фамилию"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                  <Input
+                    type="text"
+                    label="Отчество"
+                    placeholder="Введите отчество"
+                    value={middleName}
+                    onChange={(e) => setMiddleName(e.target.value)}
+                  />
+                  <Input
+                    type="tel"
+                    label="Телефон"
+                    placeholder="+7 (999) 123-45-67"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                  <div className="profile-edit-form__buttons">
+                    <button
+                      className="profile-edit-btn profile-edit-btn--primary"
+                      onClick={handleUpdateProfile}
+                    >
+                      Сохранить
+                    </button>
+                    <button
+                      className="profile-edit-btn profile-edit-btn--secondary"
+                      onClick={() => {
+                        setIsEditingProfile(false);
+                        setFirstName(profile.first_name || "");
+                        setLastName(profile.last_name || "");
+                        setMiddleName(profile.middle_name || "");
+                        setPhone(profile.phone || "");
+                      }}
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Смена Email */}
+          <div className="profile-card">
+            <div className="profile-card__header">
+              <Mail size={24} className="profile-card__icon" />
+              <h2 className="profile-card__title">Изменить Email</h2>
+            </div>
+
+            <div className="profile-card__content">
+              {!isChangingEmail ? (
+                <div className="profile-edit-info">
+                  <p className="profile-edit-info__description">
+                    Текущий email: <strong>{profile.email}</strong>
+                  </p>
+                  <button
+                    className="profile-edit-btn"
+                    onClick={() => setIsChangingEmail(true)}
+                  >
+                    Изменить Email
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleChangeEmail} className="profile-edit-form">
+                  <Input
+                    type="email"
+                    label="Новый Email"
+                    placeholder="new@email.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    required
+                  />
+                  <Input
+                    type="password"
+                    label="Текущий пароль"
+                    placeholder="Введите текущий пароль для подтверждения"
+                    value={emailPassword}
+                    onChange={(e) => setEmailPassword(e.target.value)}
+                    required
+                  />
+                  <div className="profile-edit-form__buttons">
+                    <button
+                      type="submit"
+                      className="profile-edit-btn profile-edit-btn--primary"
+                    >
+                      Сохранить
+                    </button>
+                    <button
+                      type="button"
+                      className="profile-edit-btn profile-edit-btn--secondary"
+                      onClick={() => {
+                        setIsChangingEmail(false);
+                        setNewEmail("");
+                        setEmailPassword("");
+                      }}
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+
+          {/* Смена пароля */}
+          <div className="profile-card">
+            <div className="profile-card__header">
+              <Lock size={24} className="profile-card__icon" />
+              <h2 className="profile-card__title">Изменить пароль</h2>
+            </div>
+
+            <div className="profile-card__content">
+              {!isChangingPassword ? (
+                <div className="profile-edit-info">
+                  <p className="profile-edit-info__description">
+                    Измените пароль для повышения безопасности аккаунта
+                  </p>
+                  <button
+                    className="profile-edit-btn"
+                    onClick={() => setIsChangingPassword(true)}
+                  >
+                    Изменить пароль
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleChangePassword} className="profile-edit-form">
+                  <Input
+                    type="password"
+                    label="Текущий пароль"
+                    placeholder="Введите текущий пароль"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    required
+                  />
+                  <Input
+                    type="password"
+                    label="Новый пароль"
+                    placeholder="Введите новый пароль"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                  <Input
+                    type="password"
+                    label="Подтвердите новый пароль"
+                    placeholder="Повторите новый пароль"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                  <div className="profile-edit-form__buttons">
+                    <button
+                      type="submit"
+                      className="profile-edit-btn profile-edit-btn--primary"
+                    >
+                      Сохранить
+                    </button>
+                    <button
+                      type="button"
+                      className="profile-edit-btn profile-edit-btn--secondary"
+                      onClick={() => {
+                        setIsChangingPassword(false);
+                        setOldPassword("");
+                        setNewPassword("");
+                        setConfirmPassword("");
+                      }}
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

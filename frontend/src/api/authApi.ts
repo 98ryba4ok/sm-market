@@ -1,15 +1,26 @@
 // Auth API
 
-import api from "./axios";
 import type {
+  ChangeEmailPayload,
+  ChangeEmailResponse,
+  ChangePasswordPayload,
+  ChangePasswordResponse,
   LoginPayload,
+  LogoutPayload,
+  PasswordResetConfirmPayload,
+  PasswordResetConfirmResponse,
+  PasswordResetRequestPayload,
+  PasswordResetRequestResponse,
+  RefreshTokenPayload,
   RegisterPayload,
   RegisterResponse,
   TokenResponse,
-  RefreshTokenPayload,
-  LogoutPayload,
+  UpdateProfilePayload,
+  UpdateProfileResponse,
   User,
 } from "../types/auth";
+
+import api from "./axios";
 
 export const authApi = {
   /**
@@ -43,4 +54,39 @@ export const authApi = {
    * GET /api/auth/me/
    */
   me: () => api.get<User>("/auth/me/"),
+
+  /**
+   * Обновление профиля пользователя (ФИО, телефон)
+   * PATCH /api/auth/profile/update/
+   */
+  updateProfile: (data: UpdateProfilePayload) =>
+    api.patch<UpdateProfileResponse>("/auth/profile/update/", data),
+
+  /**
+   * Смена email
+   * POST /api/auth/profile/change-email/
+   */
+  changeEmail: (data: ChangeEmailPayload) =>
+    api.post<ChangeEmailResponse>("/auth/profile/change-email/", data),
+
+  /**
+   * Смена пароля
+   * POST /api/auth/profile/change-password/
+   */
+  changePassword: (data: ChangePasswordPayload) =>
+    api.post<ChangePasswordResponse>("/auth/profile/change-password/", data),
+
+  /**
+   * Запрос на сброс пароля (отправка email)
+   * POST /api/auth/password-reset/
+   */
+  passwordResetRequest: (data: PasswordResetRequestPayload) =>
+    api.post<PasswordResetRequestResponse>("/auth/password-reset/", data),
+
+  /**
+   * Подтверждение сброса пароля с токеном
+   * POST /api/auth/password-reset/confirm/
+   */
+  passwordResetConfirm: (data: PasswordResetConfirmPayload) =>
+    api.post<PasswordResetConfirmResponse>("/auth/password-reset/confirm/", data),
 };

@@ -27,10 +27,13 @@ export interface ProductListItem {
   name: string;
   slug: string;
   sku: string;
+  room_id: number | null;
+  room_name: string | null;
   category: number;
   category_name: string;
   brand_id: number | null;
   brand_name: string | null;
+  label: 'new' | 'hit' | 'sale' | 'exclusive' | '';
   price: string;
   discount_price: string | null;
   final_price: string;
@@ -48,6 +51,15 @@ export interface Product {
   name: string;
   slug: string;
   description: string;
+  room: {
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+    image: string | null;
+    order: number;
+    is_active: boolean;
+  } | null;
   category: number;
   category_name: string;
   category_slug: string;
@@ -61,6 +73,7 @@ export interface Product {
     created_at: string;
     updated_at: string;
   } | null;
+  label: 'new' | 'hit' | 'sale' | 'exclusive' | '';
   price: string;
   discount_price: string | null;
   final_price: string;
@@ -82,7 +95,9 @@ export interface Product {
 }
 
 export interface ProductFilters {
+  room?: string;
   category?: string;
+  label?: string;
   min_price?: number;
   max_price?: number;
   in_stock?: boolean;

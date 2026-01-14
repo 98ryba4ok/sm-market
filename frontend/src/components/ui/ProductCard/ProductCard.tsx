@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import type { ProductListItem } from "../../../types";
 import { getImageUrl } from "../../../utils/imageUrl";
+import { StarRating } from "../StarRating";
 import "./ProductCard.css";
 
 interface ProductCardProps {
@@ -30,12 +31,32 @@ export const ProductCard = ({
     onAddToWishlist?.(product.id);
   };
 
+  // Get label text and class based on product label
+  const getLabelInfo = () => {
+    switch (product.label) {
+      case 'new':
+        return { text: 'Новинка!', className: 'product-card__badge--new' };
+      case 'hit':
+        return { text: 'Хит продаж!', className: 'product-card__badge--hit' };
+      case 'sale':
+        return { text: 'Распродажа!', className: 'product-card__badge--sale' };
+      case 'exclusive':
+        return { text: 'Эксклюзив!', className: 'product-card__badge--exclusive' };
+      default:
+        return null;
+    }
+  };
+
+  const labelInfo = getLabelInfo();
+
   return (
     <div className="product-card">
-      {/* New Badge */}
-      <div className="product-card__new-badge">
-        Новинка!
-      </div>
+      {/* Dynamic Badge */}
+      {labelInfo && (
+        <div className={`product-card__badge ${labelInfo.className}`}>
+          {labelInfo.text}
+        </div>
+      )}
 
       {/* Image */}
       <Link to={`/products/${product.slug}`} className="product-card__image-wrapper">
@@ -78,6 +99,13 @@ export const ProductCard = ({
             </>
           )}
         </div>
+
+        {/* Rating */}
+        <StarRating
+          rating={product.average_rating}
+          reviewsCount={product.reviews_count}
+          size={14}
+        />
 
         {/* Buttons */}
         <div className="product-card__actions">

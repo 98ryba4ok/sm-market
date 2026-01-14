@@ -56,18 +56,68 @@ class Brand(models.Model):
         super().save(*args, **kwargs)
 
 
-class Category(models.Model):
-    """Категория товаров с поддержкой вложенности"""
+class Room(models.Model):
+    """Помещение (Ванная, Кухня и т.д.)"""
     name = models.CharField(max_length=200, verbose_name="Название")
     slug = models.SlugField(max_length=200, unique=True, verbose_name="URL slug")
     description = models.TextField(blank=True, verbose_name="Описание")
-    parent = models.ForeignKey(
-        'self',
-        on_delete=models.CASCADE,
+    image = models.ImageField(
+        upload_to='rooms/',
         null=True,
         blank=True,
-        related_name='subcategories',
-        verbose_name="Родительская категория"
+        verbose_name="Изображение"
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Порядок отображения")
+    is_active = models.BooleanField(default=True, verbose_name="Активно")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+    
+    class Meta:
+        verbose_name = "Помещение"
+        verbose_name_plural = "Помещения"
+        ordering = ['order', 'name']
+        indexes = [
+            models.Index(fields=['slug']),
+            models.Index(fields=['is_active', 'order']),
+        ]
+    
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Транслитерация для русских названий
+            base_slug = slugify(self.name)
+            if not base_slug:
+                translit_map = {
+                    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+                    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+                    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+                    'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+                    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+                }
+                name_lower = self.name.lower()
+                translit = ''.join(translit_map.get(c, c) for c in name_lower)
+                base_slug = slugify(translit)
+            
+            if not base_slug:
+                base_slug = f'room-{uuid.uuid4().hex[:8]}'
+            
+            self.slug = base_slug
+        super().save(*args, **kwargs)
+
+
+class Category(models.Model):
+    """Категория оборудования"""
+    name = models.CharField(max_length=200, verbose_name="Название")
+    slug = models.SlugField(max_length=200, unique=True, verbose_name="URL slug")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    rooms = models.ManyToManyField(
+        Room,
+        related_name='categories',
+        blank=True,
+        verbose_name="Доступно для помещений",
+        help_text="В каких помещениях используется эта категория"
     )
     image = models.ImageField(
         upload_to='categories/',
@@ -75,6 +125,7 @@ class Category(models.Model):
         blank=True,
         verbose_name="Изображение"
     )
+    order = models.PositiveIntegerField(default=0, verbose_name="Порядок отображения")
     is_active = models.BooleanField(default=True, verbose_name="Активна")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -114,12 +165,6 @@ class Category(models.Model):
             self.slug = base_slug
         super().save(*args, **kwargs)
 
-    def get_all_children(self):
-        """Получить все дочерние категории рекурсивно"""
-        children = list(self.subcategories.all())
-        for child in list(children):
-            children.extend(child.get_all_children())
-        return children
 
 
 class Product(models.Model):
@@ -127,11 +172,19 @@ class Product(models.Model):
     name = models.CharField(max_length=200, verbose_name="Название")
     slug = models.SlugField(max_length=200, unique=True, verbose_name="URL slug")
     description = models.TextField(verbose_name="Описание")
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='products',
+        verbose_name="Помещение"
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.PROTECT,
         related_name='products',
-        verbose_name="Категория"
+        verbose_name="Категория оборудования"
     )
     brand = models.ForeignKey(
         Brand,
@@ -140,6 +193,17 @@ class Product(models.Model):
         blank=True,
         related_name='products',
         verbose_name="Бренд"
+    )
+    label = models.CharField(
+        max_length=50,
+        blank=True,
+        choices=[
+            ('new', 'Новинка'),
+            ('hit', 'Хит продаж'),
+            ('sale', 'Акция'),
+            ('exclusive', 'Эксклюзив'),
+        ],
+        verbose_name="Лейбл"
     )
     price = models.DecimalField(
         max_digits=10,
@@ -178,6 +242,11 @@ class Product(models.Model):
     views_count = models.PositiveIntegerField(
         default=0,
         verbose_name="Количество просмотров"
+    )
+    orders_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Количество заказов",
+        help_text="Счетчик заказов для сортировки по популярности"
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -408,6 +477,7 @@ class Banner(models.Model):
 from .models_consultation import ConsultationRequest
 
 __all__ = [
+    'Room',
     'Brand',
     'Category',
     'Product',

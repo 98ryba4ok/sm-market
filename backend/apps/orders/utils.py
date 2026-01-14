@@ -20,10 +20,10 @@ def merge_guest_cart_with_user_cart(session_key, user):
         user_cart, _ = Cart.objects.get_or_create(user=user)
         return user_cart
 
-    # Получаем гостевую корзину
-    try:
-        guest_cart = Cart.objects.get(session_key=session_key, user__isnull=True)
-    except Cart.DoesNotExist:
+    # Получаем гостевую корзину (берем первую, если их несколько)
+    guest_cart = Cart.objects.filter(session_key=session_key, user__isnull=True).first()
+    
+    if not guest_cart:
         # Нет гостевой корзины - вернем корзину пользователя
         user_cart, _ = Cart.objects.get_or_create(user=user)
         return user_cart
@@ -71,7 +71,7 @@ def merge_guest_cart_with_user_cart(session_key, user):
                     )
                     merged_count += 1
 
-    # Удаляем гостевую корзину
-    guest_cart.delete()
+    # Удаляем все гостевые корзины с этим session_key (на случай дубликатов)
+    Cart.objects.filter(session_key=session_key, user__isnull=True).delete()
 
     return user_cart

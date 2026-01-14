@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Modal } from "../../../ui/Modal/Modal";
-import { Input } from "../../../ui/Input/Input";
-import { Button } from "../../../ui/Button/Button";
+
 import { authApi } from "../../../../api/authApi";
+import { Button } from "../../../ui/Button/Button";
+import { Input } from "../../../ui/Input/Input";
+import { Modal } from "../../../ui/Modal/Modal";
 import "./LoginModal.css";
 
 interface LoginModalProps {
@@ -10,6 +11,7 @@ interface LoginModalProps {
   onClose: () => void;
   onSuccess: () => void;
   onSwitchToRegister: () => void;
+  onSwitchToPasswordReset: () => void;
 }
 
 export const LoginModal = ({
@@ -17,6 +19,7 @@ export const LoginModal = ({
   onClose,
   onSuccess,
   onSwitchToRegister,
+  onSwitchToPasswordReset,
 }: LoginModalProps) => {
   const [formData, setFormData] = useState({
     email: "",
@@ -115,6 +118,18 @@ export const LoginModal = ({
         </Button>
 
         <div className="login-form__footer">
+          <p className="login-form__switch-text">
+            <button
+              type="button"
+              className="login-form__switch-btn"
+              onClick={() => {
+                handleClose();
+                onSwitchToPasswordReset();
+              }}
+            >
+              Забыли пароль?
+            </button>
+          </p>
           <p className="login-form__switch-text">
             Нет аккаунта?{" "}
             <button
