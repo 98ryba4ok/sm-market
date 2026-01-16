@@ -5,6 +5,11 @@ import type {
   ChangeEmailResponse,
   ChangePasswordPayload,
   ChangePasswordResponse,
+  EmailCancellationPayload,
+  EmailCancellationResponse,
+  EmailChangeStatusResponse,
+  EmailConfirmationPayload,
+  EmailConfirmationResponse,
   LoginPayload,
   LogoutPayload,
   PasswordResetConfirmPayload,
@@ -14,6 +19,8 @@ import type {
   RefreshTokenPayload,
   RegisterPayload,
   RegisterResponse,
+  SecureEmailChangeRequestPayload,
+  SecureEmailChangeRequestResponse,
   TokenResponse,
   UpdateProfilePayload,
   UpdateProfileResponse,
@@ -89,4 +96,46 @@ export const authApi = {
    */
   passwordResetConfirm: (data: PasswordResetConfirmPayload) =>
     api.post<PasswordResetConfirmResponse>("/auth/password-reset/confirm/", data),
+
+  /**
+   * Валидация токена взлома и отправка ссылки для сброса пароля
+   * POST /api/auth/account-compromised/
+   */
+  validateCompromisedToken: (data: { token: string }) =>
+    api.post<{ detail: string; email: string }>("/auth/account-compromised/", data),
+
+  /**
+   * Запрос на безопасную смену email (с двойным подтверждением)
+   * POST /api/users/email-change/request/
+   */
+  secureEmailChangeRequest: (data: SecureEmailChangeRequestPayload) =>
+    api.post<SecureEmailChangeRequestResponse>("/users/email-change/request/", data),
+
+  /**
+   * Подтверждение старого email
+   * POST /api/users/email-change/confirm-old/
+   */
+  confirmOldEmail: (data: EmailConfirmationPayload) =>
+    api.post<EmailConfirmationResponse>("/users/email-change/confirm-old/", data),
+
+  /**
+   * Подтверждение нового email (завершает смену)
+   * POST /api/users/email-change/confirm-new/
+   */
+  confirmNewEmail: (data: EmailConfirmationPayload) =>
+    api.post<EmailConfirmationResponse>("/users/email-change/confirm-new/", data),
+
+  /**
+   * Отмена смены email (в течение 48 часов)
+   * POST /api/users/email-change/cancel/
+   */
+  cancelEmailChange: (data: EmailCancellationPayload) =>
+    api.post<EmailCancellationResponse>("/users/email-change/cancel/", data),
+
+  /**
+   * Получение статуса текущего запроса на смену email
+   * GET /api/users/email-change/status/
+   */
+  getEmailChangeStatus: () =>
+    api.get<EmailChangeStatusResponse>("/users/email-change/status/"),
 };

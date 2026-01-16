@@ -1,5 +1,5 @@
 import { Search, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { brandsApi } from "../../api/brandsApi";
@@ -11,6 +11,7 @@ import { wishlistApi } from "../../api/wishlistApi";
 import { CategoryFilter } from "../../components/catalog/CategoryFilter/CategoryFilter";
 import { ProductFilters } from "../../components/catalog/ProductFilters/ProductFilters";
 import { ProductCard } from "../../components/ui/ProductCard/ProductCard";
+import { ProductCardSkeleton } from "../../components/ui/ProductCardSkeleton";
 import { useToast } from "../../contexts/ToastContext";
 import type { Brand } from "../../types";
 import type { CategoryListItem } from "../../types/category";
@@ -33,7 +34,12 @@ export const CatalogPage = () => {
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
   const [ordering, setOrdering] = useState<string>("-created_at");
+  
+  // Ref для debounce таймеров
+  const searchDebounceRef = useRef<number | null>(null);
+  const filtersDebounceRef = useRef<number | null>(null);
   
   // Фильтры цены и прочее
   const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
@@ -131,78 +137,102 @@ export const CatalogPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, categories]);
 
-  // Загрузка товаров при изменении фильтров
+  // Загрузка товаров при изменении фильтров с debounce и минимальной задержкой
   useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
+    // Очищаем предыдущий таймер
+    if (filtersDebounceRef.current) {
+      clearTimeout(filtersDebounceRef.current);
+    }
 
-      try {
-        const filters: ProductFiltersType = {};
+    // Устанавливаем новый таймер на 300мс
+    filtersDebounceRef.current = setTimeout(() => {
+      const fetchProducts = async () => {
+        setIsLoading(true);
+        setError(null);
 
-        // Фильтр по помещению
-        if (selectedRoom) {
-          filters.room = selectedRoom;
-        }
+        const startTime = Date.now();
 
-        // Фильтр по категории
-        if (selectedCategories.length > 0) {
-          const category = categories.find((cat) => cat.id === selectedCategories[0]);
-          if (category) {
-            filters.category = category.slug;
+        try {
+          const filters: ProductFiltersType = {};
+
+          // Фильтр по помещению (всегда отправляем если выбрано)
+          if (selectedRoom) {
+            filters.room = selectedRoom;
           }
-        }
 
-        // Фильтр по лейблам (берем первый, так как backend поддерживает только один)
-        if (selectedLabels.length > 0) {
-          filters.label = selectedLabels[0];
-        }
+          // Фильтр по категориям (множественный выбор)
+          // Если выбраны категории, они будут дополнительно фильтровать товары помещения
+          if (selectedCategories.length > 0) {
+            filters.categories = selectedCategories;
+          }
 
-        // Поиск
-        if (searchQuery) {
-          filters.search = searchQuery;
-        }
+          // Фильтр по лейблам (берем первый, так как backend поддерживает только один)
+          if (selectedLabels.length > 0) {
+            filters.label = selectedLabels[0];
+          }
 
-        // Сортировка
-        if (ordering && ordering !== "-created_at") {
-          filters.ordering = ordering;
-        }
+          // Поиск
+          if (searchQuery) {
+            filters.search = searchQuery;
+          }
 
-        // Фильтры цены
-        if (minPrice !== undefined) {
-          filters.min_price = minPrice;
-        }
-        if (maxPrice !== undefined) {
-          filters.max_price = maxPrice;
-        }
+          // Сортировка
+          if (ordering && ordering !== "-created_at") {
+            filters.ordering = ordering;
+          }
 
-        // Дополнительные фильтры
-        if (inStock) {
-          filters.in_stock = true;
-        }
-        if (onSale) {
-          filters.on_sale = true;
-        }
-        if (minRating !== undefined) {
-          filters.min_rating = minRating;
-        }
+          // Фильтры цены
+          if (minPrice !== undefined) {
+            filters.min_price = minPrice;
+          }
+          if (maxPrice !== undefined) {
+            filters.max_price = maxPrice;
+          }
 
-        // Фильтр по брендам
-        if (selectedBrands.length > 0) {
-          filters.brand = selectedBrands.length === 1 ? selectedBrands[0] : selectedBrands;
-        }
+          // Дополнительные фильтры
+          if (inStock) {
+            filters.in_stock = true;
+          }
+          if (onSale) {
+            filters.on_sale = true;
+          }
+          if (minRating !== undefined) {
+            filters.min_rating = minRating;
+          }
 
-        const response = await productsApi.list(filters);
-        setProducts(response.data.results);
-      } catch (err) {
-        console.error("Ошибка загрузки товаров:", err);
-        setError("Не удалось загрузить товары");
-      } finally {
-        setIsLoading(false);
+          // Фильтр по брендам
+          if (selectedBrands.length > 0) {
+            filters.brand = selectedBrands.length === 1 ? selectedBrands[0] : selectedBrands;
+          }
+
+          const response = await productsApi.list(filters);
+          
+          // Минимальная задержка 1 секунда для плавного UX
+          const elapsedTime = Date.now() - startTime;
+          const remainingTime = Math.max(0, 1000 - elapsedTime);
+          
+          if (remainingTime > 0) {
+            await new Promise(resolve => setTimeout(resolve, remainingTime));
+          }
+          
+          setProducts(response.data.results);
+        } catch (err) {
+          console.error("Ошибка загрузки товаров:", err);
+          setError("Не удалось загрузить товары");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchProducts();
+    }, 300);
+
+    // Cleanup функция для очистки таймера при размонтировании
+    return () => {
+      if (filtersDebounceRef.current) {
+        clearTimeout(filtersDebounceRef.current);
       }
     };
-
-    fetchProducts();
   }, [
     selectedRoom,
     selectedCategories,
@@ -238,21 +268,12 @@ export const CatalogPage = () => {
       if (prev.includes(categoryId)) {
         return prev.filter((id) => id !== categoryId);
       } else {
-        return [categoryId];
+        return [...prev, categoryId];
       }
     });
 
-    // Обновляем URL
-    const category = categories.find((cat) => cat.id === categoryId);
-    if (category) {
-      const newParams = new URLSearchParams(searchParams);
-      if (selectedCategories.includes(categoryId)) {
-        newParams.delete("category");
-      } else {
-        newParams.set("category", category.slug);
-      }
-      setSearchParams(newParams);
-    }
+    // Убираем синхронизацию с URL для множественного выбора
+    // URL будет обновляться только при выборе помещения
   };
 
   const handleRemoveCategory = (categoryId: number) => {
@@ -265,18 +286,34 @@ export const CatalogPage = () => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setSearchQuery(value);
+    setSearchInput(value);
     
-    const newParams = new URLSearchParams(searchParams);
-    if (value) {
-      newParams.set("search", value);
-    } else {
-      newParams.delete("search");
+    // Очищаем предыдущий таймер
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
     }
-    setSearchParams(newParams);
+    
+    // Устанавливаем новый таймер на 500мс
+    searchDebounceRef.current = setTimeout(() => {
+      setSearchQuery(value);
+      
+      const newParams = new URLSearchParams(searchParams);
+      if (value) {
+        newParams.set("search", value);
+      } else {
+        newParams.delete("search");
+      }
+      setSearchParams(newParams);
+    }, 200);
   };
 
   const handleClearSearch = () => {
+    // Очищаем таймер если он есть
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    
+    setSearchInput("");
     setSearchQuery("");
     
     const newParams = new URLSearchParams(searchParams);
@@ -340,13 +377,11 @@ export const CatalogPage = () => {
           />
           <ProductFilters
             brands={brands}
-            rooms={rooms}
             minPrice={minPrice}
             maxPrice={maxPrice}
             inStock={inStock}
             onSale={onSale}
             minRating={minRating}
-            selectedRoom={selectedRoom}
             selectedLabels={selectedLabels}
             selectedBrands={selectedBrands}
             onMinPriceChange={setMinPrice}
@@ -354,7 +389,6 @@ export const CatalogPage = () => {
             onInStockChange={setInStock}
             onSaleChange={setOnSale}
             onMinRatingChange={setMinRating}
-            onRoomChange={handleSelectRoom}
             onLabelsChange={setSelectedLabels}
             onBrandsChange={setSelectedBrands}
           />
@@ -378,7 +412,7 @@ export const CatalogPage = () => {
             <input
               type="text"
               placeholder="Поиск товаров..."
-              value={searchQuery}
+              value={searchInput}
               onChange={handleSearchChange}
               className="catalog-page__search-input"
             />
@@ -476,7 +510,11 @@ export const CatalogPage = () => {
 
           {/* Сетка товаров */}
           {isLoading ? (
-            <div className="catalog-page__loading">Загрузка товаров...</div>
+            <div className="catalog-page__grid">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <ProductCardSkeleton key={index} />
+              ))}
+            </div>
           ) : error ? (
             <div className="catalog-page__error">{error}</div>
           ) : products.length === 0 ? (

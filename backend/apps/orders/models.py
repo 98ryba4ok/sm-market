@@ -227,10 +227,11 @@ class Order(models.Model):
         """Отменить заказ"""
         if self.can_be_cancelled:
             self.status = 'cancelled'
-            # Вернуть товары на склад
+            # Вернуть товары на склад и уменьшить счетчик заказов
             for item in self.items.all():
                 item.product.stock_quantity += item.quantity
-                item.product.save(update_fields=['stock_quantity'])
+                item.product.orders_count = max(0, item.product.orders_count - item.quantity)
+                item.product.save(update_fields=['stock_quantity', 'orders_count'])
             self.save(update_fields=['status'])
             return True
         return False
@@ -294,12 +295,21 @@ class OrderItem(models.Model):
         return self.price_at_purchase * self.quantity
 
     def save(self, *args, **kwargs):
+        # Проверяем, это новый элемент заказа или обновление существующего
+        is_new = self.pk is None
+        
         # Сохранить snapshot данных товара
         if not self.price_at_purchase:
             self.price_at_purchase = self.product.final_price
         if not self.product_name:
             self.product_name = self.product.name
+        
         super().save(*args, **kwargs)
+
+        # Увеличить счетчик заказов товара только для новых элементов
+        if is_new and self.product:
+            self.product.orders_count += self.quantity
+            self.product.save(update_fields=['orders_count'])
 
         # Пересчитать общую сумму заказа после сохранения элемента
         if self.order_id:

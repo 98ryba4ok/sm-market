@@ -79,6 +79,8 @@ class Command(BaseCommand):
             {'name': 'Кухня', 'description': 'Кухонное оборудование и аксессуары', 'order': 2, 'image': 'kitchen.png'},
             {'name': 'Гостиная', 'description': 'Мебель и декор для гостиной', 'order': 3, 'image': 'living.png'},
             {'name': 'Спальня', 'description': 'Мебель и аксессуары для спальни', 'order': 4, 'image': 'bedroom.png'},
+            {'name': 'Прихожая', 'description': 'Мебель и аксессуары для прихожей', 'order': 5, 'image': 'hallway.png'},
+            {'name': 'Кабинет', 'description': 'Мебель и оборудование для домашнего офиса', 'order': 6, 'image': 'office.png'},
         ]
 
         rooms = []
@@ -114,6 +116,10 @@ class Command(BaseCommand):
             {'name': 'Столы', 'description': 'Столы и стулья для гостиной', 'rooms': [2], 'image': 'tables.png'},
             {'name': 'Кровати', 'description': 'Кровати и матрасы', 'rooms': [3], 'image': 'beds.png'},
             {'name': 'Шкафы', 'description': 'Шкафы и комоды для спальни', 'rooms': [3], 'image': 'wardrobes.png'},
+            {'name': 'Вешалки', 'description': 'Вешалки и обувницы для прихожей', 'rooms': [4], 'image': 'hangers.png'},
+            {'name': 'Зеркала', 'description': 'Зеркала для прихожей', 'rooms': [4], 'image': 'mirrors.png'},
+            {'name': 'Письменные столы', 'description': 'Столы для домашнего офиса', 'rooms': [5], 'image': 'desks.png'},
+            {'name': 'Кресла офисные', 'description': 'Офисные кресла и стулья', 'rooms': [5], 'image': 'chairs.png'},
         ]
 
         categories = []
@@ -210,74 +216,70 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f'  ✓ Создан баннер: {banner.title} (без изображения)')
 
-        # Создать товары (1 товар в 5 дубликатах)
+        # Создать товары для каждой категории
         self.stdout.write('\nСоздание товаров...')
 
-        description = '''Кухонный смеситель Omoikiri Shinagawa-C - это воплощение японского минимализма и функциональности.
+        products = []
+        labels = ['new', 'hit', 'sale', 'exclusive', '']
+        product_counter = 0
+        
+        # Создаем по 3-5 товаров для каждой категории
+        for cat_idx, category in enumerate(categories):
+            num_products = random.randint(3, 5)
+            
+            for i in range(num_products):
+                # Выбираем случайный бренд
+                brand = random.choice(brands)
+                
+                # Выбираем случайное помещение из тех, к которым привязана категория
+                room = random.choice(list(category.rooms.all()))
+                
+                # Генерируем уникальное название товара с глобальным счетчиком
+                product_counter += 1
+                product_name = f'{category.name} {brand.name} Артикул {product_counter}'
+                
+                # Выбираем случайный лейбл
+                label = random.choice(labels)
+                
+                # Генерируем цену
+                base_price = Decimal(random.randint(10000, 100000))
+                has_discount = random.choice([True, False])
+                discount_price = base_price * Decimal('0.85') if has_discount else None
+                
+                description = f'''Премиальный товар из категории "{category.name}" от бренда {brand.name}.
 
 Особенности:
-• Высококачественная латунь с хромированным покрытием
-• Керамический картридж 35 мм для плавной регулировки
-• Поворот излива на 360°
-• Аэратор для экономии воды
-• Простая установка и обслуживание
-• Гарантия 5 лет
+• Высокое качество материалов
+• Современный дизайн
+• Простая установка
+• Гарантия производителя
 
-Технические характеристики:
-- Высота: 295 мм
-- Вылет излива: 220 мм
-- Присоединительный размер: 1/2"
-- Рабочее давление: 0.5-6 бар'''
+Идеально подходит для помещения: {room.name}'''
 
-        products = []
-        gessi_brand = brands[0]  # GESSI
-        smesiteli_category = categories[0]  # Смесители
-        bathroom_room = rooms[0]  # Ванная комната
-        kitchen_room = rooms[1]  # Кухня
-
-        # Лейблы для товаров
-        labels = ['new', 'hit', 'sale', 'exclusive', '']
-
-        for i in range(10):
-            # Добавляем уникальный суффикс к названию для каждого дубликата, кроме первого
-            product_name = 'Кухонный смеситель Omoikiri Shinagawa-C'
-            if i > 0:
-                product_name = f'{product_name} #{i+1}'
-
-            # Выбираем случайный лейбл
-            label = labels[i % len(labels)]
-            
-            # Чередуем помещения
-            room = bathroom_room if i % 2 == 0 else kitchen_room
-
-            product = Product.objects.create(
-                name=product_name,
-                description=description,
-                category=smesiteli_category,
-                room=room,
-                brand=gessi_brand,
-                price=Decimal('33000'),
-                discount_price=Decimal('29990') if i % 3 == 0 else None,
-                stock_quantity=10,
-                sku=f'GSI-SHN-{1000 + i}',
-                label=label,
-                orders_count=random.randint(0, 50),  # Случайное количество заказов для сортировки
-                specifications={
-                    "Материал": "Латунь",
-                    "Покрытие": "Хром",
-                    "Механизм": "Керамический картридж 35 мм",
-                    "Высота": "295 мм",
-                    "Вылет излива": "220 мм",
-                    "Поворот излива": "360°",
-                    "Присоединительный размер": "1/2\"",
-                    "Рабочее давление": "0.5-6 бар"
-                },
-                warranty_months=60,
-                is_active=True
-            )
-            products.append(product)
-            label_text = f", лейбл: {label}" if label else ""
-            self.stdout.write(f'  ✓ Создан товар: {product.name} (SKU: {product.sku}, {product.final_price} ₽{label_text})')
+                product = Product.objects.create(
+                    name=product_name,
+                    description=description,
+                    category=category,
+                    room=room,
+                    brand=brand,
+                    price=base_price,
+                    discount_price=discount_price,
+                    stock_quantity=random.randint(5, 50),
+                    sku=f'{brand.slug.upper()[:3]}-{category.slug.upper()[:3]}-{1000 + product_counter}',
+                    label=label,
+                    orders_count=random.randint(0, 100),
+                    specifications={
+                        "Бренд": brand.name,
+                        "Категория": category.name,
+                        "Помещение": room.name,
+                        "Страна производства": brand.country_of_origin,
+                    },
+                    warranty_months=random.choice([12, 24, 36, 60]),
+                    is_active=True
+                )
+                products.append(product)
+                label_text = f", лейбл: {label}" if label else ""
+                self.stdout.write(f'  ✓ Создан товар: {product.name} (SKU: {product.sku}, {product.final_price} ₽{label_text})')
         
         # Создать изображения товаров
         self.stdout.write('\nСоздание изображений товаров...')
@@ -442,8 +444,8 @@ class Command(BaseCommand):
         self.stdout.write('  backend/apps/catalog/management/commands/photo/')
         self.stdout.write('')
         self.stdout.write('Необходимые файлы:')
-        self.stdout.write('  • Помещения: bathroom.png, kitchen.png, living.png, bedroom.png')
-        self.stdout.write('  • Категории: santehnika.png, kuhni.png, unitazy.png, plitka.png, vanny.png, mebel.png')
+        self.stdout.write('  • Помещения: bathroom.png, kitchen.png, living.png, bedroom.png, hallway.png, office.png')
+        self.stdout.write('  • Категории: santehnika.png, kuhni.png, unitazy.png, plitka.png, vanny.png, mebel.png, и др.')
         self.stdout.write('  • Бренды: gessi.png, cielo.png, jorger.png, kronos.png, devon.png')
         self.stdout.write('  • Баннеры: banner1.png, banner2.png')
         self.stdout.write('  • Товар: product.png')

@@ -3,7 +3,11 @@ from django.urls import path
 from .views import (
     RegisterView, LoginView, RefreshView, LogoutView, UserProfileView,
     UserUpdateView, ChangeEmailView, ChangePasswordView,
-    PasswordResetRequestView, PasswordResetConfirmView
+    PasswordResetRequestView, PasswordResetConfirmView, AccountCompromisedView
+)
+from .views_email_change import (
+    EmailChangeRequestView, ConfirmOldEmailView, ConfirmNewEmailView,
+    CancelEmailChangeView, EmailChangeStatusView
 )
 
 urlpatterns = [
@@ -22,4 +26,14 @@ urlpatterns = [
     # Password Reset
     path("password-reset/", PasswordResetRequestView.as_view(), name='password-reset-request'),
     path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    
+    # Account Compromised
+    path("account-compromised/", AccountCompromisedView.as_view(), name='account-compromised'),
+    
+    # Secure Email Change
+    path("email-change/request/", EmailChangeRequestView.as_view(), name='email-change-request'),
+    path("email-change/confirm-old/", ConfirmOldEmailView.as_view(), name='email-change-confirm-old'),
+    path("email-change/confirm-new/", ConfirmNewEmailView.as_view(), name='email-change-confirm-new'),
+    path("email-change/cancel/", CancelEmailChangeView.as_view(), name='email-change-cancel'),
+    path("email-change/status/", EmailChangeStatusView.as_view(), name='email-change-status'),
 ]

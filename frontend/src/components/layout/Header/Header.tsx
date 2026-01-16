@@ -6,6 +6,7 @@ import { authApi } from "../../../api/authApi";
 import { cartApi } from "../../../api/cartApi";
 import categoryLogo from "../../../assets/categoryLogo.svg";
 import logo from "../../../assets/logo.svg";
+import { performLogout } from "../../../utils/auth";
 import { LoginModal } from "../../features/auth/LoginModal/LoginModal";
 import { PasswordResetModal } from "../../features/auth/PasswordResetModal/PasswordResetModal";
 import { RegisterModal } from "../../features/auth/RegisterModal/RegisterModal";
@@ -74,6 +75,25 @@ export const Header = () => {
     };
   }, []);
 
+  // Слушаем событие logout для синхронизации состояния
+  useEffect(() => {
+    const handleUserLoggedOut = () => {
+      console.log("[Header] userLoggedOut event received");
+      setIsAuthenticated(false);
+      setUserEmail(null);
+      setShowUserMenu(false);
+      setCartItemsCount(0);
+      console.log("[Header] State updated after logout");
+    };
+
+    window.addEventListener('userLoggedOut', handleUserLoggedOut);
+    console.log("[Header] userLoggedOut event listener registered");
+
+    return () => {
+      window.removeEventListener('userLoggedOut', handleUserLoggedOut);
+    };
+  }, []);
+
   const handleLoginSuccess = () => {
     const storedEmail = localStorage.getItem("userEmail");
     setIsAuthenticated(true);
@@ -85,6 +105,7 @@ export const Header = () => {
   };
 
   const handleLogout = async () => {
+    console.log("[Header] handleLogout called");
     try {
       const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) {
@@ -93,13 +114,9 @@ export const Header = () => {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Очищаем данные в любом случае
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("userEmail");
-      setIsAuthenticated(false);
-      setUserEmail(null);
-      setShowUserMenu(false);
+      // Используем централизованную функцию logout
+      performLogout();
+      // Локальное состояние обновится через событие userLoggedOut
     }
   };
 

@@ -1,6 +1,6 @@
 .product-card {
   position: relative;
-  width: 282px;
+  width: 280px;
   min-height: 420px;
   background: rgba(255, 255, 255, 1);
   border: 1px solid rgba(229, 231, 235, 1);
@@ -184,42 +184,45 @@
   position: absolute;
   top: 12px;
   left: 12px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
   z-index: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s;
+  letter-spacing: 0.3px;
   font-family: Montserrat, sans-serif;
+  border: 1px solid;
+  transition: opacity 0.2s;
 }
 
 .product-card:hover .product-card__badge {
-  transform: scale(1.05);
+  opacity: 0.9;
 }
 
-/* Новинка - зеленый */
+/* Новинка - сдержанный зеленый */
 .product-card__badge--new {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  background: rgba(240, 253, 244, 1);
+  color: rgba(22, 101, 52, 1);
+  border-color: rgba(187, 247, 208, 1);
 }
 
-/* Хит продаж - красный */
+/* Хит продаж - сдержанный красный */
 .product-card__badge--hit {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
+  background: rgba(254, 242, 242, 1);
+  color: rgba(153, 27, 27, 1);
+  border-color: rgba(254, 202, 202, 1);
 }
 
-/* Распродажа - оранжевый */
+/* Распродажа - сдержанный оранжевый */
 .product-card__badge--sale {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
+  background: rgba(255, 251, 235, 1);
+  color: rgba(146, 64, 14, 1);
+  border-color: rgba(253, 230, 138, 1);
 }
 
-/* Эксклюзив - фиолетовый */
+/* Эксклюзив - сдержанный фиолетовый */
 .product-card__badge--exclusive {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
+  background: rgba(250, 245, 255, 1);
+  color: rgba(107, 33, 168, 1);
+  border-color: rgba(233, 213, 255, 1);
 }

@@ -1,0 +1,171 @@
+.account-compromised-page {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.account-compromised-container {
+  max-width: 600px;
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.account-compromised-container--error {
+  border-left: 6px solid #dc3545;
+}
+
+.account-compromised-container--success {
+  border-left: 6px solid rgb(37, 99, 235);
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  color: #ffc107;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.icon-error {
+  color: #dc3545;
+  margin: 0 auto 1.5rem;
+}
+
+.icon-success {
+  color: #28a745;
+  margin: 0 auto 1.5rem;
+}
+
+.account-compromised-container h1 {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.account-compromised-container p {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.email-display {
+  font-weight: 600;
+  color: #007bff;
+  font-size: 1.1rem;
+  margin: 1.5rem 0;
+}
+
+.info-box {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  text-align: left;
+}
+
+.info-box h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.info-box ol {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.info-box ol li {
+  margin-bottom: 0.5rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.security-tips {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  text-align: left;
+}
+
+.security-tips h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #856404;
+}
+
+.security-tips ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.security-tips ul li {
+  margin-bottom: 0.5rem;
+  color: #856404;
+  line-height: 1.5;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1.5rem;
+  color: #007bff;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #545b62;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+@media (max-width: 768px) {
+  .account-compromised-page {
+    padding: 1rem;
+  }
+
+  .account-compromised-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .account-compromised-container h1 {
+    font-size: 1.5rem;
+  }
+
+  .info-box,
+  .security-tips {
+    padding: 1rem;
+  }
+}

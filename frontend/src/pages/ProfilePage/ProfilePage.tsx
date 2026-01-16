@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { authApi } from "../../api/authApi";
 import { ordersApi } from "../../api/ordersApi";
 import { Input } from "../../components/ui/Input/Input";
+import { Modal } from "../../components/ui/Modal/Modal";
+import { PasswordInput } from "../../components/ui/PasswordInput";
 import { useToast } from "../../contexts/ToastContext";
 import type { User as UserType } from "../../types/auth";
 import type { Order } from "../../types/order";
@@ -22,6 +24,7 @@ export const ProfilePage = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isChangingEmail, setIsChangingEmail] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showEmailChangeModal, setShowEmailChangeModal] = useState(false);
   
   // Form states
   const [firstName, setFirstName] = useState("");
@@ -31,6 +34,8 @@ export const ProfilePage = () => {
   
   const [newEmail, setNewEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -100,21 +105,86 @@ export const ProfilePage = () => {
 
   const handleChangeEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Сброс ошибок
+    setEmailError("");
+    setPasswordError("");
+    
+    // Клиентская валидация
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      setEmailError("Введите корректный email адрес");
+      return;
+    }
+    
+    if (newEmail === profile?.email) {
+      setEmailError("Новый email совпадает с текущим");
+      return;
+    }
+    
+    if (!emailPassword) {
+      setPasswordError("Введите пароль для подтверждения");
+      return;
+    }
+    
     try {
-      const response = await authApi.changeEmail({
+      await authApi.secureEmailChangeRequest({
         new_email: newEmail,
         password: emailPassword,
       });
-      if (profile) {
-        setProfile({ ...profile, email: response.data.email });
-      }
       setIsChangingEmail(false);
       setNewEmail("");
       setEmailPassword("");
-      showToast(response.data.detail, "success");
+      setShowEmailChangeModal(true);
     } catch (err) {
       console.error("Error changing email:", err);
-      showToast("Не удалось изменить email", "error");
+      const error = err as {
+        response?: {
+          data?: {
+            detail?: string;
+            error?: string;
+            new_email?: string[];
+            password?: string[];
+            non_field_errors?: string[];
+          }
+        }
+      };
+      
+      // Обрабатываем ошибки валидации полей
+      const errorData = error.response?.data;
+      if (errorData) {
+        // Ошибка валидации email - показываем под инпутом
+        if (errorData.new_email && Array.isArray(errorData.new_email)) {
+          setEmailError(errorData.new_email[0]);
+          return;
+        }
+        
+        // Ошибка валидации пароля - показываем под инпутом
+        if (errorData.password && Array.isArray(errorData.password)) {
+          setPasswordError(errorData.password[0]);
+          return;
+        }
+        
+        // Общие ошибки валидации (например, активный запрос или блокировка)
+        if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+          showToast(errorData.non_field_errors[0], "error");
+          return;
+        }
+        
+        // Простое текстовое сообщение об ошибке
+        if (errorData.detail) {
+          showToast(errorData.detail, "error");
+          return;
+        }
+        
+        if (errorData.error) {
+          showToast(errorData.error, "error");
+          return;
+        }
+      }
+      
+      // Fallback сообщение
+      showToast("Не удалось создать запрос на смену email", "error");
     }
   };
 
@@ -392,15 +462,22 @@ export const ProfilePage = () => {
                     label="Новый Email"
                     placeholder="new@email.com"
                     value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
+                    onChange={(e) => {
+                      setNewEmail(e.target.value);
+                      setEmailError(""); // Сброс ошибки при вводе
+                    }}
+                    error={emailError}
                     required
                   />
-                  <Input
-                    type="password"
+                  <PasswordInput
                     label="Текущий пароль"
                     placeholder="Введите текущий пароль для подтверждения"
                     value={emailPassword}
-                    onChange={(e) => setEmailPassword(e.target.value)}
+                    onChange={(e) => {
+                      setEmailPassword(e.target.value);
+                      setPasswordError(""); // Сброс ошибки при вводе
+                    }}
+                    error={passwordError}
                     required
                   />
                   <div className="profile-edit-form__buttons">
@@ -417,6 +494,8 @@ export const ProfilePage = () => {
                         setIsChangingEmail(false);
                         setNewEmail("");
                         setEmailPassword("");
+                        setEmailError("");
+                        setPasswordError("");
                       }}
                     >
                       Отмена
@@ -449,24 +528,21 @@ export const ProfilePage = () => {
                 </div>
               ) : (
                 <form onSubmit={handleChangePassword} className="profile-edit-form">
-                  <Input
-                    type="password"
+                  <PasswordInput
                     label="Текущий пароль"
                     placeholder="Введите текущий пароль"
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
                     required
                   />
-                  <Input
-                    type="password"
+                  <PasswordInput
                     label="Новый пароль"
                     placeholder="Введите новый пароль"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
                   />
-                  <Input
-                    type="password"
+                  <PasswordInput
                     label="Подтвердите новый пароль"
                     placeholder="Повторите новый пароль"
                     value={confirmPassword}
@@ -582,6 +658,64 @@ export const ProfilePage = () => {
             </div>
           )}
         </div>
+
+        {/* Модалка подтверждения смены email */}
+        <Modal
+          isOpen={showEmailChangeModal}
+          onClose={() => setShowEmailChangeModal(false)}
+          title="Подтверждение смены email"
+        >
+          <div className="email-change-modal">
+            <div className="email-change-modal__icon-wrapper">
+              <Mail size={48} className="email-change-modal__icon" />
+            </div>
+            
+            <div className="email-change-modal__content">
+              <h3 className="email-change-modal__subtitle">
+                Проверьте вашу почту
+              </h3>
+              
+              <div className="email-change-modal__steps">
+                <div className="email-change-modal__step">
+                  <div className="email-change-modal__step-number">1</div>
+                  <div className="email-change-modal__step-content">
+                    <p className="email-change-modal__step-title">
+                      Подтвердите старый email
+                    </p>
+                    <p className="email-change-modal__step-text">
+                      Мы отправили письмо на ваш текущий адрес <strong>{profile?.email}</strong>
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="email-change-modal__step">
+                  <div className="email-change-modal__step-number">2</div>
+                  <div className="email-change-modal__step-content">
+                    <p className="email-change-modal__step-title">
+                      Подтвердите новый email
+                    </p>
+                    <p className="email-change-modal__step-text">
+                      После подтверждения старого адреса, мы отправим письмо на новый адрес
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="email-change-modal__info">
+                <p className="email-change-modal__info-text">
+                  💡 Не забудьте проверить папку "Спам", если письмо не пришло в течение нескольких минут
+                </p>
+              </div>
+            </div>
+            
+            <button
+              className="email-change-modal__button"
+              onClick={() => setShowEmailChangeModal(false)}
+            >
+              Понятно
+            </button>
+          </div>
+        </Modal>
       </div>
     </div>
   );

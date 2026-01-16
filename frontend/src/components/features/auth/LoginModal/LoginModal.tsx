@@ -4,6 +4,7 @@ import { authApi } from "../../../../api/authApi";
 import { Button } from "../../../ui/Button/Button";
 import { Input } from "../../../ui/Input/Input";
 import { Modal } from "../../../ui/Modal/Modal";
+import { PasswordInput } from "../../../ui/PasswordInput";
 import "./LoginModal.css";
 
 interface LoginModalProps {
@@ -103,8 +104,7 @@ export const LoginModal = ({
           required
         />
 
-        <Input
-          type="password"
+        <PasswordInput
           label="Пароль"
           placeholder="Введите пароль"
           value={formData.password}

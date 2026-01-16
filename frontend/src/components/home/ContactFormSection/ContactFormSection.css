@@ -4,9 +4,9 @@
 }
 
 .contact-form-section__container {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0;
 }
 
 .contact-form-section__grid {
@@ -25,7 +25,7 @@
 .contact-form-section__image {
   position: relative;
   aspect-ratio: 4 / 3;
-  border-radius: 1rem;
+  border-radius: 30px;
   overflow: hidden;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }

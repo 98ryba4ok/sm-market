@@ -220,7 +220,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
                 'reviews__user'
             )
         
-        # Фильтр по помещению
+        # Фильтр по помещению (фильтруем по полю room напрямую)
         room_slug = self.request.query_params.get('room')
         if room_slug:
             try:
@@ -229,14 +229,32 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
             except Room.DoesNotExist:
                 pass
         
-        # Фильтр по категории
-        category_slug = self.request.query_params.get('category')
-        if category_slug:
+        # Фильтр по категориям (множественный выбор с логикой ИЛИ)
+        # Если выбраны категории, дополнительно фильтруем по ним (логика AND с помещением)
+        # Django парсит параметр categories[]=4 как ключ 'categories[]', а не 'categories'
+        category_ids = self.request.query_params.getlist('categories[]')
+        
+        if not category_ids:
+            # Fallback для старого формата без скобок
+            category_ids = self.request.query_params.getlist('categories')
+        
+        if category_ids:
             try:
-                category = Category.objects.get(slug=category_slug, is_active=True)
-                queryset = queryset.filter(category=category)
-            except Category.DoesNotExist:
+                # Преобразуем строки в числа
+                category_ids = [int(cid) for cid in category_ids]
+                queryset = queryset.filter(category_id__in=category_ids)
+            except (ValueError, TypeError):
                 pass
+        
+        # Оставляем старый фильтр по одной категории для обратной совместимости
+        if not category_ids:
+            category_slug = self.request.query_params.get('category')
+            if category_slug:
+                try:
+                    category = Category.objects.get(slug=category_slug, is_active=True)
+                    queryset = queryset.filter(category=category)
+                except Category.DoesNotExist:
+                    pass
         
         # Фильтр по лейблу
         label = self.request.query_params.get('label')

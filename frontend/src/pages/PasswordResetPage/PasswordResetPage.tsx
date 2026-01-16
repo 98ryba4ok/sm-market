@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { authApi } from "../../api/authApi";
 import { Button } from "../../components/ui/Button/Button";
-import { Input } from "../../components/ui/Input/Input";
+import { PasswordInput } from "../../components/ui/PasswordInput";
 import { useToast } from "../../contexts/ToastContext";
 import "./PasswordResetPage.css";
 
@@ -75,8 +75,7 @@ export const PasswordResetPage = () => {
 
         <form onSubmit={handleSubmit} className="password-reset-form">
           <div className="password-reset-form__field">
-            <Input
-              type="password"
+            <PasswordInput
               label="Новый пароль"
               placeholder="Введите новый пароль"
               value={newPassword}
@@ -88,8 +87,7 @@ export const PasswordResetPage = () => {
             <span className="form-hint">Минимум 8 символов</span>
           </div>
 
-          <Input
-            type="password"
+          <PasswordInput
             label="Подтвердите пароль"
             placeholder="Повторите новый пароль"
             value={confirmPassword}

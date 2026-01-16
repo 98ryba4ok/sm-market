@@ -261,6 +261,7 @@ class Product(models.Model):
             models.Index(fields=['brand', 'is_active']),
             models.Index(fields=['price']),
             models.Index(fields=['-created_at']),
+            models.Index(fields=['-orders_count']),  # Индекс для сортировки по популярности
         ]
 
     def __str__(self):

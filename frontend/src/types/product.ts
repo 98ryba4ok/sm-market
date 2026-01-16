@@ -97,6 +97,7 @@ export interface Product {
 export interface ProductFilters {
   room?: string;
   category?: string;
+  categories?: number[];
   label?: string;
   min_price?: number;
   max_price?: number;

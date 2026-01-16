@@ -14,7 +14,8 @@ from .serializers import (
     UserUpdateSerializer, ChangeEmailSerializer, ChangePasswordSerializer,
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 )
-from .models import User, PasswordResetToken
+from .models import User, PasswordResetToken, AccountCompromisedToken
+from .utils import send_password_changed_email, get_client_ip, send_password_reset_link_email
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -144,6 +145,21 @@ class ChangePasswordView(APIView):
         request.user.set_password(serializer.validated_data['new_password'])
         request.user.save()
         
+        # Генерируем токен для восстановления доступа при взломе
+        ip_address = get_client_ip(request)
+        compromised_token = AccountCompromisedToken.generate_token(
+            user=request.user,
+            ip_address=ip_address
+        )
+        
+        # Отправляем email-уведомление с токеном
+        try:
+            send_password_changed_email(request.user, request, compromised_token.token)
+        except Exception as e:
+            # Логируем ошибку, но не прерываем процесс
+            # Пароль уже изменен, поэтому возвращаем успех
+            print(f"Error sending password change email: {e}")
+        
         return Response({
             'detail': 'Пароль успешно изменен'
         })
@@ -230,3 +246,68 @@ class PasswordResetConfirmView(APIView):
         return Response({
             'detail': 'Пароль успешно изменен. Теперь вы можете войти с новым паролем.'
         })
+
+
+class AccountCompromisedView(APIView):
+    """
+    Обрабатывает токен взлома и автоматически отправляет
+    ссылку для сброса пароля на email пользователя
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        token = request.data.get('token')
+        
+        if not token:
+            return Response(
+                {'detail': 'Токен не предоставлен'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Находим токен в БД
+            compromised_token = AccountCompromisedToken.objects.get(token=token)
+            
+            # Проверяем валидность
+            if not compromised_token.is_valid():
+                return Response(
+                    {'detail': 'Токен недействителен или истек'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Помечаем токен как использованный
+            compromised_token.is_used = True
+            compromised_token.save()
+            
+            # Генерируем токен для сброса пароля
+            user = compromised_token.user
+            reset_token = PasswordResetToken.generate_token(user)
+            
+            # Отправляем ссылку для сброса на email
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+            reset_link = f"{frontend_url}/password-reset/{reset_token.token}"
+            
+            # Отправляем email
+            try:
+                send_password_reset_link_email(user, reset_link)
+            except Exception as e:
+                print(f"Error sending password reset link email: {e}")
+                return Response(
+                    {'detail': 'Не удалось отправить ссылку для сброса пароля'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Маскируем email для безопасности
+            email_parts = user.email.split('@')
+            masked_email = f"{email_parts[0][:2]}***@{email_parts[1]}" if len(email_parts) == 2 else user.email
+            
+            return Response({
+                'detail': 'Ссылка для сброса пароля отправлена на ваш email',
+                'email': masked_email
+            })
+            
+        except AccountCompromisedToken.DoesNotExist:
+            return Response(
+                {'detail': 'Недействительный токен'},
+                status=status.HTTP_404_NOT_FOUND
+            )
