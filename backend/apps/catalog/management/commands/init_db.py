@@ -1,9 +1,11 @@
 from django.core.management.base import BaseCommand
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files import File
 from django.core.management import call_command
 from decimal import Decimal
 import random
+import shutil
 from pathlib import Path
 from apps.catalog.models import Room, Category, Product, ProductImage, ProductReview, Brand, Banner
 from apps.orders.models import Order, OrderItem
@@ -55,6 +57,20 @@ class Command(BaseCommand):
         # Удаляем всех пользователей кроме суперпользователей
         User.objects.filter(is_superuser=False).delete()
         self.stdout.write(self.style.SUCCESS('  ✓ База данных очищена'))
+
+        # Удаляем старые медиа-файлы
+        media_root = Path(settings.MEDIA_ROOT)
+        media_dirs = ['products', 'categories', 'rooms', 'hero', 'brands']
+        files_deleted = 0
+        for dir_name in media_dirs:
+            dir_path = media_root / dir_name
+            if dir_path.exists():
+                for f in dir_path.iterdir():
+                    if f.is_file():
+                        f.unlink()
+                        files_deleted += 1
+        if files_deleted:
+            self.stdout.write(self.style.SUCCESS(f'  ✓ Удалено старых медиа-файлов: {files_deleted}'))
         
         # Шаг 2: Создание администратора
         if not options['skip_admin']:
