@@ -1,0 +1,24 @@
+services:
+  nginx_certbot:
+    image: nginx:alpine
+    container_name: sm_market_nginx_certbot
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx_certbot.conf:/etc/nginx/conf.d/default.conf
+      - certbot_www:/var/www/certbot
+    restart: "no"
+
+  certbot:
+    image: certbot/certbot
+    container_name: sm_market_certbot
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --email ${CERTBOT_EMAIL} -d ${DOMAIN} --agree-tos --no-eff-email
+    depends_on:
+      - nginx_certbot
+
+volumes:
+  certbot_conf:
+  certbot_www:

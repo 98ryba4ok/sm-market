@@ -8,7 +8,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./backend/.env
+      - .env
     depends_on:
       - db
 
@@ -21,7 +21,7 @@ services:
     ports:
       - "5173:5173"
     env_file:
-      - ./frontend/.env
+      - .env
     depends_on:
       - backend
 
@@ -29,7 +29,7 @@ services:
     image: postgres:15
     container_name: sm_market_db
     env_file:
-      - ./backend/.env
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
