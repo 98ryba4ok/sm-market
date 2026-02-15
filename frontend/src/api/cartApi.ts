@@ -6,6 +6,7 @@ import type {
   Cart,
   UpdateCartItemPayload,
 } from "../types/cart";
+import type { OrderTotals } from "../types/promo";
 
 import api from "./axios";
 
@@ -41,4 +42,14 @@ export const cartApi = {
    * POST /api/cart/clear/
    */
   clear: () => api.post<MessageResponse>("/cart/clear/"),
+
+  /**
+   * Рассчитать итоговую сумму заказа с учетом промокода и бонусов
+   * POST /api/cart/calculate_totals/
+   */
+  calculateTotals: (data: {
+    promo_code?: string;
+    use_bonuses?: boolean;
+    selected_items?: number[];
+  }) => api.post<OrderTotals>("/cart/calculate_totals/", data),
 };

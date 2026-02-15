@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../../../api/authApi";
 import { cartApi } from "../../../api/cartApi";
 import categoryLogo from "../../../assets/categoryLogo.svg";
-import logo from "../../../assets/logo.svg";
+import logo from "../../../assets/images/logo.jpg";
 import { performLogout } from "../../../utils/auth";
 import { LoginModal } from "../../features/auth/LoginModal/LoginModal";
 import { PasswordResetModal } from "../../features/auth/PasswordResetModal/PasswordResetModal";

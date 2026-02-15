@@ -30,16 +30,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 82px;
-  height: 56px;
-  background-color: #2563EB;
+  width: 120px;
+  height: 80px;
+  background-color: white;
   border-radius: 10px;
-  padding: 10px 5px;
+  padding: 10px;
 }
 
 .header__logo-text {
-  width: 41px;
+  width: 100px;
   height: auto;
+  mix-blend-mode: darken;
+  object-fit: contain;
 }
 
 .header__logo-catalog-wrapper{

@@ -8,11 +8,14 @@ import { AccountCompromisedPage } from "./pages/AccountCompromisedPage/AccountCo
 import { CancelEmailChangePage } from "./pages/CancelEmailChangePage";
 import { CartPage } from "./pages/CartPage/CartPage";
 import { CatalogPage } from "./pages/CatalogPage/CatalogPage";
+import { CheckoutPage } from "./pages/CheckoutPage/CheckoutPage";
 import { ConfirmNewEmailPage } from "./pages/ConfirmNewEmailPage";
 import { ConfirmOldEmailPage } from "./pages/ConfirmOldEmailPage";
 import { HomePage } from "./pages/HomePage/HomePage";
 import { OrdersPage } from "./pages/OrdersPage/OrdersPage";
+import { OrderSuccessPage } from "./pages/OrderSuccessPage/OrderSuccessPage";
 import { PasswordResetPage } from "./pages/PasswordResetPage/PasswordResetPage";
+import { PaymentReturnPage } from "./pages/PaymentReturnPage/PaymentReturnPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage/ProductDetailPage";
 import { ProfilePage } from "./pages/ProfilePage/ProfilePage";
 import { WishlistPage } from "./pages/WishlistPage/WishlistPage";
@@ -28,8 +31,11 @@ function App() {
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/products/:slug" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/order-success/:orderNumber" element={<OrderSuccessPage />} />
+            <Route path="/payment/return" element={<PaymentReturnPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/password-reset/:token" element={<PasswordResetPage />} />
             <Route path="/account-compromised/:token" element={<AccountCompromisedPage />} />

@@ -146,12 +146,6 @@ export const CartPage = () => {
     return "0";
   };
 
-  const calculateBonusPoints = () => {
-    const total = parseFloat(calculateSelectedTotal());
-    // Предположим, что 1% от суммы возвращается бонусами
-    return Math.floor(total * 0.01);
-  };
-
   const handleCheckout = () => {
     if (selectedItems.size === 0) {
       showToast("Выберите товары для оформления заказа", "info");
@@ -187,7 +181,6 @@ export const CartPage = () => {
   }
 
   const selectedCount = selectedItems.size;
-  const bonusPoints = calculateBonusPoints();
 
   return (
     <div className="cart-page">
@@ -314,11 +307,6 @@ export const CartPage = () => {
                 </Button>
               </div>
 
-              <div className="cart-summary__bonus">
-                <span>У вас {bonusPoints} бонуса</span>
-                <button className="cart-summary__bonus-link">Списать?</button>
-              </div>
-
               <div className="cart-summary__details">
                 <div className="cart-summary__row">
                   <span>{selectedCount} товара</span>
@@ -327,10 +315,6 @@ export const CartPage = () => {
                 <div className="cart-summary__row">
                   <span>Скидка</span>
                   <span>{parseFloat(calculateDiscount()).toLocaleString("ru-RU")} ₽</span>
-                </div>
-                <div className="cart-summary__row cart-summary__row--bonus">
-                  <span>Вернется бонусами</span>
-                  <span>+{bonusPoints}</span>
                 </div>
               </div>
 

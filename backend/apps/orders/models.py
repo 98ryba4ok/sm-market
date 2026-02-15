@@ -118,8 +118,19 @@ class Order(models.Model):
     ]
     
     PAYMENT_METHOD_CHOICES = [
+        ('sbp', 'СБП'),
+        ('sber_pay', 'Сбер Pay'),
+        ('sber_bank', 'Сбер банк'),
+        ('installment', 'Рассрочка'),
         ('card', 'Банковская карта'),
+        ('new_card', 'Новая карта'),
         ('cash', 'Наличные при получении'),
+        ('installment_on_delivery', 'Рассрочка при получении'),
+    ]
+    
+    DELIVERY_METHOD_CHOICES = [
+        ('courier', 'Курьером'),
+        ('pickup', 'Самовывоз'),
     ]
 
     user = models.ForeignKey(
@@ -149,10 +160,18 @@ class Order(models.Model):
         verbose_name="Общая сумма"
     )
     
-    # Адрес доставки
+    # Способ и адрес доставки
+    delivery_method = models.CharField(
+        max_length=20,
+        choices=DELIVERY_METHOD_CHOICES,
+        default='courier',
+        verbose_name="Способ получения"
+    )
     delivery_address = models.TextField(verbose_name="Адрес доставки")
     delivery_city = models.CharField(max_length=100, verbose_name="Город")
     delivery_postal_code = models.CharField(max_length=20, verbose_name="Почтовый индекс")
+    delivery_date = models.DateField(null=True, blank=True, verbose_name="Дата доставки")
+    delivery_time = models.CharField(max_length=20, null=True, blank=True, verbose_name="Время доставки")
     
     # Контактная информация
     phone = models.CharField(max_length=20, verbose_name="Телефон")
@@ -166,7 +185,7 @@ class Order(models.Model):
         verbose_name="Статус оплаты"
     )
     payment_method = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=PAYMENT_METHOD_CHOICES,
         default='card',
         verbose_name="Способ оплаты"
@@ -176,6 +195,21 @@ class Order(models.Model):
         null=True,
         blank=True,
         verbose_name="ID платежа"
+    )
+    
+    # Промокоды и бонусы
+    promo_code = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="Промокод"
+    )
+    promo_discount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0'),
+        validators=[MinValueValidator(0)],
+        verbose_name="Скидка от промокода"
     )
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
@@ -322,3 +356,112 @@ class OrderItem(models.Model):
         # Пересчитать общую сумму заказа после удаления элемента
         if order:
             order.recalculate_total()
+
+
+class PromoCode(models.Model):
+    """Промокод для скидки"""
+    
+    DISCOUNT_TYPE_CHOICES = [
+        ('percent', 'Процент'),
+        ('fixed', 'Фиксированная сумма'),
+    ]
+    
+    code = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name="Код промокода"
+    )
+    discount_type = models.CharField(
+        max_length=20,
+        choices=DISCOUNT_TYPE_CHOICES,
+        default='percent',
+        verbose_name="Тип скидки"
+    )
+    discount_value = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        verbose_name="Значение скидки"
+    )
+    min_order_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0'),
+        validators=[MinValueValidator(0)],
+        verbose_name="Минимальная сумма заказа"
+    )
+    max_discount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        verbose_name="Максимальная скидка"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Активен"
+    )
+    valid_from = models.DateTimeField(
+        verbose_name="Действителен с"
+    )
+    valid_to = models.DateTimeField(
+        verbose_name="Действителен до"
+    )
+    usage_limit = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Лимит использований"
+    )
+    used_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Количество использований"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+    
+    class Meta:
+        verbose_name = "Промокод"
+        verbose_name_plural = "Промокоды"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['code']),
+            models.Index(fields=['is_active', 'valid_from', 'valid_to']),
+        ]
+    
+    def __str__(self):
+        return f"{self.code} ({self.get_discount_type_display()})"
+    
+    def is_valid(self):
+        """Проверяет валидность промокода"""
+        from django.utils import timezone
+        now = timezone.now()
+        
+        if not self.is_active:
+            return False, "Промокод неактивен"
+        
+        if now < self.valid_from:
+            return False, "Промокод еще не действителен"
+        
+        if now > self.valid_to:
+            return False, "Промокод истек"
+        
+        if self.usage_limit and self.used_count >= self.usage_limit:
+            return False, "Превышен лимит использований промокода"
+        
+        return True, None
+    
+    def calculate_discount(self, order_amount):
+        """Вычисляет размер скидки для заказа"""
+        if order_amount < self.min_order_amount:
+            return Decimal('0')
+        
+        if self.discount_type == 'percent':
+            discount = order_amount * (self.discount_value / 100)
+            if self.max_discount:
+                discount = min(discount, self.max_discount)
+        else:
+            discount = self.discount_value
+        
+        return min(discount, order_amount)

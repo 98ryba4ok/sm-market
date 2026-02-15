@@ -160,3 +160,14 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# ЮКасса (Yookassa) payment integration
+# Для активации:
+# 1. Установить: pip install yookassa
+# 2. Получить Shop ID и Secret Key на yookassa.ru
+# 3. Заполнить переменные окружения
+# 4. Включить YOOKASSA_ENABLED=true
+YOOKASSA_SHOP_ID = os.getenv('YOOKASSA_SHOP_ID', None)
+YOOKASSA_SECRET_KEY = os.getenv('YOOKASSA_SECRET_KEY', None)
+YOOKASSA_ENABLED = os.getenv('YOOKASSA_ENABLED', 'false').lower() == 'true'
+YOOKASSA_RETURN_URL = os.getenv('YOOKASSA_RETURN_URL', 'http://localhost:5173/payment/return')

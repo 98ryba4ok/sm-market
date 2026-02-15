@@ -232,3 +232,90 @@ Based on git status, the project is actively being developed:
 - Migration pending: `backend/apps/catalog/migrations/0002_banner.py`
 
 The frontend appears to be in early development stage - API integration is ready but most UI components and pages need implementation.
+
+## Оплата заказов
+
+**Текущее состояние:** Реализована упрощенная система оплаты с одним способом оплаты "Новой картой" и подготовлена инфраструктура для интеграции с ЮКасса (Yookassa).
+
+### Frontend
+
+**Компонент PaymentMethodSelector:**
+- `frontend/src/components/checkout/PaymentMethodSelector/` - отображает единственный способ оплаты "Новой картой"
+- Изображение карты: `frontend/src/assets/images/new_card.png`
+- PaymentMethod тип упрощен до `"new_card"`
+
+**Страницы:**
+- `CheckoutPage` - страница оформления заказа, использует упрощенный способ оплаты
+- `OrderSuccessPage` - страница успешного заказа с кнопкой "Оплатить заказ" (пока показывает уведомление)
+- `PaymentReturnPage` - страница возврата после оплаты в ЮКассе (`/payment/return`)
+
+**API клиент:**
+- `frontend/src/api/paymentApi.ts` - API для создания платежей
+  - `createPayment(orderId)` - создает платеж для заказа
+
+### Backend
+
+**Модели:**
+- `Order` модель поддерживает 8 способов оплаты в `PAYMENT_METHOD_CHOICES`, хотя фронтенд использует только `new_card`
+- Поле `payment_id` для связи с платежной системой
+
+**Сервис интеграции:**
+- `backend/apps/orders/yookassa.py` - `YooKassaService` класс с заглушками
+  - `create_payment()` - создание платежа (пока возвращает заглушку)
+  - `check_payment_status()` - проверка статуса платежа
+  - `process_webhook()` - обработка уведомлений от ЮКассы
+
+**API endpoints:**
+- `POST /api/orders/{id}/create_payment/` - создать платеж для заказа (возвращает заглушку)
+
+**Настройки:**
+В `backend/config/settings.py` добавлены переменные:
+- `YOOKASSA_SHOP_ID` - ID магазина в ЮКассе
+- `YOOKASSA_SECRET_KEY` - секретный ключ
+- `YOOKASSA_ENABLED` - флаг включения интеграции (по умолчанию `false`)
+- `YOOKASSA_RETURN_URL` - URL возврата после оплаты
+
+### Активация интеграции с ЮКасса
+
+Для активации реальной интеграции с ЮКассой необходимо:
+
+1. **Регистрация:**
+   - Зарегистрироваться на [yookassa.ru](https://yookassa.ru)
+   - Получить Shop ID и Secret Key в личном кабинете
+
+2. **Установка библиотеки:**
+   ```bash
+   docker-compose exec backend pip install yookassa
+   ```
+   Или добавить в `requirements.txt`:
+   ```
+   yookassa==2.4.0
+   ```
+
+3. **Настройка переменных окружения:**
+   В `backend/.env` заполнить:
+   ```env
+   YOOKASSA_SHOP_ID=your_shop_id
+   YOOKASSA_SECRET_KEY=your_secret_key
+   YOOKASSA_ENABLED=true
+   YOOKASSA_RETURN_URL=http://localhost:5173/payment/return
+   ```
+
+4. **Раскомментировать код:**
+   - В `backend/apps/orders/yookassa.py` раскомментировать блоки TODO с реальной интеграцией
+   - Код уже подготовлен, нужно только убрать комментарии
+
+5. **Тестирование:**
+   - ЮКасса предоставляет тестовые данные для проверки интеграции
+   - Используйте тестовые карты из документации ЮКассы
+
+### Процесс оплаты (после активации):
+
+1. Пользователь оформляет заказ на `CheckoutPage`
+2. На `OrderSuccessPage` нажимает "Оплатить заказ"
+3. Frontend вызывает `POST /api/orders/{id}/create_payment/`
+4. Backend создает платеж в ЮКассе и возвращает `confirmation_url`
+5. Frontend перенаправляет пользователя на страницу оплаты ЮКассы
+6. После оплаты ЮКасса перенаправляет на `/payment/return?payment_id=xxx&order_id=xxx`
+7. `PaymentReturnPage` проверяет статус платежа и показывает результат
+8. Опционально: ЮКасса отправляет webhook уведомление о статусе платежа

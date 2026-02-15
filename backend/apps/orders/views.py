@@ -1,16 +1,19 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db import transaction
-from .models import Cart, CartItem, Order
+from decimal import Decimal
+from .models import Cart, CartItem, Order, PromoCode
 from .serializers import (
     CartSerializer,
     CartItemSerializer,
     AddToCartSerializer,
     UpdateCartItemSerializer,
     OrderSerializer,
-    OrderCreateSerializer
+    OrderCreateSerializer,
+    PromoCodeSerializer,
+    PromoCodeValidationSerializer
 )
 from apps.catalog.models import Product
 
@@ -158,6 +161,74 @@ class CartViewSet(viewsets.ViewSet):
             {'detail': 'Корзина очищена'},
             status=status.HTTP_200_OK
         )
+    
+    @action(detail=False, methods=['post'])
+    def calculate_totals(self, request):
+        """
+        Рассчитать итоговую сумму заказа с учетом промокода
+        
+        Параметры:
+        - promo_code: код промокода (опционально)
+        - selected_items: список ID товаров для оформления (опционально)
+        
+        Возвращает:
+        - subtotal: сумма без скидок
+        - promo_discount: скидка от промокода
+        - delivery_cost: стоимость доставки
+        - total: итоговая сумма
+        """
+        cart = self._get_or_create_cart(request)
+        
+        promo_code_str = request.data.get('promo_code')
+        selected_items = request.data.get('selected_items', [])
+        
+        # Получить товары
+        if selected_items:
+            cart_items = cart.items.filter(id__in=selected_items)
+        else:
+            cart_items = cart.items.all()
+        
+        if not cart_items.exists():
+            return Response(
+                {'detail': 'Корзина пуста'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Рассчитать промежуточную сумму
+        subtotal = sum(item.subtotal for item in cart_items)
+        
+        # Применить промокод
+        promo_discount = Decimal('0')
+        promo_error = None
+        if promo_code_str:
+            try:
+                promo = PromoCode.objects.get(code=promo_code_str)
+                is_valid, error = promo.is_valid()
+                
+                if is_valid:
+                    if subtotal >= promo.min_order_amount:
+                        promo_discount = promo.calculate_discount(subtotal)
+                    else:
+                        promo_error = f'Минимальная сумма заказа: {promo.min_order_amount} ₽'
+                else:
+                    promo_error = error
+            except PromoCode.DoesNotExist:
+                promo_error = 'Промокод не найден'
+        
+        # Рассчитать итоговую сумму
+        total = subtotal - promo_discount
+        total = max(total, Decimal('0'))
+        
+        # Стоимость доставки
+        delivery_cost = Decimal('0')
+        
+        return Response({
+            'subtotal': str(subtotal),
+            'promo_discount': str(promo_discount),
+            'delivery_cost': str(delivery_cost),
+            'total': str(total),
+            'promo_error': promo_error
+        })
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -273,3 +344,97 @@ class OrderViewSet(viewsets.ModelViewSet):
             'detail': 'Статус заказа обновлен',
             'order': serializer.data
         })
+    
+    @action(detail=True, methods=['post'])
+    def create_payment(self, request, pk=None):
+        """
+        Создать платеж в ЮКасса для заказа
+        POST /api/orders/{id}/create_payment/
+        
+        Пока возвращает заглушку, в будущем создаст реальный платеж
+        и вернет URL для перехода на страницу оплаты ЮКассы
+        """
+        order = self.get_object()
+        
+        if order.payment_status == 'paid':
+            return Response(
+                {'detail': 'Заказ уже оплачен'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        from .yookassa import YooKassaService
+        from django.conf import settings
+        
+        yookassa_service = YooKassaService()
+        payment_data = yookassa_service.create_payment(
+            order_number=order.order_number,
+            amount=order.total_amount,
+            description=f'Оплата заказа {order.order_number}',
+            return_url=settings.YOOKASSA_RETURN_URL,
+            metadata={'order_id': order.id}
+        )
+        
+        # Сохранить payment_id в заказе если получен
+        if payment_data.get('payment_id'):
+            order.payment_id = payment_data['payment_id']
+            order.save(update_fields=['payment_id'])
+        
+        return Response({
+            'payment_id': payment_data.get('payment_id'),
+            'confirmation_url': payment_data.get('confirmation_url'),
+            'message': payment_data.get('message', 'Платеж создан')
+        })
+
+
+class PromoCodeViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet для промокодов
+    
+    list: Получить список активных промокодов (только для админов)
+    retrieve: Получить информацию о промокоде
+    validate: Проверить промокод и рассчитать скидку
+    """
+    queryset = PromoCode.objects.all()
+    serializer_class = PromoCodeSerializer
+    permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        """Обычные пользователи видят только активные промокоды"""
+        if self.request.user.is_staff:
+            return PromoCode.objects.all()
+        return PromoCode.objects.filter(is_active=True)
+    
+    @action(detail=False, methods=['post'])
+    def validate(self, request):
+        """
+        Проверить промокод и рассчитать скидку
+        
+        Параметры:
+        - code: код промокода
+        - cart_total: сумма корзины
+        
+        Возвращает:
+        - is_valid: валиден ли промокод
+        - discount_amount: размер скидки
+        - error: сообщение об ошибке (если невалиден)
+        """
+        serializer = PromoCodeValidationSerializer(data=request.data)
+        
+        try:
+            serializer.is_valid(raise_exception=True)
+            promo = serializer.validated_data['promo_code']
+            discount = serializer.validated_data['discount_amount']
+            
+            return Response({
+                'is_valid': True,
+                'discount_amount': str(discount),
+                'discount_type': promo.discount_type,
+                'error': None
+            })
+        except serializers.ValidationError as e:
+            error_message = str(e.detail.get('code', ['Неизвестная ошибка'])[0])
+            return Response({
+                'is_valid': False,
+                'discount_amount': '0',
+                'error': error_message
+            }, status=status.HTTP_200_OK)

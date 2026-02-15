@@ -1,0 +1,81 @@
+.payment-return-page {
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+.payment-return-page__container {
+  max-width: 600px;
+  width: 100%;
+}
+
+.payment-return-card {
+  background: white;
+  padding: 48px 32px;
+  border-radius: 16px;
+  border: 1px solid var(--gray-200);
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.payment-return-card__icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 48px;
+  font-weight: bold;
+}
+
+.payment-return-card--success .payment-return-card__icon {
+  background: var(--green-500);
+  color: white;
+}
+
+.payment-return-card--error .payment-return-card__icon {
+  background: var(--red-500);
+  color: white;
+}
+
+.payment-return-card__title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 16px;
+}
+
+.payment-return-card__text {
+  font-size: 14px;
+  color: var(--gray-600);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.payment-return-card__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .payment-return-card {
+    padding: 32px 24px;
+  }
+
+  .payment-return-card__title {
+    font-size: 24px;
+  }
+
+  .payment-return-card__actions {
+    flex-direction: column;
+  }
+
+  .payment-return-card__actions button {
+    width: 100%;
+  }
+}

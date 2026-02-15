@@ -300,3 +300,5 @@ class EmailConfirmationToken(models.Model):
         self.is_used = True
         self.used_at = timezone.now()
         self.save()
+
+

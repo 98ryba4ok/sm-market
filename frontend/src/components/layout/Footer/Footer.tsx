@@ -90,11 +90,6 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/bonus" className="footer__link">
-                  Бонусная программа
-                </Link>
-              </li>
-              <li>
                 <Link to="/warranty" className="footer__link">
                   Гарантия и возврат
                 </Link>
