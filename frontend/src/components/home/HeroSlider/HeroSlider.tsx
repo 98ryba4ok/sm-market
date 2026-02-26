@@ -74,14 +74,15 @@ export const HeroSlider = () => {
                   className="hero-slider__button"
                   style={{
                     display: "inline-block",
-                    marginTop: "1.5rem",
-                    padding: "0.75rem 1.5rem",
+                    marginTop: "1rem",
+                    padding: "0.625rem 1.25rem",
                     backgroundColor: "rgb(37, 99, 235)",
                     color: "white",
                     borderRadius: "0.25rem",
                     textDecoration: "none",
                     fontWeight: 500,
                     transition: "background-color 0.2s",
+                    fontSize: "0.875rem",
                   }}
                   onMouseEnter={(e) =>
                     (e.currentTarget.style.backgroundColor = "rgb(29, 78, 216)")

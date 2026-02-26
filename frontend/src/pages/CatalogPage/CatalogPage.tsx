@@ -1,4 +1,4 @@
-import { Search, X } from "lucide-react";
+import { Filter, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -9,6 +9,8 @@ import { productsApi } from "../../api/productsApi";
 import { getRoomCategories, getRooms } from "../../api/roomsApi";
 import { wishlistApi } from "../../api/wishlistApi";
 import { CategoryFilter } from "../../components/catalog/CategoryFilter/CategoryFilter";
+import { MobileFilters } from "../../components/catalog/MobileFilters";
+import { MobileSort } from "../../components/catalog/MobileSort";
 import { ProductFilters } from "../../components/catalog/ProductFilters/ProductFilters";
 import { ProductCard } from "../../components/ui/ProductCard/ProductCard";
 import { ProductCardSkeleton } from "../../components/ui/ProductCardSkeleton";
@@ -52,6 +54,9 @@ export const CatalogPage = () => {
   // Состояние загрузки
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Мобильные фильтры
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   // Загрузка помещений и брендов при монтировании
   useEffect(() => {
@@ -426,7 +431,19 @@ export const CatalogPage = () => {
             )}
           </div>
 
-          {/* Панель сортировки */}
+          {/* Мобильная панель управления */}
+          <div className="catalog-page__mobile-controls">
+            <button
+              className="catalog-page__mobile-filters-button"
+              onClick={() => setIsMobileFiltersOpen(true)}
+            >
+              <Filter size={18} />
+              <span>Фильтры</span>
+            </button>
+            <MobileSort ordering={ordering} onOrderingChange={setOrdering} />
+          </div>
+
+          {/* Панель сортировки (десктоп) */}
           <div className="catalog-page__sort-panel">
             <span className="catalog-page__sort-label">Сортировка:</span>
             <div className="catalog-page__sort-buttons">
@@ -533,6 +550,33 @@ export const CatalogPage = () => {
           )}
         </main>
       </div>
+
+      {/* Мобильные фильтры */}
+      <MobileFilters
+        isOpen={isMobileFiltersOpen}
+        onClose={() => setIsMobileFiltersOpen(false)}
+        rooms={rooms}
+        selectedRoom={selectedRoom}
+        categories={categories}
+        selectedCategories={selectedCategories}
+        brands={brands}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        inStock={inStock}
+        onSale={onSale}
+        minRating={minRating}
+        selectedLabels={selectedLabels}
+        selectedBrands={selectedBrands}
+        onSelectRoom={handleSelectRoom}
+        onToggleCategory={handleToggleCategory}
+        onMinPriceChange={setMinPrice}
+        onMaxPriceChange={setMaxPrice}
+        onInStockChange={setInStock}
+        onSaleChange={setOnSale}
+        onMinRatingChange={setMinRating}
+        onLabelsChange={setSelectedLabels}
+        onBrandsChange={setSelectedBrands}
+      />
     </div>
   );
 };

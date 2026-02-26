@@ -1,4 +1,4 @@
-import { ChevronDown, Heart, LogOut, Search, ShoppingCart, User } from "lucide-react";
+import { Heart, Menu, Search, ShoppingCart, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -10,6 +10,10 @@ import { performLogout } from "../../../utils/auth";
 import { LoginModal } from "../../features/auth/LoginModal/LoginModal";
 import { PasswordResetModal } from "../../features/auth/PasswordResetModal/PasswordResetModal";
 import { RegisterModal } from "../../features/auth/RegisterModal/RegisterModal";
+
+import { MobileMenu } from "./MobileMenu";
+import { SearchModal } from "./SearchModal";
+import { UserMenu } from "./UserMenu";
 import "./Header.css";
 
 export const Header = () => {
@@ -20,8 +24,9 @@ export const Header = () => {
   const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   useEffect(() => {
     // Проверяем авторизацию при загрузке
@@ -81,7 +86,6 @@ export const Header = () => {
       console.log("[Header] userLoggedOut event received");
       setIsAuthenticated(false);
       setUserEmail(null);
-      setShowUserMenu(false);
       setCartItemsCount(0);
       console.log("[Header] State updated after logout");
     };
@@ -137,23 +141,15 @@ export const Header = () => {
     <header className="header">
       <div className="header__container">
         <div className="header__content">
-          <div className="header__logo-catalog-wrapper">
-            {/* Logo */}
-            <Link to="/" className="header__logo">
-              <div className="header__logo-box">
-                <img className="header__logo-text" src={logo} alt="CM" />
-              </div>
-            </Link>
+          {/* Logo */}
+          <Link to="/" className="header__logo">
+            <div className="header__logo-box">
+              <img className="header__logo-text" src={logo} alt="CM" />
+            </div>
+          </Link>
 
-            {/* Catalog Button */}
-            <Link to="/catalog" className="header__catalog-btn">
-              <img src={categoryLogo} alt="" />
-              <span className="header__catalog-text">Каталог</span>
-            </Link>
-          </div>
-
-          {/* Search */}
-          <div className="header__search">
+          {/* Search - Desktop */}
+          <div className="header__search header__search--desktop">
             <form className="header__search-wrapper" onSubmit={handleSearch}>
               <input
                 type="text"
@@ -169,59 +165,40 @@ export const Header = () => {
             </form>
           </div>
 
-          {/* Actions */}
-          <div className="header__actions">
+          {/* Search - Mobile */}
+          <div className="header__search header__search--mobile">
+            <form className="header__search-wrapper" onSubmit={handleSearch}>
+              <input
+                type="text"
+                placeholder="Поиск"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
+                className="header__search-input"
+              />
+              <button type="submit" className="header__search-btn">
+                <Search size={18} />
+              </button>
+            </form>
+          </div>
+
+          {/* Actions - Desktop */}
+          <div className="header__actions header__actions--desktop">
+            {/* Catalog Button */}
+            <Link to="/catalog" className="header__catalog-btn header__catalog-btn--desktop">
+              <img src={categoryLogo} alt="" />
+              <span className="header__catalog-text">Каталог</span>
+            </Link>
+
             {isAuthenticated ? (
-              <div className="header__user-menu">
-                <button
-                  className="header__user-btn"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                >
-                  <User size={20} />
-                  <span className="header__user-email">{userEmail}</span>
-                  <ChevronDown size={16} />
-                </button>
-                {showUserMenu && (
-                  <div className="header__user-dropdown">
-                    <Link
-                      to="/profile"
-                      className="header__user-dropdown-item"
-                      onClick={() => setShowUserMenu(false)}
-                    >
-                      <User size={18} />
-                      Мой профиль
-                    </Link>
-                    <Link
-                      to="/orders"
-                      className="header__user-dropdown-item"
-                      onClick={() => setShowUserMenu(false)}
-                    >
-                      <ShoppingCart size={18} />
-                      Мои заказы
-                    </Link>
-                    <button className="header__user-dropdown-item" onClick={handleLogout}>
-                      <LogOut size={18} />
-                      Выйти
-                    </button>
-                  </div>
-                )}
-              </div>
+              <UserMenu userEmail={userEmail} onLogout={handleLogout} />
             ) : (
-              <>
-                <button
-                  className="header__action-link header__action-btn"
-                  onClick={() => setIsLoginModalOpen(true)}
-                >
-                  <User size={20} />
-                  <span className="header__action-text">Войти</span>
-                </button>
-                {/* <button
-                  className="header__action-link header__action-btn header__register-btn"
-                  onClick={() => setIsRegisterModalOpen(true)}
-                >
-                  <span className="header__action-text">Регистрация</span>
-                </button> */}
-              </>
+              <button
+                className="header__action-link header__action-btn"
+                onClick={() => setIsLoginModalOpen(true)}
+              >
+                <span className="header__action-text">Войти</span>
+              </button>
             )}
 
             <Link to="/wishlist" className="header__action-link header__action-link--icon-only">
@@ -235,8 +212,32 @@ export const Header = () => {
               )}
             </Link>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="header__mobile-menu-btn"
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Открыть меню"
+          >
+            <Menu size={24} />
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        isAuthenticated={isAuthenticated}
+        userEmail={userEmail}
+        onOpenLoginModal={() => setIsLoginModalOpen(true)}
+      />
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+      />
 
       {/* Auth Modals */}
       <LoginModal

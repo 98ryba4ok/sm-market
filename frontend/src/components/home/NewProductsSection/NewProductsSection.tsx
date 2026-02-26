@@ -1,5 +1,5 @@
-import { ArrowRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { cartApi, productsApi, wishlistApi } from "../../../api";
@@ -13,10 +13,13 @@ export const NewProductsSection = () => {
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
   useEffect(() => {
     productsApi
-      .list({ ordering: "-created_at", page_size: 4 })
+      .list({ ordering: "-created_at", page_size: 8 })
       .then((response) => {
         setProducts(response.data.results);
         setTotalCount(response.data.count);
@@ -24,6 +27,43 @@ export const NewProductsSection = () => {
       .catch((error) => console.error("Failed to load products:", error))
       .finally(() => setLoading(false));
   }, []);
+
+  const checkScrollButtons = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      setCanScrollLeft(container.scrollLeft > 0);
+      setCanScrollRight(
+        container.scrollLeft < container.scrollWidth - container.clientWidth
+      );
+    }
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", checkScrollButtons);
+      checkScrollButtons();
+      return () => {
+        container.removeEventListener("scroll", checkScrollButtons);
+      };
+    }
+  }, [products]);
+
+  const scrollLeft = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const scrollAmount = container.clientWidth * 0.8;
+      container.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const scrollAmount = container.clientWidth * 0.8;
+      container.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
 
   const handleAddToCart = async (productId: number) => {
     try {
@@ -85,16 +125,49 @@ export const NewProductsSection = () => {
           </Link>
         </div>
 
-        {/* Products Grid */}
-        <div className="new-products-section__grid">
-          {products.slice(0, 4).map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={handleAddToCart}
-              onAddToWishlist={handleAddToWishlist}
-            />
-          ))}
+        {/* Products Slider */}
+        <div className="new-products-section__slider-wrapper">
+          <button
+            className={`new-products-section__nav-button new-products-section__nav-button--left ${
+              !canScrollLeft ? "new-products-section__nav-button--disabled" : ""
+            }`}
+            onClick={scrollLeft}
+            disabled={!canScrollLeft}
+            aria-label="Прокрутить влево"
+          >
+            <ChevronLeft size={24} />
+          </button>
+
+          <div
+            className="new-products-section__slider"
+            ref={scrollContainerRef}
+          >
+            <div className="new-products-section__slider-track">
+              {products.map((product) => (
+                <div
+                  key={product.id}
+                  className="new-products-section__slider-item"
+                >
+                  <ProductCard
+                    product={product}
+                    onAddToCart={handleAddToCart}
+                    onAddToWishlist={handleAddToWishlist}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            className={`new-products-section__nav-button new-products-section__nav-button--right ${
+              !canScrollRight ? "new-products-section__nav-button--disabled" : ""
+            }`}
+            onClick={scrollRight}
+            disabled={!canScrollRight}
+            aria-label="Прокрутить вправо"
+          >
+            <ChevronRight size={24} />
+          </button>
         </div>
       </div>
     </section>

@@ -8,6 +8,10 @@ import { reviewsApi } from "../../api/reviewsApi";
 import { wishlistApi } from "../../api/wishlistApi";
 import { Button } from "../../components/ui/Button/Button";
 import { ProductCard } from "../../components/ui/ProductCard/ProductCard";
+import { ProductImageGallery } from "../../components/product/ProductImageGallery";
+import { MobileProductInfo } from "../../components/product/MobileProductInfo";
+import { ReviewFormDrawer } from "../../components/product/ReviewFormDrawer";
+import { SimilarProductsSlider } from "../../components/product/SimilarProductsSlider";
 import { useToast } from "../../contexts/ToastContext";
 import { getImageUrl } from "../../utils/imageUrl";
 import type { Product, ProductListItem, ProductReview } from "../../types";
@@ -253,162 +257,176 @@ export const ProductDetailPage = () => {
 
         {/* Main Content */}
         <div className="product-detail-page__main">
-          {/* Left: Thumbnails */}
-          {product.images && product.images.length > 1 && (
-            <div className="product-detail-page__thumbnails-vertical">
-              {product.images.map((img) => {
-                const imageUrl = getImageUrl(img.image);
-                return (
-                  <button
-                    key={img.id}
-                    className={`product-detail-page__thumbnail-vertical ${
-                      selectedImage === imageUrl ? "product-detail-page__thumbnail-vertical--active" : ""
-                    }`}
-                    onClick={() => setSelectedImage(imageUrl)}
-                  >
-                    <img src={imageUrl} alt={img.alt_text || product.name} />
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          {/* Desktop Layout */}
+          <div className="product-detail-page__desktop-layout">
+            {/* Left: Thumbnails */}
+            {product.images && product.images.length > 1 && (
+              <div className="product-detail-page__thumbnails-vertical">
+                {product.images.map((img) => {
+                  const imageUrl = getImageUrl(img.image);
+                  return (
+                    <button
+                      key={img.id}
+                      className={`product-detail-page__thumbnail-vertical ${
+                        selectedImage === imageUrl ? "product-detail-page__thumbnail-vertical--active" : ""
+                      }`}
+                      onClick={() => setSelectedImage(imageUrl)}
+                    >
+                      <img src={imageUrl} alt={img.alt_text || product.name} />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-          {/* Center: Main Image */}
-          <div className="product-detail-page__main-image-container">
-            <div className="product-detail-page__main-image">
-              {selectedImage ? (
-                <img src={selectedImage} alt={product.name} />
-              ) : (
-                <div className="product-detail-page__no-image">
-                  Нет изображения
+            {/* Center: Main Image */}
+            <div className="product-detail-page__main-image-container">
+              <div className="product-detail-page__main-image">
+                {selectedImage ? (
+                  <img src={selectedImage} alt={product.name} />
+                ) : (
+                  <div className="product-detail-page__no-image">
+                    Нет изображения
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Product Info - Split into 2 columns */}
+            <div className="product-detail-page__info">
+              {/* Left Column: Product Details */}
+              <div className="product-detail-page__info-left">
+                <h1 className="product-detail-page__title">{product.name}</h1>
+                
+                {product.sku && (
+                  <div className="product-detail-page__sku">
+                    Код товара: {product.sku}
+                  </div>
+                )}
+
+                {product.average_rating !== null && (
+                  <div className="product-detail-page__rating">
+                    <Star size={16} fill="#fbbf24" color="#fbbf24" />
+                    <span>{product.average_rating.toFixed(1)}</span>
+                  </div>
+                )}
+
+                {/* Color Selector - показываем только если есть несколько изображений */}
+                {product.images && product.images.length > 1 && (
+                  <div className="product-detail-page__color-section">
+                    <div className="product-detail-page__label">Варианты</div>
+                    <div className="product-detail-page__color-options">
+                      {product.images.slice(0, 5).map((img) => {
+                        const imageUrl = getImageUrl(img.image);
+                        return (
+                          <button
+                            key={img.id}
+                            className={`product-detail-page__color-option ${
+                              selectedImage === imageUrl ? "product-detail-page__color-option--active" : ""
+                            }`}
+                            onClick={() => setSelectedImage(imageUrl)}
+                          >
+                            <img src={imageUrl} alt={img.alt_text || product.name} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* About Product Section */}
+                <div className="product-detail-page__about">
+                  <div className="product-detail-page__about-header">
+                    <h3>О товаре</h3>
+                    <div className="product-detail-page__about-link" onClick={() => setActiveTab("specifications")}>Все характеристики</div>
+                  </div>
+                  <table className="product-detail-page__specs-table-compact">
+                    <tbody>
+                      {product.brand && (
+                        <tr>
+                          <td>Бренд</td>
+                          <td>{product.brand.name}</td>
+                        </tr>
+                      )}
+                      {Object.entries(product.specifications || {}).slice(0, 5).map(([key, value]) => (
+                        <tr key={key}>
+                          <td>{key}</td>
+                          <td>{value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+              </div>
+
+              {/* Right Column: Price & Actions */}
+              <div className="product-detail-page__info-right">
+                <div className="product-detail-page__price-row">
+                  <span className="product-detail-page__price">
+                    {Number(product.final_price).toLocaleString("ru-RU")} ₽
+                  </span>
+                  {hasDiscount && (
+                    <>
+                      <span className="product-detail-page__old-price">
+                        {Number(product.price).toLocaleString("ru-RU")} ₽
+                      </span>
+                      <span className="product-detail-page__discount-badge-new">
+                        -{discountPercentage}%
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                <Button
+                  variant="primary"
+                  onClick={handleAddToCart}
+                  disabled={!product.in_stock}
+                  className="product-detail-page__cart-button"
+                >
+                  <ShoppingCart size={20} />
+                  Добавить в корзину
+                </Button>
+
+                <button
+                  className="product-detail-page__wishlist-button"
+                  onClick={handleAddToWishlist}
+                >
+                  <Heart size={20} />
+                  В избранное
+                </button>
+
+                {/* Status Items */}
+                <div className="product-detail-page__status-list">
+                  {product.in_stock && (
+                    <div className="product-detail-page__status-item">
+                      <Check size={20} className="product-detail-page__status-icon" />
+                      <span>В наличии</span>
+                    </div>
+                  )}
+
+                  <div className="product-detail-page__status-item">
+                    <Truck size={20} className="product-detail-page__status-icon-green" />
+                    <span>Доставка за 1 - 2 дня</span>
+                  </div>
+
+                  <div className="product-detail-page__status-item">
+                    <Check size={20} className="product-detail-page__status-icon-green" />
+                    <span>Гарантия {product.warranty_months >= 12 ? `${product.warranty_months / 12} ${product.warranty_months === 12 ? 'год' : 'лет'}` : `${product.warranty_months} мес.`}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Right: Product Info - Split into 2 columns */}
-          <div className="product-detail-page__info">
-            {/* Left Column: Product Details */}
-            <div className="product-detail-page__info-left">
-              <h1 className="product-detail-page__title">{product.name}</h1>
-              
-              {product.sku && (
-                <div className="product-detail-page__sku">
-                  Код товара: {product.sku}
-                </div>
-              )}
-
-              {product.average_rating !== null && (
-                <div className="product-detail-page__rating">
-                  <Star size={16} fill="#fbbf24" color="#fbbf24" />
-                  <span>{product.average_rating.toFixed(1)}</span>
-                </div>
-              )}
-
-              {/* Color Selector - показываем только если есть несколько изображений */}
-              {product.images && product.images.length > 1 && (
-                <div className="product-detail-page__color-section">
-                  <div className="product-detail-page__label">Варианты</div>
-                  <div className="product-detail-page__color-options">
-                    {product.images.slice(0, 5).map((img) => {
-                      const imageUrl = getImageUrl(img.image);
-                      return (
-                        <button
-                          key={img.id}
-                          className={`product-detail-page__color-option ${
-                            selectedImage === imageUrl ? "product-detail-page__color-option--active" : ""
-                          }`}
-                          onClick={() => setSelectedImage(imageUrl)}
-                        >
-                          <img src={imageUrl} alt={img.alt_text || product.name} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* About Product Section */}
-              <div className="product-detail-page__about">
-                <div className="product-detail-page__about-header">
-                  <h3>О товаре</h3>
-                  <div className="product-detail-page__about-link">Все характеристики</div>
-                </div>
-                <table className="product-detail-page__specs-table-compact">
-                  <tbody>
-                    {product.brand && (
-                      <tr>
-                        <td>Бренд</td>
-                        <td>{product.brand.name}</td>
-                      </tr>
-                    )}
-                    {Object.entries(product.specifications || {}).slice(0, 5).map(([key, value]) => (
-                      <tr key={key}>
-                        <td>{key}</td>
-                        <td>{value}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Right Column: Price & Actions */}
-            <div className="product-detail-page__info-right">
-              <div className="product-detail-page__price-row">
-                <span className="product-detail-page__price">
-                  {Number(product.final_price).toLocaleString("ru-RU")} ₽
-                </span>
-                {hasDiscount && (
-                  <>
-                    <span className="product-detail-page__old-price">
-                      {Number(product.price).toLocaleString("ru-RU")} ₽
-                    </span>
-                    <span className="product-detail-page__discount-badge-new">
-                      -{discountPercentage}%
-                    </span>
-                  </>
-                )}
-              </div>
-
-              <Button
-                variant="primary"
-                onClick={handleAddToCart}
-                disabled={!product.in_stock}
-                className="product-detail-page__cart-button"
-              >
-                <ShoppingCart size={20} />
-                Добавить в корзину
-              </Button>
-
-              <button
-                className="product-detail-page__wishlist-button"
-                onClick={handleAddToWishlist}
-              >
-                <Heart size={20} />
-                В избранное
-              </button>
-
-              {/* Status Items */}
-              <div className="product-detail-page__status-list">
-                {product.in_stock && (
-                  <div className="product-detail-page__status-item">
-                    <Check size={20} className="product-detail-page__status-icon" />
-                    <span>В наличии</span>
-                  </div>
-                )}
-
-                <div className="product-detail-page__status-item">
-                  <Truck size={20} className="product-detail-page__status-icon-green" />
-                  <span>Доставка за 1 - 2 дня</span>
-                </div>
-
-                <div className="product-detail-page__status-item">
-                  <Check size={20} className="product-detail-page__status-icon-green" />
-                  <span>Гарантия {product.warranty_months >= 12 ? `${product.warranty_months / 12} ${product.warranty_months === 12 ? 'год' : 'лет'}` : `${product.warranty_months} мес.`}</span>
-                </div>
-              </div>
-            </div>
+          {/* Mobile Layout */}
+          <div className="product-detail-page__mobile-layout">
+            <ProductImageGallery images={product.images} productName={product.name} />
+            <MobileProductInfo
+              product={product}
+              onAddToCart={handleAddToCart}
+              onAddToWishlist={handleAddToWishlist}
+              onSpecsClick={() => setActiveTab("specifications")}
+            />
           </div>
         </div>
 
@@ -503,70 +521,59 @@ export const ProductDetailPage = () => {
               <div className="product-detail-page__reviews">
                 <div className="product-detail-page__reviews-header">
                   <h3>Отзывы ({reviews.length})</h3>
-                  {!showReviewForm && (
-                    <Button
-                      variant="primary"
-                      onClick={() => setShowReviewForm(true)}
-                    >
-                      Написать отзыв
-                    </Button>
-                  )}
+                  <Button
+                    variant="primary"
+                    onClick={() => setShowReviewForm(true)}
+                  >
+                    Написать отзыв
+                  </Button>
                 </div>
 
-                {/* Review Form */}
-                {showReviewForm && (
-                  <div className="product-detail-page__review-form">
-                    <div className="product-detail-page__review-form-header">
-                      <h4>{editingReview ? "Редактировать отзыв" : "Написать отзыв"}</h4>
-                      <button
-                        className="product-detail-page__review-form-close"
-                        onClick={handleCancelReview}
-                        aria-label="Закрыть"
-                      >
-                        <X size={20} />
-                      </button>
-                    </div>
-                    <form onSubmit={handleSubmitReview}>
-                      <div className="product-detail-page__form-group">
-                        <label>Рейтинг:</label>
-                        <div className="product-detail-page__rating-input">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <button
-                              key={i}
-                              type="button"
-                              className="product-detail-page__rating-star"
-                              onClick={() => setReviewFormData({ ...reviewFormData, rating: i + 1 })}
-                            >
-                              <Star
-                                size={24}
-                                fill={i < reviewFormData.rating ? "currentColor" : "none"}
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="product-detail-page__form-group">
-                        <label htmlFor="comment">Комментарий:</label>
-                        <textarea
-                          id="comment"
-                          value={reviewFormData.comment}
-                          onChange={(e) => setReviewFormData({ ...reviewFormData, comment: e.target.value })}
-                          rows={4}
-                          required
-                          placeholder="Расскажите о вашем опыте использования товара..."
-                        />
-                      </div>
-                      <div className="product-detail-page__form-actions">
-                        <Button type="submit" variant="primary">
-                          {editingReview ? "Обновить отзыв" : "Отправить отзыв"}
-                        </Button>
-                        <Button type="button" variant="secondary" onClick={handleCancelReview}>
-                          Отмена
-                        </Button>
-                      </div>
-                    </form>
-                  </div>
-                )}
+                {/* Review Form Drawer */}
+                <ReviewFormDrawer
+                  isOpen={showReviewForm}
+                  onClose={handleCancelReview}
+                  onSubmit={async (rating, comment) => {
+                    if (!product) return;
+                    
+                    try {
+                      if (editingReview) {
+                        await reviewsApi.partialUpdate(editingReview.id, { rating, comment });
+                        showToast("Отзыв обновлен!", "success");
+                      } else {
+                        await reviewsApi.create({
+                          product: product.id,
+                          rating,
+                          comment,
+                        });
+                        showToast("Отзыв добавлен!", "success");
+                      }
+
+                      loadReviews(product.id);
+                      setShowReviewForm(false);
+                      setEditingReview(null);
+                      setReviewFormData({ rating: 5, comment: "" });
+                    } catch (err: unknown) {
+                      console.error("Error submitting review:", err);
+                      if (err && typeof err === 'object' && 'response' in err) {
+                        const error = err as { response?: { status?: number; data?: { detail?: string } } };
+                        if (error.response?.status === 401) {
+                          showToast("Войдите в систему для добавления отзыва", "error");
+                          window.dispatchEvent(new CustomEvent("openLoginModal"));
+                        } else if (error.response?.data?.detail) {
+                          showToast(error.response.data.detail, "error");
+                        } else {
+                          showToast("Ошибка при сохранении отзыва", "error");
+                        }
+                      } else {
+                        showToast("Ошибка при сохранении отзыва", "error");
+                      }
+                    }
+                  }}
+                  initialRating={reviewFormData.rating}
+                  initialComment={reviewFormData.comment}
+                  isEditing={!!editingReview}
+                />
 
                 {/* Reviews List */}
                 {reviewsLoading ? (
@@ -635,49 +642,46 @@ export const ProductDetailPage = () => {
 
         {/* Similar Products Section */}
         {similarProducts.length > 0 && (
-          <div className="product-detail-page__similar">
-            <h2>Похожие товары</h2>
-            {similarLoading ? (
-              <div className="product-detail-page__similar-loading">Загрузка...</div>
-            ) : (
-              <div className="product-detail-page__similar-grid">
-                {similarProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onAddToCart={async (id) => {
-                      try {
-                        await cartApi.addItem({ product_id: id, quantity: 1 });
-                        showToast("Товар добавлен в корзину!", "success");
-                        // Уведомляем Header об обновлении корзины
-                        window.dispatchEvent(new Event('cartUpdated'));
-                      } catch (err: any) {
-                        if (err.response?.status === 401) {
-                          showToast("Войдите в систему", "error");
-                          window.dispatchEvent(new CustomEvent("openLoginModal"));
-                        } else {
-                          showToast("Ошибка при добавлении в корзину", "error");
-                        }
-                      }
-                    }}
-                    onAddToWishlist={async (id) => {
-                      try {
-                        await wishlistApi.add({ product_id: id });
-                        showToast("Товар добавлен в избранное!", "success");
-                      } catch (err: any) {
-                        if (err.response?.status === 401) {
-                          showToast("Войдите в систему", "error");
-                          window.dispatchEvent(new CustomEvent("openLoginModal"));
-                        } else {
-                          showToast("Ошибка при добавлении в избранное", "error");
-                        }
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <SimilarProductsSlider
+            products={similarProducts}
+            onAddToCart={async (id) => {
+              try {
+                await cartApi.addItem({ product_id: id, quantity: 1 });
+                showToast("Товар добавлен в корзину!", "success");
+                window.dispatchEvent(new Event('cartUpdated'));
+              } catch (err: unknown) {
+                if (err && typeof err === 'object' && 'response' in err) {
+                  const error = err as { response?: { status?: number } };
+                  if (error.response?.status === 401) {
+                    showToast("Войдите в систему", "error");
+                    window.dispatchEvent(new CustomEvent("openLoginModal"));
+                  } else {
+                    showToast("Ошибка при добавлении в корзину", "error");
+                  }
+                } else {
+                  showToast("Ошибка при добавлении в корзину", "error");
+                }
+              }
+            }}
+            onAddToWishlist={async (id) => {
+              try {
+                await wishlistApi.add({ product_id: id });
+                showToast("Товар добавлен в избранное!", "success");
+              } catch (err: unknown) {
+                if (err && typeof err === 'object' && 'response' in err) {
+                  const error = err as { response?: { status?: number } };
+                  if (error.response?.status === 401) {
+                    showToast("Войдите в систему", "error");
+                    window.dispatchEvent(new CustomEvent("openLoginModal"));
+                  } else {
+                    showToast("Ошибка при добавлении в избранное", "error");
+                  }
+                } else {
+                  showToast("Ошибка при добавлении в избранное", "error");
+                }
+              }
+            }}
+          />
         )}
       </div>
     </div>

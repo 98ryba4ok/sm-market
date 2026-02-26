@@ -10,6 +10,8 @@ import { DatePicker } from "../../components/ui/DatePicker/DatePicker";
 import { Input } from "../../components/ui/Input/Input";
 import { Textarea } from "../../components/ui/Textarea/Textarea";
 import { TimePicker } from "../../components/ui/TimePicker/TimePicker";
+import { MobileCheckoutItem } from "../../components/checkout/MobileCheckoutItem";
+import { MobileCheckoutSummary } from "../../components/checkout/MobileCheckoutSummary";
 import {
   DeliveryMethodSelector,
   type DeliveryMethod,
@@ -105,7 +107,7 @@ export const CheckoutPage = () => {
     if (!cart) return;
 
     if (selectedItems.size === cart.items.length) {
-      showToast("Должен быть выбран хотя бы один товар", "warning");
+      showToast("Должен быть выбран хотя бы один товар", "info");
       return;
     } else {
       const allItemIds = new Set(cart.items.map((item) => item.id));
@@ -117,7 +119,7 @@ export const CheckoutPage = () => {
     const newSelected = new Set(selectedItems);
     
     if (newSelected.has(itemId) && newSelected.size === 1) {
-      showToast("Должен быть выбран хотя бы один товар", "warning");
+      showToast("Должен быть выбран хотя бы один товар", "info");
       return;
     }
     
@@ -235,10 +237,10 @@ export const CheckoutPage = () => {
       const response = await ordersApi.create(orderData);
       showToast("Заказ успешно оформлен!", "success");
       navigate(`/order-success/${response.data.order_number}`);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to create order:", error);
       const errorMessage =
-        error?.response?.data?.detail || "Ошибка при создании заказа";
+        (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Ошибка при создании заказа";
       showToast(errorMessage, "error");
     } finally {
       setIsSubmitting(false);
@@ -270,6 +272,8 @@ export const CheckoutPage = () => {
       </div>
     );
   }
+
+  const isMobile = window.innerWidth < 768;
 
   return (
     <div className="checkout-page">
@@ -398,144 +402,172 @@ export const CheckoutPage = () => {
 
                 <div className="checkout-items__list">
                   {cart.items.map((item) => (
-                    <div key={item.id} className="checkout-item">
-                      <label className="checkout-item__checkbox">
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.has(item.id)}
-                          onChange={() => handleSelectItem(item.id)}
-                        />
-                      </label>
+                    isMobile ? (
+                      <MobileCheckoutItem
+                        key={item.id}
+                        item={item}
+                        isSelected={selectedItems.has(item.id)}
+                        onSelect={handleSelectItem}
+                        onUpdateQuantity={handleUpdateQuantity}
+                        onRemove={handleRemoveItem}
+                      />
+                    ) : (
+                      <div key={item.id} className="checkout-item">
+                        <label className="checkout-item__checkbox">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(item.id)}
+                            onChange={() => handleSelectItem(item.id)}
+                          />
+                        </label>
 
-                      <div className="checkout-item__image">
-                        <img
-                          src={
-                            getImageUrl(item.product_detail.main_image) ||
-                            "/placeholder.png"
-                          }
-                          alt={item.product_detail.name}
-                        />
-                      </div>
+                        <div className="checkout-item__image">
+                          <img
+                            src={
+                              getImageUrl(item.product_detail.main_image) ||
+                              "/placeholder.png"
+                            }
+                            alt={item.product_detail.name}
+                          />
+                        </div>
 
-                      <div className="checkout-item__info">
-                        <Link
-                          to={`/products/${item.product_detail.slug}`}
-                          className="checkout-item__name"
-                        >
-                          {item.product_detail.name}
-                        </Link>
-                        <p className="checkout-item__category">
-                          {item.product_detail.category_name}
-                        </p>
-                      </div>
+                        <div className="checkout-item__info">
+                          <Link
+                            to={`/products/${item.product_detail.slug}`}
+                            className="checkout-item__name"
+                          >
+                            {item.product_detail.name}
+                          </Link>
+                          <p className="checkout-item__category">
+                            {item.product_detail.category_name}
+                          </p>
+                        </div>
 
-                      <div className="checkout-item__quantity">
+                        <div className="checkout-item__quantity">
+                          <button
+                            className="checkout-item__quantity-btn"
+                            onClick={() =>
+                              handleUpdateQuantity(item.id, item.quantity - 1)
+                            }
+                            disabled={item.quantity <= 1}
+                          >
+                            -
+                          </button>
+                          <span className="checkout-item__quantity-value">
+                            {item.quantity}
+                          </span>
+                          <button
+                            className="checkout-item__quantity-btn"
+                            onClick={() =>
+                              handleUpdateQuantity(item.id, item.quantity + 1)
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <div className="checkout-item__price">
+                          <span className="checkout-item__current-price">
+                            {parseFloat(item.subtotal).toLocaleString("ru-RU")} ₽
+                          </span>
+                        </div>
+
                         <button
-                          className="checkout-item__quantity-btn"
-                          onClick={() =>
-                            handleUpdateQuantity(item.id, item.quantity - 1)
-                          }
-                          disabled={item.quantity <= 1}
+                          className="checkout-item__remove"
+                          onClick={() => handleRemoveItem(item.id)}
+                          title="Удалить"
                         >
-                          -
-                        </button>
-                        <span className="checkout-item__quantity-value">
-                          {item.quantity}
-                        </span>
-                        <button
-                          className="checkout-item__quantity-btn"
-                          onClick={() =>
-                            handleUpdateQuantity(item.id, item.quantity + 1)
-                          }
-                        >
-                          +
+                          <Trash2 size={20} />
                         </button>
                       </div>
-
-                      <div className="checkout-item__price">
-                        <span className="checkout-item__current-price">
-                          {parseFloat(item.subtotal).toLocaleString("ru-RU")} ₽
-                        </span>
-                      </div>
-
-                      <button
-                        className="checkout-item__remove"
-                        onClick={() => handleRemoveItem(item.id)}
-                        title="Удалить"
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                    </div>
+                    )
                   ))}
                 </div>
               </div>
             </section>
           </div>
 
-          <div className="checkout-page__summary">
-            <div className="checkout-summary">
-              <div className="checkout-summary__promo">
-                <Input
-                  type="text"
-                  placeholder="Промокод"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                />
-                <Button variant="outline" size="md" onClick={handleApplyPromo}>
-                  Применить
-                </Button>
-              </div>
-              {totals?.promo_error && (
-                <div className="checkout-summary__error">{totals.promo_error}</div>
-              )}
+          {/* Десктопная версия блока итогов */}
+          {!isMobile && (
+            <div className="checkout-page__summary">
+              <div className="checkout-summary">
+                <div className="checkout-summary__promo">
+                  <Input
+                    type="text"
+                    placeholder="Промокод"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                  />
+                  <Button variant="outline" size="md" onClick={handleApplyPromo}>
+                    Применить
+                  </Button>
+                </div>
+                {totals?.promo_error && (
+                  <div className="checkout-summary__error">{totals.promo_error}</div>
+                )}
 
-              {totals && (
-                <>
-                  <div className="checkout-summary__details">
-                    <div className="checkout-summary__row">
-                      <span>{selectedItems.size} товара</span>
-                      <span>
-                        {parseFloat(totals.subtotal).toLocaleString("ru-RU")} ₽
-                      </span>
-                    </div>
-                    {parseFloat(totals.promo_discount) > 0 && (
-                      <div className="checkout-summary__row checkout-summary__row--discount">
-                        <span>Скидка по промокоду</span>
+                {totals && (
+                  <>
+                    <div className="checkout-summary__details">
+                      <div className="checkout-summary__row">
+                        <span>{selectedItems.size} товара</span>
                         <span>
-                          -{parseFloat(totals.promo_discount).toLocaleString("ru-RU")} ₽
+                          {parseFloat(totals.subtotal).toLocaleString("ru-RU")} ₽
                         </span>
                       </div>
-                    )}
-                    <div className="checkout-summary__row">
-                      <span>Доставка</span>
-                      <span>
-                        {parseFloat(totals.delivery_cost) > 0
-                          ? `${parseFloat(totals.delivery_cost).toLocaleString("ru-RU")} ₽`
-                          : "Без доплат"}
+                      {parseFloat(totals.promo_discount) > 0 && (
+                        <div className="checkout-summary__row checkout-summary__row--discount">
+                          <span>Скидка по промокоду</span>
+                          <span>
+                            -{parseFloat(totals.promo_discount).toLocaleString("ru-RU")} ₽
+                          </span>
+                        </div>
+                      )}
+                      <div className="checkout-summary__row">
+                        <span>Доставка</span>
+                        <span>
+                          {parseFloat(totals.delivery_cost) > 0
+                            ? `${parseFloat(totals.delivery_cost).toLocaleString("ru-RU")} ₽`
+                            : "Без доплат"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="checkout-summary__total">
+                      <span>Итого</span>
+                      <span className="checkout-summary__total-price">
+                        {parseFloat(totals.total).toLocaleString("ru-RU")} ₽
                       </span>
                     </div>
-                  </div>
+                  </>
+                )}
 
-                  <div className="checkout-summary__total">
-                    <span>Итого</span>
-                    <span className="checkout-summary__total-price">
-                      {parseFloat(totals.total).toLocaleString("ru-RU")} ₽
-                    </span>
-                  </div>
-                </>
-              )}
-
-              <Button
-                className="checkout-summary__submit-btn"
-                onClick={handleSubmit}
-                disabled={isSubmitting || selectedItems.size === 0}
-              >
-                {isSubmitting ? "Оформление..." : "Оформить заказ"}
-              </Button>
+                <Button
+                  className="checkout-summary__submit-btn"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || selectedItems.size === 0}
+                >
+                  {isSubmitting ? "Оформление..." : "Оформить заказ"}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+      {/* Мобильный фиксированный блок итогов */}
+      {isMobile && (
+        <MobileCheckoutSummary
+          totals={totals}
+          selectedCount={selectedItems.size}
+          promoCode={promoCode}
+          onPromoCodeChange={setPromoCode}
+          onApplyPromo={handleApplyPromo}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          disabled={selectedItems.size === 0}
+        />
+      )}
     </div>
   );
 };

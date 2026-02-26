@@ -1,0 +1,1 @@
+export { MobileProductInfo } from "./MobileProductInfo";

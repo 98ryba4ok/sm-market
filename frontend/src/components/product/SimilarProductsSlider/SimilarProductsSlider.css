@@ -1,0 +1,137 @@
+.similar-products-slider {
+  margin-bottom: 2rem;
+}
+
+.similar-products-slider__title {
+  font-family: Montserrat, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 1.5rem 0;
+}
+
+.similar-products-slider__container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.similar-products-slider__scroll-container {
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.similar-products-slider__scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.similar-products-slider__products {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.similar-products-slider__product {
+  flex-shrink: 0;
+  width: 280px;
+}
+
+.similar-products-slider__nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.similar-products-slider__nav-button:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.similar-products-slider__nav-button--disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.similar-products-slider__nav-button--left {
+  left: -24px;
+}
+
+.similar-products-slider__nav-button--right {
+  right: -24px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .similar-products-slider__nav-button--left {
+    left: 0;
+  }
+
+  .similar-products-slider__nav-button--right {
+    right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .similar-products-slider__title {
+    font-size: 20px;
+  }
+
+  .similar-products-slider__product {
+    width: calc(50vw - 1.5rem);
+  }
+
+  .similar-products-slider__nav-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .similar-products-slider__nav-button svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .similar-products-slider {
+    margin-bottom: 1.5rem;
+  }
+
+  .similar-products-slider__title {
+    font-size: 18px;
+    margin-bottom: 1rem;
+  }
+
+  .similar-products-slider__product {
+    width: calc(100vw - 3rem);
+  }
+
+  .similar-products-slider__products {
+    gap: 0.75rem;
+  }
+
+  .similar-products-slider__nav-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .similar-products-slider__nav-button svg {
+    width: 18px;
+    height: 18px;
+  }
+}

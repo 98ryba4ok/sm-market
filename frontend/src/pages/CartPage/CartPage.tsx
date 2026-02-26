@@ -6,6 +6,8 @@ import { cartApi } from "../../api/cartApi";
 import { wishlistApi } from "../../api/wishlistApi";
 import { Button } from "../../components/ui/Button/Button";
 import { Input } from "../../components/ui/Input/Input";
+import { MobileCartItem } from "../../components/cart/MobileCartItem";
+import { MobileCartSummary } from "../../components/cart/MobileCartSummary";
 import { useToast } from "../../contexts/ToastContext";
 import type { Cart } from "../../types/cart";
 import { getImageUrl } from "../../utils/imageUrl";
@@ -181,6 +183,7 @@ export const CartPage = () => {
   }
 
   const selectedCount = selectedItems.size;
+  const isMobile = window.innerWidth < 768;
 
   return (
     <div className="cart-page">
@@ -214,128 +217,157 @@ export const CartPage = () => {
 
             <div className="cart-page__list">
               {cart.items.map((item) => (
-                <div key={item.id} className="cart-item">
-                  <label className="cart-item__checkbox">
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.has(item.id)}
-                      onChange={() => handleSelectItem(item.id)}
-                    />
-                  </label>
+                isMobile ? (
+                  <MobileCartItem
+                    key={item.id}
+                    item={item}
+                    isSelected={selectedItems.has(item.id)}
+                    onSelect={handleSelectItem}
+                    onUpdateQuantity={handleUpdateQuantity}
+                    onRemove={handleRemoveItem}
+                    onAddToWishlist={handleAddToWishlist}
+                    isUpdating={updatingItems.has(item.id)}
+                  />
+                ) : (
+                  <div key={item.id} className="cart-item">
+                    <label className="cart-item__checkbox">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.has(item.id)}
+                        onChange={() => handleSelectItem(item.id)}
+                      />
+                    </label>
 
-                  <div className="cart-item__image">
-                    <img
-                      src={getImageUrl(item.product_detail.main_image) || "/placeholder.png"}
-                      alt={item.product_detail.name}
-                    />
-                  </div>
+                    <div className="cart-item__image">
+                      <img
+                        src={getImageUrl(item.product_detail.main_image) || "/placeholder.png"}
+                        alt={item.product_detail.name}
+                      />
+                    </div>
 
-                  <div className="cart-item__info">
-                    <Link
-                      to={`/products/${item.product_detail.slug}`}
-                      className="cart-item__name"
-                    >
-                      {item.product_detail.name}
-                    </Link>
-                    <p className="cart-item__description">
-                      {item.product_detail.category_name}
-                    </p>
-                  </div>
+                    <div className="cart-item__info">
+                      <Link
+                        to={`/products/${item.product_detail.slug}`}
+                        className="cart-item__name"
+                      >
+                        {item.product_detail.name}
+                      </Link>
+                      <p className="cart-item__description">
+                        {item.product_detail.category_name}
+                      </p>
+                    </div>
 
-                  <div className="cart-item__quantity">
-                    <button
-                      className="cart-item__quantity-btn"
-                      onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-                      disabled={item.quantity <= 1 || updatingItems.has(item.id)}
-                    >
-                      -
-                    </button>
-                    <span className="cart-item__quantity-value">{item.quantity}</span>
-                    <button
-                      className="cart-item__quantity-btn"
-                      onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                      disabled={updatingItems.has(item.id)}
-                    >
-                      +
-                    </button>
-                  </div>
+                    <div className="cart-item__quantity">
+                      <button
+                        className="cart-item__quantity-btn"
+                        onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1 || updatingItems.has(item.id)}
+                      >
+                        -
+                      </button>
+                      <span className="cart-item__quantity-value">{item.quantity}</span>
+                      <button
+                        className="cart-item__quantity-btn"
+                        onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                        disabled={updatingItems.has(item.id)}
+                      >
+                        +
+                      </button>
+                    </div>
 
-                  <div className="cart-item__price">
-                    {item.product_detail.discount_price && (
-                      <span className="cart-item__old-price">
-                        {parseFloat(item.product_detail.price).toLocaleString("ru-RU")} ₽
+                    <div className="cart-item__price">
+                      {item.product_detail.discount_price && (
+                        <span className="cart-item__old-price">
+                          {parseFloat(item.product_detail.price).toLocaleString("ru-RU")} ₽
+                        </span>
+                      )}
+                      <span className="cart-item__current-price">
+                        {parseFloat(item.subtotal).toLocaleString("ru-RU")} ₽
                       </span>
-                    )}
-                    <span className="cart-item__current-price">
-                      {parseFloat(item.subtotal).toLocaleString("ru-RU")} ₽
-                    </span>
-                  </div>
+                    </div>
 
-                  <div className="cart-item__actions">
-                    <button
-                      className="cart-item__action-btn"
-                      onClick={() => handleAddToWishlist(item.product)}
-                      title="Добавить в избранное"
-                    >
-                      <Heart size={20} />
-                    </button>
-                    <button
-                      className="cart-item__action-btn"
-                      onClick={() => handleRemoveItem(item.id)}
-                      title="Удалить"
-                    >
-                      <Trash2 size={20} />
-                    </button>
+                    <div className="cart-item__actions">
+                      <button
+                        className="cart-item__action-btn"
+                        onClick={() => handleAddToWishlist(item.product)}
+                        title="Добавить в избранное"
+                      >
+                        <Heart size={20} />
+                      </button>
+                      <button
+                        className="cart-item__action-btn"
+                        onClick={() => handleRemoveItem(item.id)}
+                        title="Удалить"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )
               ))}
             </div>
           </div>
 
-          {/* Правая колонка - итоги */}
-          <div className="cart-page__summary">
-            <div className="cart-summary">
-              <div className="cart-summary__promo">
-                <Input
-                  type="text"
-                  placeholder="Промокод"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                />
-                <Button variant="outline" size="md">
-                  Применить
+          {/* Правая колонка - итоги (только для десктопа) */}
+          {!isMobile && (
+            <div className="cart-page__summary">
+              <div className="cart-summary">
+                <div className="cart-summary__promo">
+                  <Input
+                    type="text"
+                    placeholder="Промокод"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                  />
+                  <Button variant="outline" size="md">
+                    Применить
+                  </Button>
+                </div>
+
+                <div className="cart-summary__details">
+                  <div className="cart-summary__row">
+                    <span>{selectedCount} товара</span>
+                    <span>{parseFloat(calculateSelectedTotal()).toLocaleString("ru-RU")} ₽</span>
+                  </div>
+                  <div className="cart-summary__row">
+                    <span>Скидка</span>
+                    <span>{parseFloat(calculateDiscount()).toLocaleString("ru-RU")} ₽</span>
+                  </div>
+                </div>
+
+                <div className="cart-summary__total">
+                  <span>Итого</span>
+                  <span className="cart-summary__total-price">
+                    {parseFloat(calculateSelectedTotal()).toLocaleString("ru-RU")} ₽
+                  </span>
+                </div>
+
+                <Button
+                  className="cart-summary__checkout-btn"
+                  onClick={handleCheckout}
+                  disabled={selectedItems.size === 0}
+                >
+                  Перейти к оформлению
                 </Button>
               </div>
-
-              <div className="cart-summary__details">
-                <div className="cart-summary__row">
-                  <span>{selectedCount} товара</span>
-                  <span>{parseFloat(calculateSelectedTotal()).toLocaleString("ru-RU")} ₽</span>
-                </div>
-                <div className="cart-summary__row">
-                  <span>Скидка</span>
-                  <span>{parseFloat(calculateDiscount()).toLocaleString("ru-RU")} ₽</span>
-                </div>
-              </div>
-
-              <div className="cart-summary__total">
-                <span>Итого</span>
-                <span className="cart-summary__total-price">
-                  {parseFloat(calculateSelectedTotal()).toLocaleString("ru-RU")} ₽
-                </span>
-              </div>
-
-              <Button
-                className="cart-summary__checkout-btn"
-                onClick={handleCheckout}
-                disabled={selectedItems.size === 0}
-              >
-                Перейти к оформлению
-              </Button>
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+      {/* Мобильный фиксированный блок итогов */}
+      {isMobile && (
+        <MobileCartSummary
+          selectedCount={selectedCount}
+          total={calculateSelectedTotal()}
+          discount={calculateDiscount()}
+          promoCode={promoCode}
+          onPromoCodeChange={setPromoCode}
+          onApplyPromoCode={() => showToast("Промокод применен", "success")}
+          onCheckout={handleCheckout}
+          disabled={selectedItems.size === 0}
+        />
+      )}
     </div>
   );
 };
