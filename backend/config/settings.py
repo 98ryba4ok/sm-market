@@ -53,7 +53,13 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # В dev режиме разрешаем все
+
+if not CORS_ALLOW_ALL_ORIGINS:
+    CORS_ALLOWED_ORIGINS = os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "https://sm-santex.ru,https://www.sm-santex.ru",
+    ).split(",")
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -67,7 +73,7 @@ CORS_ALLOW_HEADERS = [
 # Session settings for guest cart
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_SECURE = not DEBUG  # True в продакшене (HTTPS)
 SESSION_SAVE_EVERY_REQUEST = True
 
 MIDDLEWARE = [

@@ -6,6 +6,10 @@ services:
     container_name: sm_market_django
     env_file:
       - .env
+    environment:
+      - DEBUG=0
+      - ALLOWED_HOSTS=sm-santex.ru,www.sm-santex.ru
+      - CORS_ALLOWED_ORIGINS=https://sm-santex.ru,https://www.sm-santex.ru
     volumes:
       - media_data:/app/media
     depends_on:
