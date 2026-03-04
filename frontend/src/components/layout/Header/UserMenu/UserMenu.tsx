@@ -1,7 +1,7 @@
 import { User, ShoppingCart, LogOut, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { performLogout } from "../../../../utils/auth";
 import "./UserMenu.css";

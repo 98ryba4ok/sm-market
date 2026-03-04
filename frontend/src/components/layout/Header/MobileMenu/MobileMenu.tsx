@@ -1,7 +1,7 @@
 import { Home, Package, Heart, ClipboardList, User, LogOut, X, ShoppingCart, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { performLogout } from "../../../../utils/auth";
 import "./MobileMenu.css";

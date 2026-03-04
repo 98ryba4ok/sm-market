@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Edit2, Heart, ShoppingCart, Star, Trash2, Truck, X } from "lucide-react";
+import { Check, ChevronRight, Edit2, Heart, ShoppingCart, Star, Trash2, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -7,7 +7,6 @@ import { productsApi } from "../../api/productsApi";
 import { reviewsApi } from "../../api/reviewsApi";
 import { wishlistApi } from "../../api/wishlistApi";
 import { Button } from "../../components/ui/Button/Button";
-import { ProductCard } from "../../components/ui/ProductCard/ProductCard";
 import { ProductImageGallery } from "../../components/product/ProductImageGallery";
 import { MobileProductInfo } from "../../components/product/MobileProductInfo";
 import { ReviewFormDrawer } from "../../components/product/ReviewFormDrawer";
@@ -38,7 +37,7 @@ export const ProductDetailPage = () => {
 
   // Similar products state
   const [similarProducts, setSimilarProducts] = useState<ProductListItem[]>([]);
-  const [similarLoading, setSimilarLoading] = useState(false);
+  const [_similarLoading, setSimilarLoading] = useState(false);
 
   // User state (для проверки авторизации)
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
@@ -150,44 +149,6 @@ export const ProductDetailPage = () => {
     }
   };
 
-  const handleSubmitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!product) return;
-
-    try {
-      if (editingReview) {
-        // Update existing review
-        await reviewsApi.partialUpdate(editingReview.id, reviewFormData);
-        showToast("Отзыв обновлен!", "success");
-      } else {
-        // Create new review
-        await reviewsApi.create({
-          product: product.id,
-          rating: reviewFormData.rating,
-          comment: reviewFormData.comment,
-        });
-        showToast("Отзыв добавлен!", "success");
-      }
-
-      // Reload reviews
-      loadReviews(product.id);
-
-      // Reset form
-      setShowReviewForm(false);
-      setEditingReview(null);
-      setReviewFormData({ rating: 5, comment: "" });
-    } catch (err: any) {
-      console.error("Error submitting review:", err);
-      if (err.response?.status === 401) {
-        showToast("Войдите в систему для добавления отзыва", "error");
-        window.dispatchEvent(new CustomEvent("openLoginModal"));
-      } else if (err.response?.data?.detail) {
-        showToast(err.response.data.detail, "error");
-      } else {
-        showToast("Ошибка при сохранении отзыва", "error");
-      }
-    }
-  };
 
   const handleEditReview = (review: ProductReview) => {
     setEditingReview(review);

@@ -1,4 +1,4 @@
-import { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes } from "react";
 import { Clock } from "lucide-react";
 import "./TimePicker.css";
 

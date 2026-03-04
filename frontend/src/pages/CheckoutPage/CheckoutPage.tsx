@@ -5,7 +5,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { cartApi } from "../../api/cartApi";
 import { ordersApi } from "../../api/ordersApi";
 import { Button } from "../../components/ui/Button/Button";
-import { Checkbox } from "../../components/ui/Checkbox/Checkbox";
 import { DatePicker } from "../../components/ui/DatePicker/DatePicker";
 import { Input } from "../../components/ui/Input/Input";
 import { Textarea } from "../../components/ui/Textarea/Textarea";

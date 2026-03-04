@@ -2,7 +2,7 @@ import { Search, X, Clock, ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { productsApi } from "../../../../api/productsApi";
 import type { ProductListItem } from "../../../../types";

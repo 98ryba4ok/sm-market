@@ -1,4 +1,4 @@
-import { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes } from "react";
 import { Calendar } from "lucide-react";
 import "./DatePicker.css";
 

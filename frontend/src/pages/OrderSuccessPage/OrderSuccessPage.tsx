@@ -2,7 +2,6 @@ import { Check, Package, CreditCard } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { paymentApi } from "../../api/paymentApi";
 import { Button } from "../../components/ui/Button/Button";
 import { useToast } from "../../contexts/ToastContext";
 import "./OrderSuccessPage.css";
