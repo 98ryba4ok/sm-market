@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
+  baseURL: import.meta.env.VITE_API_URL || "/api",
   withCredentials: true, // Важно для отправки cookies (сессий)
 });
 
@@ -80,7 +80,7 @@ api.interceptors.response.use(
       try {
         // Попытка обновить токен
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/auth/refresh/`,
+          `${import.meta.env.VITE_API_URL || "/api"}/auth/refresh/`,
           { refresh: refreshToken }
         );
 
