@@ -1,0 +1,29 @@
+.about-values {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.about-value {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.about-value__icon {
+  color: #2563eb;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.about-value__text {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+}

@@ -1,0 +1,214 @@
+.warranty-card {
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  transition: box-shadow 0.2s;
+}
+
+.warranty-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.warranty-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.warranty-card__header svg {
+  color: #2563eb;
+}
+
+.warranty-card__period {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+}
+
+.warranty-card__title {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.warranty-card__text {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* Conditions */
+.warranty-conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.warranty-conditions__block {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.warranty-conditions__header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.125rem;
+  font-family: Montserrat, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.warranty-conditions__header--yes {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.warranty-conditions__header--yes svg {
+  color: #10b981;
+}
+
+.warranty-conditions__header--no {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.warranty-conditions__header--no svg {
+  color: #ef4444;
+}
+
+.warranty-conditions__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.875rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.warranty-conditions__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: Montserrat, sans-serif;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.warranty-conditions__item svg {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.warranty-conditions__item--no svg {
+  color: #ef4444;
+}
+
+/* Note */
+.warranty-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+}
+
+.warranty-note__icon {
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.warranty-note p {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.8125rem;
+  color: #92400e;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Exchange */
+.exchange-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.exchange-info__icon {
+  width: 56px;
+  height: 56px;
+  background: #eff6ff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.exchange-info__title {
+  font-family: Montserrat, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.75rem;
+}
+
+/* Reuse faq styles from PaymentInfoPage */
+.payment-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  max-width: 800px;
+}
+
+.faq-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.125rem 1.25rem;
+}
+
+.faq-item__question {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin-bottom: 0.625rem;
+}
+
+.faq-item__icon {
+  color: #2563eb;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.faq-item__question span {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.faq-item__answer {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.65;
+  margin: 0;
+  padding-left: 1.5rem;
+}

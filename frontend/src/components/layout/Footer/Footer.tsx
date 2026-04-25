@@ -21,18 +21,8 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/suppliers" className="footer__link">
-                  Поставщикам
-                </Link>
-              </li>
-              <li>
                 <Link to="/company" className="footer__link">
                   Отзывы о компании
-                </Link>
-              </li>
-              <li>
-                <Link to="/vacancies" className="footer__link">
-                  Вакансии
                 </Link>
               </li>
             </ul>
@@ -43,27 +33,27 @@ export const Footer = () => {
             <h3 className="footer__section-title">Каталог</h3>
             <ul className="footer__list">
               <li>
-                <Link to="/catalog/bathrooms" className="footer__link">
+                <Link to="/catalog?search=сантехника" className="footer__link">
                   Сантехника
                 </Link>
               </li>
               <li>
-                <Link to="/catalog/kitchens" className="footer__link">
+                <Link to="/catalog?search=кухня" className="footer__link">
                   Кухни
                 </Link>
               </li>
               <li>
-                <Link to="/catalog/toilets" className="footer__link">
+                <Link to="/catalog?search=унитаз" className="footer__link">
                   Унитазы
                 </Link>
               </li>
               <li>
-                <Link to="/catalog/tiles" className="footer__link">
+                <Link to="/catalog?search=плитка" className="footer__link">
                   Плитка
                 </Link>
               </li>
               <li>
-                <Link to="/catalog/furniture" className="footer__link">
+                <Link to="/catalog?search=мебель+для+ванны" className="footer__link">
                   Мебель для ванны
                 </Link>
               </li>
@@ -97,33 +87,6 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Сервис */}
-          <div>
-            <h3 className="footer__section-title">Сервис</h3>
-            <ul className="footer__list">
-              <li>
-                <Link to="/installation" className="footer__link">
-                  Монтаж и установка
-                </Link>
-              </li>
-              <li>
-                <Link to="/express-delivery" className="footer__link">
-                  Ускоренная доставка
-                </Link>
-              </li>
-              <li>
-                <Link to="/projects" className="footer__link">
-                  Проекты
-                </Link>
-              </li>
-              <li>
-                <Link to="/design" className="footer__link">
-                  Дизайн-проекты
-                </Link>
-              </li>
-            </ul>
-          </div>
-
           {/* Контакты */}
           <div>
             <h3 className="footer__section-title">Контакты</h3>
@@ -151,8 +114,18 @@ export const Footer = () => {
         </div>
 
         <div className="footer__copyright">
-          <p>© SM Market, 2025</p>
-          <p>Все права защищены.</p>
+          <p>© SM Market, 2025. Все права защищены.</p>
+          <div className="footer__legal-links">
+            <Link to="/offer" className="footer__link">
+              Публичная оферта
+            </Link>
+            <Link to="/privacy" className="footer__link">
+              Политика конфиденциальности
+            </Link>
+            <Link to="/warranty" className="footer__link">
+              Условия возврата
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

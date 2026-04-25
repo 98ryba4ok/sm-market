@@ -53,6 +53,7 @@ export const CheckoutPage = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [offerAccepted, setOfferAccepted] = useState(false);
 
   const getMinDeliveryDate = () => {
     const tomorrow = new Date();
@@ -213,6 +214,11 @@ export const CheckoutPage = () => {
 
     if (selectedItems.size === 0) {
       showToast("Выберите товары для оформления", "error");
+      return;
+    }
+
+    if (!offerAccepted) {
+      showToast("Необходимо согласиться с условиями оферты", "error");
       return;
     }
 
@@ -541,10 +547,29 @@ export const CheckoutPage = () => {
                   </>
                 )}
 
+                <label className="checkout-offer-consent">
+                  <input
+                    type="checkbox"
+                    checked={offerAccepted}
+                    onChange={(e) => setOfferAccepted(e.target.checked)}
+                    className="checkout-offer-consent__checkbox"
+                  />
+                  <span className="checkout-offer-consent__text">
+                    Я ознакомился и согласен с{" "}
+                    <Link to="/offer" target="_blank" className="checkout-offer-consent__link">
+                      условиями публичной оферты
+                    </Link>{" "}
+                    и{" "}
+                    <Link to="/privacy" target="_blank" className="checkout-offer-consent__link">
+                      политикой конфиденциальности
+                    </Link>
+                  </span>
+                </label>
+
                 <Button
                   className="checkout-summary__submit-btn"
                   onClick={handleSubmit}
-                  disabled={isSubmitting || selectedItems.size === 0}
+                  disabled={isSubmitting || selectedItems.size === 0 || !offerAccepted}
                 >
                   {isSubmitting ? "Оформление..." : "Оформить заказ"}
                 </Button>
@@ -565,6 +590,8 @@ export const CheckoutPage = () => {
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           disabled={selectedItems.size === 0}
+          offerAccepted={offerAccepted}
+          onOfferAcceptedChange={setOfferAccepted}
         />
       )}
     </div>

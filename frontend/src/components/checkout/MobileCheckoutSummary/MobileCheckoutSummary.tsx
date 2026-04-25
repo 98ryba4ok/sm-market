@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 
 import { Button } from "../../ui/Button/Button";
 import { Input } from "../../ui/Input/Input";
@@ -14,6 +15,8 @@ interface MobileCheckoutSummaryProps {
   onSubmit: () => void;
   isSubmitting: boolean;
   disabled?: boolean;
+  offerAccepted: boolean;
+  onOfferAcceptedChange: (value: boolean) => void;
 }
 
 export const MobileCheckoutSummary: React.FC<MobileCheckoutSummaryProps> = ({
@@ -25,6 +28,8 @@ export const MobileCheckoutSummary: React.FC<MobileCheckoutSummaryProps> = ({
   onSubmit,
   isSubmitting,
   disabled = false,
+  offerAccepted,
+  onOfferAcceptedChange,
 }) => {
   const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
 
@@ -41,11 +46,30 @@ export const MobileCheckoutSummary: React.FC<MobileCheckoutSummaryProps> = ({
         <Button
           className="mobile-checkout-summary__submit-btn"
           onClick={onSubmit}
-          disabled={disabled || isSubmitting || selectedCount === 0}
+          disabled={disabled || isSubmitting || selectedCount === 0 || !offerAccepted}
         >
           {isSubmitting ? "Оформление..." : "Оформить заказ"}
         </Button>
       </div>
+
+      <label className="mobile-checkout-offer-consent">
+        <input
+          type="checkbox"
+          checked={offerAccepted}
+          onChange={(e) => onOfferAcceptedChange(e.target.checked)}
+          className="mobile-checkout-offer-consent__checkbox"
+        />
+        <span className="mobile-checkout-offer-consent__text">
+          Согласен с{" "}
+          <Link to="/offer" target="_blank" className="mobile-checkout-offer-consent__link">
+            офертой
+          </Link>{" "}
+          и{" "}
+          <Link to="/privacy" target="_blank" className="mobile-checkout-offer-consent__link">
+            политикой конфиденциальности
+          </Link>
+        </span>
+      </label>
 
       {isDetailsExpanded && (
         <div className="mobile-checkout-summary__promo">

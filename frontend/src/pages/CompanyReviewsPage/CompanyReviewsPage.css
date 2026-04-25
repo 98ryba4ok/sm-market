@@ -1,0 +1,191 @@
+.reviews-summary {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.reviews-summary__score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 100px;
+}
+
+.reviews-summary__number {
+  font-family: Montserrat, sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.reviews-summary__count {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.reviews-summary__bars {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reviews-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.reviews-bar__label {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.reviews-bar__track {
+  flex: 1;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.reviews-bar__fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.reviews-bar__count {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  width: 16px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Star rating */
+.star-rating {
+  display: flex;
+  gap: 2px;
+}
+
+.star-rating__star--filled {
+  color: #f59e0b;
+  fill: #f59e0b;
+}
+
+.star-rating__star--empty {
+  color: #d1d5db;
+  fill: #d1d5db;
+}
+
+/* Reviews grid */
+.reviews-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .reviews-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Review card */
+.review-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  transition: box-shadow 0.2s;
+}
+
+.review-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.review-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+}
+
+.review-card__avatar {
+  width: 40px;
+  height: 40px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Montserrat, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.review-card__meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.review-card__name {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.review-card__city {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
+
+.review-card__rating {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.review-card__date {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.review-card__text {
+  font-family: Montserrat, sans-serif;
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.review-card__product {
+  margin-top: auto;
+}

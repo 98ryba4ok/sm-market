@@ -1,0 +1,51 @@
+services:
+  django:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.backend
+    container_name: sm_market_django
+    env_file:
+      - .env
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  db:
+    image: postgres:15
+    container_name: sm_market_db
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.nginx.vds
+    container_name: sm_market_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - media_data:/app/media
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot
+    depends_on:
+      - django
+    restart: always
+
+volumes:
+  postgres_data:
+  media_data:
+  certbot_www:
