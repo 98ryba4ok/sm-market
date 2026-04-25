@@ -107,22 +107,18 @@
 }
 
 @media (min-width: 1024px) {
-  /* Размеры карточек для контейнера 1200px */
   .category-card--small {
-    width: 280px;
-    flex: 0 0 280px;
+    flex: 0 0 calc((100% - 2rem) * 0.24);
     height: 200px;
   }
-  
+
   .category-card--medium {
-    width: 380px;
-    flex: 0 0 380px;
+    flex: 0 0 calc((100% - 2rem) * 0.34);
     height: 200px;
   }
-  
+
   .category-card--large {
-    width: 480px;
-    flex: 0 0 480px;
+    flex: 0 0 calc((100% - 2rem) * 0.42);
     height: 200px;
   }
 }
