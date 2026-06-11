@@ -106,20 +106,19 @@ class Command(BaseCommand):
         # Создать категории
         self.stdout.write('\nСоздание категорий...')
         categories_data = [
-            {'name': 'Смесители', 'description': 'Смесители для ванной и кухни', 'rooms': [0, 1], 'image': 'santehnika.png'},
-            {'name': 'Унитазы', 'description': 'Унитазы и комплектующие', 'rooms': [0], 'image': 'unitazy.png'},
-            {'name': 'Плитка', 'description': 'Плитка для ванной и кухни', 'rooms': [0, 1], 'image': 'plitka.png'},
-            {'name': 'Ванны', 'description': 'Ванны и душевые кабины', 'rooms': [0], 'image': 'vanny.png'},
-            {'name': 'Мебель для ванны', 'description': 'Мебель и аксессуары для ванной комнаты', 'rooms': [0], 'image': 'mebel.png'},
-            {'name': 'Кухонные мойки', 'description': 'Мойки для кухни', 'rooms': [1], 'image': 'kuhni.png'},
-            {'name': 'Диваны', 'description': 'Диваны и кресла для гостиной', 'rooms': [2], 'image': 'sofa.png'},
-            {'name': 'Столы', 'description': 'Столы и стулья для гостиной', 'rooms': [2], 'image': 'tables.png'},
-            {'name': 'Кровати', 'description': 'Кровати и матрасы', 'rooms': [3], 'image': 'beds.png'},
-            {'name': 'Шкафы', 'description': 'Шкафы и комоды для спальни', 'rooms': [3], 'image': 'wardrobes.png'},
-            {'name': 'Вешалки', 'description': 'Вешалки и обувницы для прихожей', 'rooms': [4], 'image': 'hangers.png'},
-            {'name': 'Зеркала', 'description': 'Зеркала для прихожей', 'rooms': [4], 'image': 'mirrors.png'},
-            {'name': 'Письменные столы', 'description': 'Столы для домашнего офиса', 'rooms': [5], 'image': 'desks.png'},
-            {'name': 'Кресла офисные', 'description': 'Офисные кресла и стулья', 'rooms': [5], 'image': 'chairs.png'},
+            {'name': 'Смесители и комплектующие', 'description': 'Смесители для ванной и кухни, запорная арматура и комплектующие', 'rooms': [0, 1], 'image': 'smesiteli.png'},
+            {'name': 'Лейки и шланги для душа', 'description': 'Ручные лейки, шланги и аксессуары для душа', 'rooms': [0], 'image': 'leiki.png'},
+            {'name': 'Стойки для душа', 'description': 'Душевые стойки, штанги и системы', 'rooms': [0], 'image': 'stoyki.png'},
+            {'name': 'Радиаторы и комплектующие', 'description': 'Радиаторы отопления, термостаты и монтажные комплекты', 'rooms': [0, 2, 3], 'image': 'radiatory.png'},
+            {'name': 'Сифоны и комплектующие', 'description': 'Сифоны для раковин, ванн и поддонов', 'rooms': [0, 1], 'image': 'sifony.png'},
+            {'name': 'Унитазы и комплектующие', 'description': 'Унитазы, инсталляции, арматура и кнопки смыва', 'rooms': [0], 'image': 'unitazy.png'},
+            {'name': 'Водосчетчики', 'description': 'Счетчики холодной и горячей воды', 'rooms': [0, 1], 'image': 'vodoschotchiki.png'},
+            {'name': 'Водонагреватель', 'description': 'Накопительные и проточные водонагреватели', 'rooms': [0, 1], 'image': 'vodonagrevateli.png'},
+            {'name': 'Инструменты', 'description': 'Профессиональный инструмент для монтажа сантехники', 'rooms': [0, 1, 2, 3, 4, 5], 'image': 'instrumenty.png'},
+            {'name': 'Коллектора и комплектующие', 'description': 'Распределительные коллекторы и фитинги', 'rooms': [0, 1], 'image': 'kollektory.png'},
+            {'name': 'Котельное оборудование', 'description': 'Котлы, горелки и элементы котельных систем', 'rooms': [0, 1], 'image': 'kotelnoe.png'},
+            {'name': 'Краны', 'description': 'Шаровые краны, вентили и запорная арматура', 'rooms': [0, 1], 'image': 'krany.png'},
+            {'name': 'Оборудование для контроля и защиты', 'description': 'Системы защиты от протечек, датчики и автоматика', 'rooms': [0, 1], 'image': 'oborudovanie.png'},
         ]
 
         categories = []
@@ -148,11 +147,12 @@ class Command(BaseCommand):
         # Создать бренды
         self.stdout.write('\nСоздание брендов...')
         brands_data = [
-            {'name': 'GESSI', 'description': 'Итальянский производитель премиум сантехники', 'country': 'Италия', 'order': 1, 'logo': 'gessi.png'},
-            {'name': 'cielo', 'description': 'Дизайнерская керамика и сантехника', 'country': 'Италия', 'order': 2, 'logo': 'cielo.png'},
-            {'name': 'Jorger', 'description': 'Эксклюзивная сантехника класса люкс', 'country': 'Германия', 'order': 3, 'logo': 'jorger.png'},
-            {'name': 'KRONOS ceramiche', 'description': 'Итальянская керамическая плитка', 'country': 'Италия', 'order': 4, 'logo': 'kronos.png'},
-            {'name': 'DevoN&DevoN', 'description': 'Мебель для ванных комнат', 'country': 'Россия', 'order': 5, 'logo': 'devon.png'},
+            {'name': 'GROHE', 'description': 'Немецкий производитель сантехники премиум-класса', 'country': 'Германия', 'order': 1, 'logo': 'grohe.png'},
+            {'name': 'GEBERIT', 'description': 'Швейцарский производитель инсталляций и сантехнических систем', 'country': 'Швейцария', 'order': 2, 'logo': 'geberit.png'},
+            {'name': 'THERMEX', 'description': 'Водонагреватели и климатическое оборудование', 'country': 'Россия', 'order': 3, 'logo': 'thermex.png'},
+            {'name': 'Grundfos', 'description': 'Датский производитель насосного оборудования', 'country': 'Дания', 'order': 4, 'logo': 'grundfos.png'},
+            {'name': 'OVENTROP', 'description': 'Немецкая арматура для систем отопления и водоснабжения', 'country': 'Германия', 'order': 5, 'logo': 'oventrop.png'},
+            {'name': 'Viega', 'description': 'Системы трубопроводов и инсталляций', 'country': 'Германия', 'order': 6, 'logo': 'viega.png'},
         ]
 
         brands = []
@@ -242,19 +242,19 @@ class Command(BaseCommand):
                 label = random.choice(labels)
                 
                 # Генерируем цену
-                base_price = Decimal(random.randint(10000, 100000))
+                base_price = Decimal(random.randint(1500, 55000))
                 has_discount = random.choice([True, False])
                 discount_price = base_price * Decimal('0.85') if has_discount else None
-                
-                description = f'''Премиальный товар из категории "{category.name}" от бренда {brand.name}.
+
+                description = f'''Сантехника из категории "{category.name}" от бренда {brand.name}.
 
 Особенности:
 • Высокое качество материалов
-• Современный дизайн
-• Простая установка
+• Соответствует европейским стандартам
+• Простой монтаж
 • Гарантия производителя
 
-Идеально подходит для помещения: {room.name}'''
+Подходит для: {room.name}'''
 
                 product = Product.objects.create(
                     name=product_name,
