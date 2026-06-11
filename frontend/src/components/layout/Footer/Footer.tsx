@@ -92,22 +92,19 @@ export const Footer = () => {
             <h3 className="footer__section-title">Контакты</h3>
             <ul className="footer__list footer__list--spaced">
               <li>
-                <a href="tel:84951234567" className="footer__contact-link">
+                <a href="tel:+79685783251" className="footer__contact-link">
                   <Phone size={16} />
-                  8 495 123 45 67
+                  +7 (968) 578-32-51
                 </a>
               </li>
               <li>
-                <a href="tel:88001234567" className="footer__contact-link">
-                  <Phone size={16} />
-                  8 800 123 45 67
-                </a>
-              </li>
-              <li>
-                <a href="mailto:info@smmarket.ru" className="footer__contact-link">
+                <a href="mailto:santexnika17@bk.ru" className="footer__contact-link">
                   <Mail size={16} />
-                  info@smmarket.ru
+                  santexnika17@bk.ru
                 </a>
+              </li>
+              <li className="footer__contact-link" style={{ cursor: "default" }}>
+                г. Москва, ул. Дегунинская, д. 17
               </li>
             </ul>
           </div>

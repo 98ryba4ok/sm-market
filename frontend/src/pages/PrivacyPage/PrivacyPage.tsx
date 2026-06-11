@@ -74,7 +74,7 @@ export const PrivacyPage = () => {
                 Оператором персональных данных является:<br />
                 <strong>ИНДИВИДУАЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ МИРЗАГАСАНОВ САХИЛ БАШАРАТ ОГЛЫ</strong>,
                 ИНН: 621302547601, ОГРНИП: 318623400010967,
-                e-mail: info@sm-santex.ru, тел.: +7 (926) 660-06-07.
+                e-mail: santexnika17@bk.ru, тел.: +7 (968) 578-32-51.
               </p>
             </section>
 
@@ -227,8 +227,8 @@ export const PrivacyPage = () => {
               </div>
               <p className="info-page__text" style={{ marginTop: "1.25rem" }}>
                 Для реализации прав направьте запрос на почту{" "}
-                <a href="mailto:info@sm-santex.ru" className="privacy-link">
-                  info@sm-santex.ru
+                <a href="mailto:santexnika17@bk.ru" className="privacy-link">
+                  santexnika17@bk.ru
                 </a>
                 . Мы ответим в течение 30 дней.
               </p>
@@ -301,8 +301,8 @@ export const PrivacyPage = () => {
                   </div>
                   <div>
                     <p className="contact-item__label">Email по вопросам приватности</p>
-                    <a href="mailto:info@sm-santex.ru" className="contact-item__value">
-                      info@sm-santex.ru
+                    <a href="mailto:santexnika17@bk.ru" className="contact-item__value">
+                      santexnika17@bk.ru
                     </a>
                   </div>
                 </div>
@@ -312,8 +312,8 @@ export const PrivacyPage = () => {
                   </div>
                   <div>
                     <p className="contact-item__label">Телефон</p>
-                    <a href="tel:+79266600607" className="contact-item__value">
-                      +7 (926) 660-06-07
+                    <a href="tel:+79685783251" className="contact-item__value">
+                      +7 (968) 578-32-51
                     </a>
                   </div>
                 </div>
@@ -322,9 +322,9 @@ export const PrivacyPage = () => {
                     <Shield size={20} />
                   </div>
                   <div>
-                    <p className="contact-item__label">Юридический адрес</p>
+                    <p className="contact-item__label">Адрес магазина</p>
                     <span className="contact-item__value">
-                      info@sm-santex.ru
+                      г. Москва, ул. Дегунинская, д. 17
                     </span>
                   </div>
                 </div>

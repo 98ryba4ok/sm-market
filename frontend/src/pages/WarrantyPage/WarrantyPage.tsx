@@ -187,11 +187,14 @@ export const WarrantyPage = () => {
             <h2 className="info-page__section-title" style={{ marginBottom: "1rem" }}>Контакты для возврата</h2>
             <p className="info-page__text">
               <strong>E-mail:</strong>{" "}
-              <a href="mailto:info@sm-santex.ru" style={{ color: "#2563eb" }}>info@sm-santex.ru</a>
+              <a href="mailto:santexnika17@bk.ru" style={{ color: "#2563eb" }}>santexnika17@bk.ru</a>
             </p>
             <p className="info-page__text">
               <strong>Телефон:</strong>{" "}
-              <a href="tel:+79266600607" style={{ color: "#2563eb" }}>+7 (926) 660-06-07</a>
+              <a href="tel:+79685783251" style={{ color: "#2563eb" }}>+7 (968) 578-32-51</a>
+            </p>
+            <p className="info-page__text">
+              <strong>Адрес:</strong> г. Москва, ул. Дегунинская, д. 17
             </p>
             <p className="info-page__text">
               <strong>Режим работы:</strong> пн–пт, 10:00–18:00 (МСК)

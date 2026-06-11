@@ -26,7 +26,7 @@ export const DeliveryPage = () => {
               </div>
               <h3 className="delivery-method-card__title">Курьерская доставка</h3>
               <p className="delivery-method-card__text">
-                Доставка по Москве и Московской области на следующий день после оформления заказа
+                Доставка по Москве и Московской области через сервис <strong>Достависта</strong>. Быстро и надёжно.
               </p>
               <div className="delivery-method-card__details">
                 <div className="delivery-detail">
@@ -64,12 +64,12 @@ export const DeliveryPage = () => {
               </div>
               <h3 className="delivery-method-card__title">Самовывоз</h3>
               <p className="delivery-method-card__text">
-                Получите заказ в нашем пункте выдачи в Москве. Готовность заказа — 1 рабочий день
+                Заберите заказ из нашего магазина в Москве. Готовность заказа — 1 рабочий день
               </p>
               <div className="delivery-method-card__details">
                 <div className="delivery-detail">
                   <MapPin size={15} />
-                  <span>ул. Строительная, 42</span>
+                  <span>ул. Дегунинская, д. 17</span>
                 </div>
                 <div className="delivery-detail">
                   <span className="delivery-method-card__price">Бесплатно</span>

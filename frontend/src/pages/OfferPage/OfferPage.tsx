@@ -285,7 +285,7 @@ export const OfferPage = () => {
               </p>
               <p className="info-page__text">
                 9.3. Покупатель вправе отозвать согласие на обработку персональных данных,
-                направив заявку на адрес <a href="mailto:info@sm-santex.ru" className="offer-link">info@sm-santex.ru</a>.
+                направив заявку на адрес <a href="mailto:santexnika17@bk.ru" className="offer-link">santexnika17@bk.ru</a>.
                 Отзыв согласия не влечёт исполнение ранее оформленных заказов.
               </p>
             </section>
@@ -317,7 +317,7 @@ export const OfferPage = () => {
               <p className="info-page__text">
                 11.1. Все разногласия, возникающие из настоящего договора, решаются
                 путём переговоров. Для этого Покупателю необходимо направить
-                письменную претензию на адрес <a href="mailto:info@sm-santex.ru" className="offer-link">info@sm-santex.ru</a>{" "}
+                письменную претензию на адрес <a href="mailto:santexnika17@bk.ru" className="offer-link">santexnika17@bk.ru</a>{" "}
                 или на юридический адрес Продавца.
               </p>
               <p className="info-page__text">
@@ -393,6 +393,10 @@ export const OfferPage = () => {
                   <span className="offer-req-row__value">623402001</span>
                 </div>
                 <div className="offer-req-row">
+                  <span className="offer-req-row__label">Адрес магазина</span>
+                  <span className="offer-req-row__value">г. Москва, ул. Дегунинская, д. 17</span>
+                </div>
+                <div className="offer-req-row">
                   <span className="offer-req-row__label">Сайт</span>
                   <span className="offer-req-row__value">sm-santex.ru</span>
                 </div>
@@ -402,14 +406,14 @@ export const OfferPage = () => {
                   <div className="contact-item__icon"><Mail size={20} /></div>
                   <div>
                     <p className="contact-item__label">Email</p>
-                    <a href="mailto:info@sm-santex.ru" className="contact-item__value">info@sm-santex.ru</a>
+                    <a href="mailto:santexnika17@bk.ru" className="contact-item__value">santexnika17@bk.ru</a>
                   </div>
                 </div>
                 <div className="contact-item">
                   <div className="contact-item__icon"><Phone size={20} /></div>
                   <div>
                     <p className="contact-item__label">Телефон</p>
-                    <a href="tel:+79266600607" className="contact-item__value">+7 (926) 660-06-07</a>
+                    <a href="tel:+79685783251" className="contact-item__value">+7 (968) 578-32-51</a>
                   </div>
                 </div>
               </div>

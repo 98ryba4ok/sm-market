@@ -47,20 +47,9 @@ export const FeedbackPage = () => {
                   <Phone size={20} />
                 </div>
                 <div>
-                  <p className="contact-item__label">Телефон (бесплатно)</p>
-                  <a href="tel:88001234567" className="contact-item__value">
-                    8 800 123 45 67
-                  </a>
-                </div>
-              </div>
-              <div className="contact-item">
-                <div className="contact-item__icon">
-                  <Phone size={20} />
-                </div>
-                <div>
-                  <p className="contact-item__label">Телефон Москва</p>
-                  <a href="tel:84951234567" className="contact-item__value">
-                    8 495 123 45 67
+                  <p className="contact-item__label">Телефон</p>
+                  <a href="tel:+79685783251" className="contact-item__value">
+                    +7 (968) 578-32-51
                   </a>
                 </div>
               </div>
@@ -70,8 +59,8 @@ export const FeedbackPage = () => {
                 </div>
                 <div>
                   <p className="contact-item__label">Email</p>
-                  <a href="mailto:info@smmarket.ru" className="contact-item__value">
-                    info@smmarket.ru
+                  <a href="mailto:santexnika17@bk.ru" className="contact-item__value">
+                    santexnika17@bk.ru
                   </a>
                 </div>
               </div>
@@ -82,7 +71,7 @@ export const FeedbackPage = () => {
                 <div>
                   <p className="contact-item__label">Адрес</p>
                   <span className="contact-item__value">
-                    г. Москва, ул. Строительная, 42
+                    г. Москва, ул. Дегунинская, д. 17
                   </span>
                 </div>
               </div>
