@@ -209,9 +209,9 @@ class OrderCreateSerializer(serializers.Serializer):
         choices=Order.DELIVERY_METHOD_CHOICES,
         default='courier'
     )
-    delivery_address = serializers.CharField(max_length=500)
-    delivery_city = serializers.CharField(max_length=100)
-    delivery_postal_code = serializers.CharField(max_length=20)
+    delivery_address = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
+    delivery_city = serializers.CharField(max_length=100, required=False, allow_blank=True, default='')
+    delivery_postal_code = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
     delivery_date = serializers.DateField(required=False, allow_null=True)
     delivery_time = serializers.CharField(max_length=20, required=False, allow_null=True, allow_blank=True)
     phone = serializers.CharField(max_length=20)
@@ -230,7 +230,19 @@ class OrderCreateSerializer(serializers.Serializer):
     def validate(self, data):
         """Проверка наличия товаров в корзине"""
         user = self.context['request'].user
-        
+
+        # Для курьерской доставки адресные поля обязательны
+        if data.get('delivery_method', 'courier') == 'courier':
+            if not data.get('delivery_address', '').strip():
+                raise serializers.ValidationError({'delivery_address': 'Укажите адрес доставки'})
+            if not data.get('delivery_city', '').strip():
+                raise serializers.ValidationError({'delivery_city': 'Укажите город'})
+        else:
+            # Самовывоз — фиксируем адрес магазина
+            data['delivery_address'] = 'ул. Дегунинская, д. 17'
+            data['delivery_city'] = 'Москва'
+            data['delivery_postal_code'] = '127486'
+
         # Получить корзину пользователя
         try:
             if user.is_authenticated:

@@ -104,24 +104,15 @@ export const CheckoutPage = () => {
 
   const handleSelectAll = () => {
     if (!cart) return;
-
     if (selectedItems.size === cart.items.length) {
-      showToast("Должен быть выбран хотя бы один товар", "info");
-      return;
+      setSelectedItems(new Set());
     } else {
-      const allItemIds = new Set(cart.items.map((item) => item.id));
-      setSelectedItems(allItemIds);
+      setSelectedItems(new Set(cart.items.map((item) => item.id)));
     }
   };
 
   const handleSelectItem = (itemId: number) => {
     const newSelected = new Set(selectedItems);
-    
-    if (newSelected.has(itemId) && newSelected.size === 1) {
-      showToast("Должен быть выбран хотя бы один товар", "info");
-      return;
-    }
-    
     if (newSelected.has(itemId)) {
       newSelected.delete(itemId);
     } else {
@@ -165,27 +156,9 @@ export const CheckoutPage = () => {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.city.trim()) {
-      newErrors.city = "Укажите город";
-    }
-
-    if (deliveryMethod === "courier" && !formData.address.trim()) {
-      newErrors.address = "Укажите адрес доставки";
-    }
-
-    if (deliveryMethod === "courier" && !formData.postalCode.trim()) {
-      newErrors.postalCode = "Укажите индекс";
-    }
-
-    if (deliveryDate) {
-      const selectedDate = new Date(deliveryDate);
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-      
-      if (selectedDate < tomorrow) {
-        newErrors.deliveryDate = "Дата доставки не может быть раньше завтрашнего дня";
-      }
+    if (deliveryMethod === "courier") {
+      if (!formData.city.trim()) newErrors.city = "Укажите город";
+      if (!formData.address.trim()) newErrors.address = "Укажите адрес доставки";
     }
 
     if (!formData.phone.trim()) {
@@ -304,7 +277,7 @@ export const CheckoutPage = () => {
               />
             </section>
 
-            {deliveryMethod === "courier" && (
+            {deliveryMethod === "courier" ? (
               <section className="checkout-section">
                 <h2 className="checkout-section__title">Адрес доставки</h2>
                 <div className="checkout-section__grid">
@@ -324,7 +297,6 @@ export const CheckoutPage = () => {
                       setFormData({ ...formData, postalCode: e.target.value })
                     }
                     error={errors.postalCode}
-                    required
                   />
                 </div>
                 <Textarea
@@ -338,6 +310,14 @@ export const CheckoutPage = () => {
                   rows={3}
                   required
                 />
+              </section>
+            ) : (
+              <section className="checkout-section">
+                <h2 className="checkout-section__title">Адрес самовывоза</h2>
+                <div className="checkout-pickup-address">
+                  <p>г. Москва, ул. Дегунинская, д. 17</p>
+                  <p className="checkout-pickup-address__hint">Пн–Пт, 10:00–18:00</p>
+                </div>
               </section>
             )}
 
@@ -369,23 +349,25 @@ export const CheckoutPage = () => {
               </div>
             </section>
 
-            <section className="checkout-section">
-              <h2 className="checkout-section__title">Дата и время доставки</h2>
-              <div className="checkout-section__grid">
-                <DatePicker
-                  label="Дата доставки"
-                  value={deliveryDate}
-                  onChange={(e) => setDeliveryDate(e.target.value)}
-                  min={minDeliveryDate}
-                  error={errors.deliveryDate}
-                />
-                <TimePicker
-                  label="Время доставки"
-                  value={deliveryTime}
-                  onChange={(e) => setDeliveryTime(e.target.value)}
-                />
-              </div>
-            </section>
+            {deliveryMethod === "courier" && (
+              <section className="checkout-section">
+                <h2 className="checkout-section__title">Дата и время доставки</h2>
+                <div className="checkout-section__grid">
+                  <DatePicker
+                    label="Дата доставки"
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    min={minDeliveryDate}
+                    error={errors.deliveryDate}
+                  />
+                  <TimePicker
+                    label="Время доставки"
+                    value={deliveryTime}
+                    onChange={(e) => setDeliveryTime(e.target.value)}
+                  />
+                </div>
+              </section>
+            )}
 
             <section className="checkout-section">
               <h2 className="checkout-section__title">

@@ -1,11 +1,15 @@
-import { AlertCircle, CheckCircle, HelpCircle, RefreshCw, Shield, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, HelpCircle, Shield, XCircle } from "lucide-react";
 import "../../styles/info-page.css";
 import "./WarrantyPage.css";
 
 const FAQ = [
   {
     q: "В течение какого срока можно вернуть товар?",
-    a: "Товар надлежащего качества можно вернуть в течение 7 дней с момента получения (ст. 26.1 ЗОЗПП). Товар ненадлежащего качества — в течение гарантийного срока.",
+    a: "Товар надлежащего качества можно вернуть в течение 14 дней с момента получения. Обращайтесь напрямую в наш магазин.",
+  },
+  {
+    q: "Что делать, если прошло более 14 дней?",
+    a: "По истечении 14 дней гарантийные вопросы решаются через сервисный центр. Контакты сервисного центра указаны в гарантийном талоне на товар.",
   },
   {
     q: "Нужен ли чек для возврата?",
@@ -20,8 +24,8 @@ const FAQ = [
     a: "Сразу при получении сфотографируйте повреждения, не подписывайте акт приёма и свяжитесь с нами. Мы организуем замену или возврат.",
   },
   {
-    q: "Распространяется ли гарантия на потребительское использование?",
-    a: "Да, гарантия распространяется на все дефекты производственного характера при условии соблюдения правил эксплуатации.",
+    q: "Каков гарантийный срок на товар?",
+    a: "Гарантийный срок индивидуален для каждого товара и указан в гарантийном талоне, который прилагается к покупке.",
   },
 ];
 
@@ -42,24 +46,22 @@ export const WarrantyPage = () => {
         {/* Гарантийные сроки */}
         <div className="info-page__section">
           <h2 className="info-page__section-title">Гарантийные сроки</h2>
-          <div className="info-page__grid-3">
-            {[
-              { category: "Сантехника (ванны, душевые)", period: "12 месяцев", text: "На все акриловые ванны и душевые кабины" },
-              { category: "Смесители и краны", period: "24 месяца", text: "На механизмы смесителей всех производителей" },
-              { category: "Унитазы и биде", period: "12 месяцев", text: "На керамические изделия и механизмы бачков" },
-              { category: "Мебель для ванны", period: "18 месяцев", text: "На тумбы, зеркала и шкафчики" },
-              { category: "Плитка и керамика", period: "24 месяца", text: "На соответствие заявленным характеристикам" },
-              { category: "Инсталляции и системы", period: "24 месяца", text: "На инсталляционные системы и скрытые части" },
-            ].map((item, i) => (
-              <div key={i} className="warranty-card">
-                <div className="warranty-card__header">
-                  <Shield size={20} />
-                  <span className="warranty-card__period">{item.period}</span>
-                </div>
-                <h3 className="warranty-card__title">{item.category}</h3>
-                <p className="warranty-card__text">{item.text}</p>
+          <div className="info-card">
+            <div className="exchange-info">
+              <div className="exchange-info__icon">
+                <Shield size={28} />
               </div>
-            ))}
+              <div>
+                <h3 className="exchange-info__title">Индивидуальный гарантийный срок</h3>
+                <p className="info-page__text">
+                  Гарантийный срок устанавливается индивидуально для каждого товара производителем.
+                  Срок гарантии указан в <strong>гарантийном талоне</strong>, который прилагается к товару при покупке.
+                </p>
+                <p className="info-page__text">
+                  Сохраняйте гарантийный талон — он потребуется при обращении в сервисный центр по истечении 14 дней с момента покупки.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -67,23 +69,38 @@ export const WarrantyPage = () => {
         <div className="info-page__section">
           <div className="info-page__two-col">
             <div>
-              <h2 className="info-page__section-title">Возврат товара</h2>
-              <div className="step-list">
-                {[
-                  { title: "Свяжитесь с нами", text: "Позвоните или напишите на email, сообщите номер заказа и причину возврата" },
-                  { title: "Согласование", text: "Менеджер уточнит детали и согласует условия возврата в течение 1 рабочего дня" },
-                  { title: "Передача товара", text: "Привезите товар в пункт выдачи или передайте курьеру в оригинальной упаковке" },
-                  { title: "Проверка", text: "Специалист проверит товар на соответствие условиям возврата" },
-                  { title: "Возврат средств", text: "Деньги вернутся на ваш счёт в течение 5–10 рабочих дней" },
-                ].map((s, i) => (
-                  <div key={i} className="step-item">
-                    <div className="step-item__number">{i + 1}</div>
-                    <div className="step-item__content">
-                      <p className="step-item__title">{s.title}</p>
-                      <p className="step-item__text">{s.text}</p>
-                    </div>
+              <h2 className="info-page__section-title">Порядок возврата</h2>
+
+              <div className="info-card" style={{ marginBottom: "1rem", borderLeft: "4px solid #2563eb", padding: "1.25rem 1.5rem" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                  <CheckCircle size={22} color="#2563eb" style={{ flexShrink: 0, marginTop: "2px" }} />
+                  <div>
+                    <p style={{ fontWeight: 600, marginBottom: "0.25rem" }}>До 14 дней — обращайтесь в магазин</p>
+                    <p className="info-page__text" style={{ margin: 0 }}>
+                      Если с момента получения товара прошло не более 14 дней, свяжитесь с нами напрямую. Мы поможем оформить возврат или обмен.
+                    </p>
+                    <p className="info-page__text" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+                      <strong>Телефон:</strong>{" "}
+                      <a href="tel:+79685783251" style={{ color: "#2563eb" }}>+7 (968) 578-32-51</a>
+                      {" · "}
+                      <strong>Email:</strong>{" "}
+                      <a href="mailto:santexnika17@bk.ru" style={{ color: "#2563eb" }}>santexnika17@bk.ru</a>
+                    </p>
                   </div>
-                ))}
+                </div>
+              </div>
+
+              <div className="info-card" style={{ marginBottom: "1rem", borderLeft: "4px solid #f59e0b", padding: "1.25rem 1.5rem" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                  <AlertCircle size={22} color="#f59e0b" style={{ flexShrink: 0, marginTop: "2px" }} />
+                  <div>
+                    <p style={{ fontWeight: 600, marginBottom: "0.25rem" }}>После 14 дней — сервисный центр</p>
+                    <p className="info-page__text" style={{ margin: 0 }}>
+                      По истечении 14 дней гарантийные претензии рассматриваются через сервисный центр производителя.
+                      Адрес и контакты сервисного центра указаны в гарантийном талоне на ваш товар.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -136,30 +153,6 @@ export const WarrantyPage = () => {
                   <AlertCircle size={16} className="warranty-note__icon" />
                   <p>Товар ненадлежащего качества (заводской брак) принимается к возврату независимо от срока использования в пределах гарантийного срока.</p>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Обмен */}
-        <div className="info-page__section">
-          <h2 className="info-page__section-title">Обмен товара</h2>
-          <div className="info-card">
-            <div className="exchange-info">
-              <div className="exchange-info__icon">
-                <RefreshCw size={28} />
-              </div>
-              <div>
-                <h3 className="exchange-info__title">Обменяем без проблем</h3>
-                <p className="info-page__text">
-                  Если полученный товар вам не подошёл по размеру, цвету или иным характеристикам,
-                  мы готовы обменять его на другой товар из нашего каталога. Обмен осуществляется
-                  в течение 14 дней при соблюдении условий сохранности товара.
-                </p>
-                <p className="info-page__text">
-                  Разницу в стоимости при обмене доплачиваете вы (если новый товар дороже)
-                  или мы возвращаем вам (если дешевле). Доставку при обмене берём на себя.
-                </p>
               </div>
             </div>
           </div>
