@@ -2,10 +2,17 @@
 
 Сбой отправки не должен влиять на обработку заказа/оплаты — все ошибки
 логируются и подавляются. Конфигурация через settings:
-TELEGRAM_BOT_TOKEN и TELEGRAM_CHAT_ID (берутся из .env).
+- TELEGRAM_BOT_TOKEN — токен бота от @BotFather
+- TELEGRAM_CHAT_ID — id чата/группы
+- TELEGRAM_PROXY (опц.) — http(s)/socks5 прокси, если до Telegram нет прямого доступа
+
+Отправка идёт в фоновом потоке с ретраями: egress к api.telegram.org с
+российских серверов часто нестабилен (троттлинг), поэтому повторяем попытки.
 """
 import logging
 import socket
+import threading
+import time
 
 import requests
 import urllib3.util.connection as _urllib3_conn
@@ -19,25 +26,42 @@ logger = logging.getLogger(__name__)
 _urllib3_conn.allowed_gai_family = lambda: socket.AF_INET
 
 _API_URL = "https://api.telegram.org/bot{token}/sendMessage"
+_MAX_ATTEMPTS = 6
+_RETRY_DELAY = 2  # секунд между попытками
 
 
-def _send(text: str) -> None:
+def _deliver(text: str) -> None:
     token = getattr(settings, "TELEGRAM_BOT_TOKEN", "")
     chat_id = getattr(settings, "TELEGRAM_CHAT_ID", "")
     if not token or not chat_id:
         return
-    try:
-        requests.post(
-            _API_URL.format(token=token),
-            json={
-                "chat_id": chat_id,
-                "text": text,
-                "disable_web_page_preview": True,
-            },
-            timeout=10,
-        )
-    except Exception:
-        logger.exception("Не удалось отправить Telegram-уведомление")
+
+    proxy = getattr(settings, "TELEGRAM_PROXY", "")
+    proxies = {"http": proxy, "https": proxy} if proxy else None
+    payload = {"chat_id": chat_id, "text": text, "disable_web_page_preview": True}
+
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        try:
+            r = requests.post(
+                _API_URL.format(token=token), json=payload, timeout=8, proxies=proxies
+            )
+            if r.ok:
+                return
+            # Ошибка уровня API (неверный chat_id и т.п.) — ретрай не поможет
+            logger.warning("Telegram API %s: %s", r.status_code, r.text[:200])
+            return
+        except requests.RequestException as exc:
+            if attempt == _MAX_ATTEMPTS:
+                logger.warning(
+                    "Telegram недоступен после %s попыток: %s", attempt, exc
+                )
+            else:
+                time.sleep(_RETRY_DELAY)
+
+
+def _send(text: str) -> None:
+    """Неблокирующая отправка: фоновый поток, чтобы не задерживать ответ API."""
+    threading.Thread(target=_deliver, args=(text,), daemon=True).start()
 
 
 def _items_lines(order) -> list:

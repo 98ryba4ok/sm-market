@@ -189,3 +189,5 @@ YOOKASSA_VAT_CODE = int(os.getenv('YOOKASSA_VAT_CODE', '11'))
 # TELEGRAM_BOT_TOKEN — токен бота от @BotFather; TELEGRAM_CHAT_ID — id чата/группы.
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
+# Опциональный прокси, если до api.telegram.org нет прямого доступа (напр. socks5://user:pass@host:port)
+TELEGRAM_PROXY = os.getenv('TELEGRAM_PROXY', '')
