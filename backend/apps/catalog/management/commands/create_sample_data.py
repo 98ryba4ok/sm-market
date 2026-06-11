@@ -1,12 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.core.files import File
-from decimal import Decimal
-import random
-import shutil
 from pathlib import Path
-from apps.catalog.models import Room, Category, Product, ProductImage, ProductReview, Brand, Banner
-from apps.orders.models import Order, OrderItem
+from apps.catalog.models import Room, Category, Brand, Banner
 
 User = get_user_model()
 
@@ -35,16 +31,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write('Очистка существующих данных...')
-            OrderItem.objects.all().delete()
-            Order.objects.all().delete()
-            ProductReview.objects.all().delete()
-            ProductImage.objects.all().delete()
-            Product.objects.all().delete()
             Banner.objects.all().delete()
             Brand.objects.all().delete()
             Category.objects.all().delete()
             Room.objects.all().delete()
-            # Удаляем тестовых пользователей (кроме суперпользователей)
             User.objects.filter(is_superuser=False, is_staff=False).delete()
             self.stdout.write(self.style.SUCCESS('✓ Данные очищены'))
         
@@ -216,197 +206,15 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f'  ✓ Создан баннер: {banner.title} (без изображения)')
 
-        # Создать товары для каждой категории
-        self.stdout.write('\nСоздание товаров...')
-
-        products = []
-        labels = ['new', 'hit', 'sale', 'exclusive', '']
-        product_counter = 0
-        
-        # Создаем по 3-5 товаров для каждой категории
-        for cat_idx, category in enumerate(categories):
-            num_products = random.randint(3, 5)
-            
-            for i in range(num_products):
-                # Выбираем случайный бренд
-                brand = random.choice(brands)
-                
-                # Выбираем случайное помещение из тех, к которым привязана категория
-                room = random.choice(list(category.rooms.all()))
-                
-                # Генерируем уникальное название товара с глобальным счетчиком
-                product_counter += 1
-                product_name = f'{category.name} {brand.name} Артикул {product_counter}'
-                
-                # Выбираем случайный лейбл
-                label = random.choice(labels)
-                
-                # Генерируем цену
-                base_price = Decimal(random.randint(1500, 55000))
-                has_discount = random.choice([True, False])
-                discount_price = base_price * Decimal('0.85') if has_discount else None
-
-                description = f'''Сантехника из категории "{category.name}" от бренда {brand.name}.
-
-Особенности:
-• Высокое качество материалов
-• Соответствует европейским стандартам
-• Простой монтаж
-• Гарантия производителя
-
-Подходит для: {room.name}'''
-
-                product = Product.objects.create(
-                    name=product_name,
-                    description=description,
-                    category=category,
-                    room=room,
-                    brand=brand,
-                    price=base_price,
-                    discount_price=discount_price,
-                    stock_quantity=random.randint(5, 50),
-                    sku=f'{brand.slug.upper()[:3]}-{category.slug.upper()[:3]}-{1000 + product_counter}',
-                    label=label,
-                    orders_count=random.randint(0, 100),
-                    specifications={
-                        "Бренд": brand.name,
-                        "Категория": category.name,
-                        "Помещение": room.name,
-                        "Страна производства": brand.country_of_origin,
-                    },
-                    warranty_months=random.choice([12, 24, 36, 60]),
-                    is_active=True
-                )
-                products.append(product)
-                label_text = f", лейбл: {label}" if label else ""
-                self.stdout.write(f'  ✓ Создан товар: {product.name} (SKU: {product.sku}, {product.final_price} ₽{label_text})')
-        
-        # Создать изображения товаров
-        self.stdout.write('\nСоздание изображений товаров...')
-
-        product_image_filename = 'product.png'
-        photo_path = self.get_photo_path(product_image_filename)
-
-        if photo_path:
-            images_created = 0
-            for product in products:
-                with open(photo_path, 'rb') as f:
-                    product_image = ProductImage.objects.create(
-                        product=product,
-                        alt_text=product.name,
-                        is_main=True
-                    )
-                    product_image.image.save(f'{product.slug}.png', File(f), save=True)
-                    images_created += 1
-
-            self.stdout.write(self.style.SUCCESS(f'✓ Создано изображений: {images_created}'))
-        else:
-            self.stdout.write(self.style.WARNING(f'⚠ Файл {product_image_filename} не найден в папке photo, изображения не созданы'))
-        
-        # Создать отзывы
-        self.stdout.write('\nСоздание отзывов...')
-        review_comments = [
-            'Отличный товар! Полностью соответствует описанию.',
-            'Очень доволен покупкой. Рекомендую!',
-            'Хорошее качество за свою цену.',
-            'Быстрая доставка, товар в отличном состоянии.',
-            'Превзошел все ожидания!',
-            'Неплохо, но есть небольшие недостатки.',
-            'Отличное соотношение цены и качества.',
-            'Пользуюсь уже месяц - никаких нареканий.',
-            'Качество на высоте!',
-            'Буду заказывать еще.',
-            'Товар пришел быстро, упаковка отличная.',
-            'Соответствует описанию, все работает.',
-            'Рекомендую к покупке!',
-            'За эти деньги - отличный вариант.',
-            'Пользуюсь каждый день, очень удобно.',
-        ]
-        
-        reviews_created = 0
-        # Создаем отзывы от разных пользователей на разные товары
-        for product in products:
-            # Каждый товар получает от 0 до 3 отзывов
-            num_reviews = random.randint(0, 3)
-            # Выбираем случайных пользователей для отзывов
-            reviewers = random.sample(test_users, min(num_reviews, len(test_users)))
-            
-            for user in reviewers:
-                ProductReview.objects.create(
-                    product=product,
-                    user=user,
-                    rating=random.randint(3, 5),
-                    comment=random.choice(review_comments),
-                    is_verified_purchase=random.choice([True, True, False])  # 66% verified
-                )
-                reviews_created += 1
-        
-        self.stdout.write(self.style.SUCCESS(f'✓ Создано отзывов: {reviews_created}'))
-        
-        # Создать тестовые заказы
-        self.stdout.write('\nСоздание тестовых заказов...')
-        orders_created = 0
-        
-        cities = ['Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург', 'Казань']
-        
-        for user in test_users[:3]:  # Создаем заказы для первых 3 пользователей
-            # Каждый пользователь делает 1-2 заказа
-            num_orders = random.randint(1, 2)
-            
-            for _ in range(num_orders):
-                # Выбираем 1-4 случайных товара для заказа
-                order_products = random.sample(products, random.randint(1, 4))
-                
-                # Рассчитываем общую сумму заказа
-                total = Decimal('0')
-                for product in order_products:
-                    quantity = random.randint(1, 3)
-                    total += product.final_price * quantity
-                
-                # Создаем заказ
-                city = random.choice(cities)
-                order = Order.objects.create(
-                    user=user,
-                    status=random.choice(['pending', 'processing', 'shipped', 'delivered']),
-                    payment_method=random.choice(['card', 'cash']),
-                    payment_status=random.choice(['pending', 'paid']),
-                    total_amount=total,
-                    delivery_address=f'ул. Тестовая, д. {random.randint(1, 100)}, кв. {random.randint(1, 200)}',
-                    delivery_city=city,
-                    delivery_postal_code=f'{random.randint(100000, 999999)}',
-                    phone=user.phone,
-                    email=user.email,
-                )
-                
-                # Добавляем товары в заказ
-                for product in order_products:
-                    quantity = random.randint(1, 3)
-                    OrderItem.objects.create(
-                        order=order,
-                        product=product,
-                        quantity=quantity,
-                        price_at_purchase=product.final_price,
-                        product_name=product.name
-                    )
-                
-                orders_created += 1
-        
-        self.stdout.write(self.style.SUCCESS(f'✓ Создано заказов: {orders_created}'))
-        
         # Итоговая статистика
         self.stdout.write('\n' + '='*70)
-        self.stdout.write(self.style.SUCCESS('✓ Тестовые данные успешно созданы!'))
+        self.stdout.write(self.style.SUCCESS('✓ Данные успешно созданы!'))
         self.stdout.write('='*70)
         self.stdout.write(f'Пользователей: {len(test_users)}')
         self.stdout.write(f'Помещений: {Room.objects.count()}')
         self.stdout.write(f'Категорий: {Category.objects.count()}')
         self.stdout.write(f'Брендов: {Brand.objects.count()}')
         self.stdout.write(f'Баннеров: {Banner.objects.count()}')
-        self.stdout.write(f'Товаров: {Product.objects.count()}')
-        self.stdout.write(f'Изображений: {ProductImage.objects.count()}')
-        self.stdout.write(f'Отзывов: {ProductReview.objects.count()}')
-        self.stdout.write(f'Заказов: {Order.objects.count()}')
-        self.stdout.write(f'Позиций в заказах: {OrderItem.objects.count()}')
 
         self.stdout.write('\n' + '='*70)
         self.stdout.write(self.style.SUCCESS('Созданные помещения:'))
@@ -445,15 +253,9 @@ class Command(BaseCommand):
         self.stdout.write('')
         self.stdout.write('Необходимые файлы:')
         self.stdout.write('  • Помещения: bathroom.png, kitchen.png, living.png, bedroom.png, hallway.png, office.png')
-        self.stdout.write('  • Категории: santehnika.png, kuhni.png, unitazy.png, plitka.png, vanny.png, mebel.png, и др.')
-        self.stdout.write('  • Бренды: gessi.png, cielo.png, jorger.png, kronos.png, devon.png')
+        self.stdout.write('  • Категории: smesiteli.png, leiki.png, stoyki.png, radiatory.png, sifony.png,')
+        self.stdout.write('               unitazy.png, vodoschotchiki.png, vodonagrevateli.png, instrumenty.png,')
+        self.stdout.write('               kollektory.png, kotelnoe.png, krany.png, oborudovanie.png')
+        self.stdout.write('  • Бренды: grohe.png, geberit.png, thermex.png, grundfos.png, oventrop.png, viega.png')
         self.stdout.write('  • Баннеры: banner1.png, banner2.png')
-        self.stdout.write('  • Товар: product.png')
-        self.stdout.write('='*70)
-
-        self.stdout.write('\n' + '='*70)
-        self.stdout.write('Для доступа к админ-панели создайте суперпользователя:')
-        self.stdout.write('  python manage.py createsuperuser')
-        self.stdout.write('\nИли используйте Docker:')
-        self.stdout.write('  docker-compose exec backend python manage.py createsuperuser')
         self.stdout.write('='*70)
