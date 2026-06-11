@@ -49,8 +49,15 @@
   flex: 1;
   padding: 0.875rem 1.5rem;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 10px;
+}
+
+.mobile-checkout-summary__pay-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  text-align: center;
 }
 
 .mobile-checkout-summary__promo {

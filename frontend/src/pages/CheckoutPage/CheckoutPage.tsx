@@ -25,6 +25,23 @@ import type { OrderTotals } from "../../types/promo";
 import { getImageUrl } from "../../utils/imageUrl";
 import "./CheckoutPage.css";
 
+// Нормализует ввод к виду +7 (XXX) XXX-XX-XX
+const formatPhone = (raw: string): string => {
+  let digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("8")) digits = "7" + digits.slice(1);
+  if (digits && !digits.startsWith("7")) digits = "7" + digits;
+  digits = digits.slice(0, 11);
+  if (!digits) return "";
+  const rest = digits.slice(1);
+  let out = "+7";
+  if (rest.length) out += ` (${rest.slice(0, 3)}`;
+  if (rest.length >= 3) out += ")";
+  if (rest.length > 3) out += ` ${rest.slice(3, 6)}`;
+  if (rest.length > 6) out += `-${rest.slice(6, 8)}`;
+  if (rest.length > 8) out += `-${rest.slice(8, 10)}`;
+  return out;
+};
+
 export const CheckoutPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -161,8 +178,11 @@ export const CheckoutPage = () => {
       if (!formData.address.trim()) newErrors.address = "Укажите адрес доставки";
     }
 
+    const phoneDigits = formData.phone.replace(/\D/g, "");
     if (!formData.phone.trim()) {
       newErrors.phone = "Укажите телефон";
+    } else if (phoneDigits.length !== 11 || !/^[78]/.test(phoneDigits)) {
+      newErrors.phone = "Введите корректный номер: +7 (___) ___-__-__";
     }
 
     if (!formData.email.trim()) {
@@ -330,9 +350,10 @@ export const CheckoutPage = () => {
                   placeholder="+7 (___) ___-__-__"
                   value={formData.phone}
                   onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
+                    setFormData({ ...formData, phone: formatPhone(e.target.value) })
                   }
                   error={errors.phone}
+                  maxLength={18}
                   required
                 />
                 <Input
@@ -494,6 +515,16 @@ export const CheckoutPage = () => {
                   </>
                 )}
 
+                <div className="checkout-payment-invite">
+                  <span className="checkout-payment-invite__icon">💳</span>
+                  <div className="checkout-payment-invite__text">
+                    <strong>Онлайн-оплата картой</strong>
+                    <span>
+                      После оформления вы перейдёте к безопасной оплате через ЮKassa
+                    </span>
+                  </div>
+                </div>
+
                 <label className="checkout-offer-consent">
                   <input
                     type="checkbox"
@@ -518,7 +549,11 @@ export const CheckoutPage = () => {
                   onClick={handleSubmit}
                   disabled={isSubmitting || selectedItems.size === 0 || !offerAccepted}
                 >
-                  {isSubmitting ? "Оформление..." : "Оформить заказ"}
+                  {isSubmitting
+                    ? "Оформление..."
+                    : totals
+                      ? `Перейти к оплате · ${parseFloat(totals.total).toLocaleString("ru-RU")} ₽`
+                      : "Перейти к оплате"}
                 </Button>
               </div>
             </div>

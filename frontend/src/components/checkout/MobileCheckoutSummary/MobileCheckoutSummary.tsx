@@ -41,9 +41,17 @@ export const MobileCheckoutSummary: React.FC<MobileCheckoutSummaryProps> = ({
           onClick={onSubmit}
           disabled={disabled || isSubmitting || selectedCount === 0 || !offerAccepted}
         >
-          {isSubmitting ? "Оформление..." : "Оформить заказ"}
+          {isSubmitting
+            ? "Оформление..."
+            : totals
+              ? `Перейти к оплате · ${parseFloat(totals.total).toLocaleString("ru-RU")} ₽`
+              : "Перейти к оплате"}
         </Button>
       </div>
+
+      <p className="mobile-checkout-summary__pay-hint">
+        💳 Онлайн-оплата картой через ЮKassa после оформления
+      </p>
 
       <label className="mobile-checkout-offer-consent">
         <input
