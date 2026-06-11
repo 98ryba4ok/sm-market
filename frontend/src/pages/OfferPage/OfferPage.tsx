@@ -30,7 +30,7 @@ export const OfferPage = () => {
           <h1 className="info-page__title">Публичная оферта</h1>
           <p className="info-page__subtitle">
             Договор купли-продажи товаров дистанционным способом.<br />
-            Редакция от 1 января 2025 г.
+            Редакция от 15 мая 2026 г.
           </p>
         </div>
       </div>
@@ -55,7 +55,7 @@ export const OfferPage = () => {
               <Shield size={20} className="offer-intro__icon" />
               <p>
                 Настоящий документ является официальным предложением (публичной офертой)
-                ООО «СМ Маркет» (далее — «Продавец») заключить договор купли-продажи
+                ИП Мирзагасанов Сахил Башарат Оглы (далее — «Продавец») заключить договор купли-продажи
                 товаров дистанционным способом на условиях, изложенных ниже. Совершение
                 акцепта — оформление заказа — означает полное и безоговорочное согласие
                 Покупателя со всеми условиями настоящего договора.
@@ -66,8 +66,8 @@ export const OfferPage = () => {
               <h2 className="offer-section__title">1. Общие положения</h2>
               <p className="info-page__text">
                 1.1. Настоящая публичная оферта (далее — «Оферта») регулирует отношения между
-                ООО «СМ Маркет» и физическим лицом (далее — «Покупатель»), оформляющим
-                заказ через сайт <strong>smmarket.ru</strong> или мобильное приложение
+                ИП Мирзагасанов Сахил Башарат Оглы и физическим лицом (далее — «Покупатель»), оформляющим
+                заказ через сайт <strong>sm-santex.ru</strong> или мобильное приложение
                 (далее — «Сайт»).
               </p>
               <p className="info-page__text">
@@ -285,7 +285,7 @@ export const OfferPage = () => {
               </p>
               <p className="info-page__text">
                 9.3. Покупатель вправе отозвать согласие на обработку персональных данных,
-                направив заявку на адрес <a href="mailto:privacy@smmarket.ru" className="offer-link">privacy@smmarket.ru</a>.
+                направив заявку на адрес <a href="mailto:info@sm-santex.ru" className="offer-link">info@sm-santex.ru</a>.
                 Отзыв согласия не влечёт исполнение ранее оформленных заказов.
               </p>
             </section>
@@ -317,7 +317,7 @@ export const OfferPage = () => {
               <p className="info-page__text">
                 11.1. Все разногласия, возникающие из настоящего договора, решаются
                 путём переговоров. Для этого Покупателю необходимо направить
-                письменную претензию на адрес <a href="mailto:info@smmarket.ru" className="offer-link">info@smmarket.ru</a>{" "}
+                письменную претензию на адрес <a href="mailto:info@sm-santex.ru" className="offer-link">info@sm-santex.ru</a>{" "}
                 или на юридический адрес Продавца.
               </p>
               <p className="info-page__text">
@@ -357,24 +357,44 @@ export const OfferPage = () => {
               <h2 className="offer-section__title">13. Реквизиты продавца</h2>
               <div className="offer-requisites">
                 <div className="offer-req-row">
-                  <span className="offer-req-row__label">Полное наименование</span>
-                  <span className="offer-req-row__value">Общество с ограниченной ответственностью «СМ Маркет»</span>
-                </div>
-                <div className="offer-req-row">
-                  <span className="offer-req-row__label">Сокращённое наименование</span>
-                  <span className="offer-req-row__value">ООО «СМ Маркет»</span>
+                  <span className="offer-req-row__label">Наименование</span>
+                  <span className="offer-req-row__value">ИНДИВИДУАЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ МИРЗАГАСАНОВ САХИЛ БАШАРАТ ОГЛЫ</span>
                 </div>
                 <div className="offer-req-row">
                   <span className="offer-req-row__label">ИНН</span>
-                  <span className="offer-req-row__value">7701234567</span>
+                  <span className="offer-req-row__value">621302547601</span>
                 </div>
                 <div className="offer-req-row">
-                  <span className="offer-req-row__label">ОГРН</span>
-                  <span className="offer-req-row__value">1147701234567</span>
+                  <span className="offer-req-row__label">ОГРНИП</span>
+                  <span className="offer-req-row__value">318623400010967</span>
                 </div>
                 <div className="offer-req-row">
-                  <span className="offer-req-row__label">Юридический адрес</span>
-                  <span className="offer-req-row__value">123456, г. Москва, ул. Строительная, д. 42</span>
+                  <span className="offer-req-row__label">Расчётный счёт</span>
+                  <span className="offer-req-row__value">40802810453000036087</span>
+                </div>
+                <div className="offer-req-row">
+                  <span className="offer-req-row__label">Банк</span>
+                  <span className="offer-req-row__value">РЯЗАНСКОЕ ОТДЕЛЕНИЕ N 8606 ПАО СБЕРБАНК</span>
+                </div>
+                <div className="offer-req-row">
+                  <span className="offer-req-row__label">БИК</span>
+                  <span className="offer-req-row__value">046126614</span>
+                </div>
+                <div className="offer-req-row">
+                  <span className="offer-req-row__label">Корреспондентский счёт</span>
+                  <span className="offer-req-row__value">30101810500000000614</span>
+                </div>
+                <div className="offer-req-row">
+                  <span className="offer-req-row__label">ИНН банка</span>
+                  <span className="offer-req-row__value">7707083893</span>
+                </div>
+                <div className="offer-req-row">
+                  <span className="offer-req-row__label">КПП банка</span>
+                  <span className="offer-req-row__value">623402001</span>
+                </div>
+                <div className="offer-req-row">
+                  <span className="offer-req-row__label">Сайт</span>
+                  <span className="offer-req-row__value">sm-santex.ru</span>
                 </div>
               </div>
               <div className="offer-contacts">
@@ -382,21 +402,21 @@ export const OfferPage = () => {
                   <div className="contact-item__icon"><Mail size={20} /></div>
                   <div>
                     <p className="contact-item__label">Email</p>
-                    <a href="mailto:info@smmarket.ru" className="contact-item__value">info@smmarket.ru</a>
+                    <a href="mailto:info@sm-santex.ru" className="contact-item__value">info@sm-santex.ru</a>
                   </div>
                 </div>
                 <div className="contact-item">
                   <div className="contact-item__icon"><Phone size={20} /></div>
                   <div>
                     <p className="contact-item__label">Телефон</p>
-                    <a href="tel:84951234567" className="contact-item__value">8 495 123 45 67</a>
+                    <a href="tel:+79266600607" className="contact-item__value">+7 (926) 660-06-07</a>
                   </div>
                 </div>
               </div>
             </section>
 
             <div className="offer-footer-note">
-              <p>Редакция от <strong>1 января 2025 г.</strong></p>
+              <p>Редакция от <strong>15 мая 2026 г.</strong></p>
             </div>
           </div>
         </div>

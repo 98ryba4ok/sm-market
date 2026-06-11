@@ -5,7 +5,7 @@ import "./WarrantyPage.css";
 const FAQ = [
   {
     q: "В течение какого срока можно вернуть товар?",
-    a: "Товар надлежащего качества можно вернуть в течение 14 дней с момента получения. Товар ненадлежащего качества — в течение гарантийного срока.",
+    a: "Товар надлежащего качества можно вернуть в течение 7 дней с момента получения (ст. 26.1 ЗОЗПП). Товар ненадлежащего качества — в течение гарантийного срока.",
   },
   {
     q: "Нужен ли чек для возврата?",
@@ -178,6 +178,28 @@ export const WarrantyPage = () => {
                 <p className="faq-item__answer">{item.a}</p>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Контакты для возврата */}
+        <div className="info-page__section">
+          <div className="info-card" style={{ padding: "1.5rem 2rem" }}>
+            <h2 className="info-page__section-title" style={{ marginBottom: "1rem" }}>Контакты для возврата</h2>
+            <p className="info-page__text">
+              <strong>E-mail:</strong>{" "}
+              <a href="mailto:info@sm-santex.ru" style={{ color: "#2563eb" }}>info@sm-santex.ru</a>
+            </p>
+            <p className="info-page__text">
+              <strong>Телефон:</strong>{" "}
+              <a href="tel:+79266600607" style={{ color: "#2563eb" }}>+7 (926) 660-06-07</a>
+            </p>
+            <p className="info-page__text">
+              <strong>Режим работы:</strong> пн–пт, 10:00–18:00 (МСК)
+            </p>
+            <p className="info-page__text" style={{ marginTop: "1rem", color: "#6b7280", fontSize: "0.875rem" }}>
+              Настоящие условия разработаны в соответствии с Законом РФ от 07.02.1992 № 2300-I
+              «О защите прав потребителей» и действуют с 15 мая 2026 г.
+            </p>
           </div>
         </div>
       </div>

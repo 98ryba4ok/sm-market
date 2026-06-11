@@ -12,7 +12,7 @@ export const PrivacyPage = () => {
           </div>
           <h1 className="info-page__title">Политика конфиденциальности</h1>
           <p className="info-page__subtitle">
-            Дата вступления в силу: 1 января 2025 г.
+            Дата вступления в силу: 15 мая 2026 г.
           </p>
         </div>
       </div>
@@ -50,7 +50,7 @@ export const PrivacyPage = () => {
             <div className="privacy-intro info-card">
               <Shield size={20} className="privacy-intro__icon" />
               <p>
-                ООО «СМ Маркет» (далее — «Компания», «мы») уважает конфиденциальность
+                ИП Мирзагасанов Сахил Башарат Оглы (далее — «Компания», «мы») уважает конфиденциальность
                 своих пользователей и обязуется защищать их персональные данные.
                 Настоящая Политика конфиденциальности описывает, какие данные мы
                 собираем, как используем и как защищаем в соответствии с Федеральным
@@ -61,7 +61,7 @@ export const PrivacyPage = () => {
             <section id="section-1" className="privacy-section">
               <h2 className="privacy-section__title">1. Общие положения</h2>
               <p className="info-page__text">
-                Настоящая Политика применяется к сайту <strong>smmarket.ru</strong> и
+                Настоящая Политика применяется к сайту <strong>sm-santex.ru</strong> и
                 всем связанным с ним сервисам, мобильным приложениям и точкам сбора
                 данных (далее — «Сервис»).
               </p>
@@ -72,8 +72,9 @@ export const PrivacyPage = () => {
               </p>
               <p className="info-page__text">
                 Оператором персональных данных является:<br />
-                <strong>ООО «СМ Маркет»</strong>, ИНН 7701234567, ОГРН 1147701234567,
-                адрес: 123456, г. Москва, ул. Строительная, д. 42.
+                <strong>ИНДИВИДУАЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ МИРЗАГАСАНОВ САХИЛ БАШАРАТ ОГЛЫ</strong>,
+                ИНН: 621302547601, ОГРНИП: 318623400010967,
+                e-mail: info@sm-santex.ru, тел.: +7 (926) 660-06-07.
               </p>
             </section>
 
@@ -226,8 +227,8 @@ export const PrivacyPage = () => {
               </div>
               <p className="info-page__text" style={{ marginTop: "1.25rem" }}>
                 Для реализации прав направьте запрос на почту{" "}
-                <a href="mailto:privacy@smmarket.ru" className="privacy-link">
-                  privacy@smmarket.ru
+                <a href="mailto:info@sm-santex.ru" className="privacy-link">
+                  info@sm-santex.ru
                 </a>
                 . Мы ответим в течение 30 дней.
               </p>
@@ -300,8 +301,8 @@ export const PrivacyPage = () => {
                   </div>
                   <div>
                     <p className="contact-item__label">Email по вопросам приватности</p>
-                    <a href="mailto:privacy@smmarket.ru" className="contact-item__value">
-                      privacy@smmarket.ru
+                    <a href="mailto:info@sm-santex.ru" className="contact-item__value">
+                      info@sm-santex.ru
                     </a>
                   </div>
                 </div>
@@ -311,8 +312,8 @@ export const PrivacyPage = () => {
                   </div>
                   <div>
                     <p className="contact-item__label">Телефон</p>
-                    <a href="tel:84951234567" className="contact-item__value">
-                      8 495 123 45 67
+                    <a href="tel:+79266600607" className="contact-item__value">
+                      +7 (926) 660-06-07
                     </a>
                   </div>
                 </div>
@@ -323,7 +324,7 @@ export const PrivacyPage = () => {
                   <div>
                     <p className="contact-item__label">Юридический адрес</p>
                     <span className="contact-item__value">
-                      123456, г. Москва, ул. Строительная, д. 42
+                      info@sm-santex.ru
                     </span>
                   </div>
                 </div>
@@ -332,7 +333,7 @@ export const PrivacyPage = () => {
 
             <div className="privacy-footer-note">
               <p>
-                Последнее обновление: <strong>1 января 2025 г.</strong>
+                Последнее обновление: <strong>15 мая 2026 г.</strong>
               </p>
             </div>
           </div>
