@@ -378,12 +378,31 @@ class OrderViewSet(viewsets.ModelViewSet):
         from . import yookassa as yk
         from django.conf import settings
 
+        # Чек для 54-ФЗ: контакт покупателя + позиции заказа со ставкой НДС
+        vat_code = getattr(settings, 'YOOKASSA_VAT_CODE', 11)
+        receipt_items = [
+            {
+                'description': (item.product_name or 'Товар')[:128],
+                'quantity': str(item.quantity),
+                'amount': {
+                    'value': str(Decimal(item.price_at_purchase).quantize(Decimal('0.01'))),
+                    'currency': 'RUB',
+                },
+                'vat_code': vat_code,
+                'payment_mode': 'full_payment',
+                'payment_subject': 'commodity',
+            }
+            for item in order.items.all()
+        ]
+        receipt = {'customer': {'email': order.email}, 'items': receipt_items} if receipt_items else None
+
         payment_data = yk.create_payment(
             order_id=order.id,
             order_number=order.order_number,
             amount=order.total_amount,
             description=f'Оплата заказа {order.order_number} на sm-santex.ru',
             return_url=settings.YOOKASSA_RETURN_URL,
+            receipt=receipt,
         )
 
         if payment_data.get('payment_id'):

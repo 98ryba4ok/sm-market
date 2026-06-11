@@ -25,6 +25,7 @@ def create_payment(
     description: str,
     return_url: str,
     metadata: Optional[Dict[str, Any]] = None,
+    receipt: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     settings = _get_settings()
 
@@ -55,6 +56,10 @@ def create_payment(
             'description': description,
             'metadata': {**(metadata or {}), 'order_id': order_id, 'order_number': order_number},
         }
+
+        # Чек для 54-ФЗ (фискализация). Обязателен, если магазин на фискализации.
+        if receipt:
+            payload['receipt'] = receipt
 
         payment = Payment.create(payload, idempotency_key)
 

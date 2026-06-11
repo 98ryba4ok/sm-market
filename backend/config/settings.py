@@ -182,3 +182,5 @@ YOOKASSA_SHOP_ID = os.getenv('YOOKASSA_SHOP_ID', None)
 YOOKASSA_SECRET_KEY = os.getenv('YOOKASSA_SECRET_KEY', None)
 YOOKASSA_ENABLED = os.getenv('YOOKASSA_ENABLED', 'false').lower() == 'true'
 YOOKASSA_RETURN_URL = os.getenv('YOOKASSA_RETURN_URL', 'http://localhost:5173/payment/return')
+# Код ставки НДС для чеков 54-ФЗ. 11 = НДС 22% (с 2026), 12 = НДС 22/122, 1 = без НДС.
+YOOKASSA_VAT_CODE = int(os.getenv('YOOKASSA_VAT_CODE', '11'))
