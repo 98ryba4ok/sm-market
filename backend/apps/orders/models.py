@@ -271,11 +271,19 @@ class Order(models.Model):
         return False
 
     def mark_as_paid(self):
-        """Отметить заказ как оплаченный"""
+        """Отметить заказ как оплаченный (идемпотентно)"""
+        if self.payment_status == 'paid':
+            return
         self.payment_status = 'paid'
         if self.status == 'pending':
             self.status = 'processing'
         self.save(update_fields=['payment_status', 'status'])
+
+        # Уведомление в Telegram только после успешного коммита и только при
+        # реальном переходе в "оплачено" (повторные вызовы webhook не дублируют).
+        from django.db import transaction
+        from .telegram import notify_order_paid
+        transaction.on_commit(lambda: notify_order_paid(self))
 
     def recalculate_total(self):
         """Пересчитать общую сумму заказа из элементов"""
