@@ -2,7 +2,8 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.core.files import File
 from pathlib import Path
-from apps.catalog.models import Room, Category, Brand, Banner
+from apps.catalog.models import Room, Category, Product, ProductImage, ProductReview, Brand, Banner
+from apps.orders.models import Order, OrderItem
 
 User = get_user_model()
 
@@ -31,6 +32,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write('Очистка существующих данных...')
+            OrderItem.objects.all().delete()
+            Order.objects.all().delete()
+            ProductReview.objects.all().delete()
+            ProductImage.objects.all().delete()
+            Product.objects.all().delete()
             Banner.objects.all().delete()
             Brand.objects.all().delete()
             Category.objects.all().delete()
