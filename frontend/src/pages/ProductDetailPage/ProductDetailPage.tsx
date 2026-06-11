@@ -220,25 +220,23 @@ export const ProductDetailPage = () => {
         <div className="product-detail-page__main">
           {/* Desktop Layout */}
           <div className="product-detail-page__desktop-layout">
-            {/* Left: Thumbnails */}
-            {product.images && product.images.length > 1 && (
-              <div className="product-detail-page__thumbnails-vertical">
-                {product.images.map((img) => {
-                  const imageUrl = getImageUrl(img.image);
-                  return (
-                    <button
-                      key={img.id}
-                      className={`product-detail-page__thumbnail-vertical ${
-                        selectedImage === imageUrl ? "product-detail-page__thumbnail-vertical--active" : ""
-                      }`}
-                      onClick={() => setSelectedImage(imageUrl)}
-                    >
-                      <img src={imageUrl} alt={img.alt_text || product.name} />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            {/* Left: Thumbnails — always rendered to preserve grid column */}
+            <div className="product-detail-page__thumbnails-vertical">
+              {product.images && product.images.length > 1 && product.images.map((img) => {
+                const imageUrl = getImageUrl(img.image);
+                return (
+                  <button
+                    key={img.id}
+                    className={`product-detail-page__thumbnail-vertical ${
+                      selectedImage === imageUrl ? "product-detail-page__thumbnail-vertical--active" : ""
+                    }`}
+                    onClick={() => setSelectedImage(imageUrl)}
+                  >
+                    <img src={imageUrl} alt={img.alt_text || product.name} />
+                  </button>
+                );
+              })}
+            </div>
 
             {/* Center: Main Image */}
             <div className="product-detail-page__main-image-container">
