@@ -1,9 +1,16 @@
+import json
+import logging
+
 from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.views import APIView
 from django.db import transaction
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from decimal import Decimal
+
 from .models import Cart, CartItem, Order, PromoCode
 from .serializers import (
     CartSerializer,
@@ -13,9 +20,11 @@ from .serializers import (
     OrderSerializer,
     OrderCreateSerializer,
     PromoCodeSerializer,
-    PromoCodeValidationSerializer
+    PromoCodeValidationSerializer,
 )
 from apps.catalog.models import Product
+
+logger = logging.getLogger(__name__)
 
 
 class CartViewSet(viewsets.ViewSet):
@@ -347,42 +356,69 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def create_payment(self, request, pk=None):
-        """
-        Создать платеж в ЮКасса для заказа
-        POST /api/orders/{id}/create_payment/
-        
-        Пока возвращает заглушку, в будущем создаст реальный платеж
-        и вернет URL для перехода на страницу оплаты ЮКассы
-        """
-        order = self.get_object()
-        
+        """POST /api/orders/{id}/create_payment/"""
+        return self._do_create_payment(self.get_object())
+
+    @action(detail=False, methods=['post'], url_path='create-payment-by-number')
+    def create_payment_by_number(self, request):
+        """POST /api/orders/create-payment-by-number/ — создать платёж по order_number"""
+        order_number = request.data.get('order_number')
+        if not order_number:
+            return Response({'detail': 'Не указан order_number'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            order = Order.objects.get(order_number=order_number, user=request.user)
+        except Order.DoesNotExist:
+            return Response({'detail': 'Заказ не найден'}, status=status.HTTP_404_NOT_FOUND)
+        return self._do_create_payment(order)
+
+    def _do_create_payment(self, order):
         if order.payment_status == 'paid':
-            return Response(
-                {'detail': 'Заказ уже оплачен'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        from .yookassa import YooKassaService
+            return Response({'detail': 'Заказ уже оплачен'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from . import yookassa as yk
         from django.conf import settings
-        
-        yookassa_service = YooKassaService()
-        payment_data = yookassa_service.create_payment(
+
+        payment_data = yk.create_payment(
+            order_id=order.id,
             order_number=order.order_number,
             amount=order.total_amount,
-            description=f'Оплата заказа {order.order_number}',
+            description=f'Оплата заказа {order.order_number} на sm-santex.ru',
             return_url=settings.YOOKASSA_RETURN_URL,
-            metadata={'order_id': order.id}
         )
-        
-        # Сохранить payment_id в заказе если получен
+
         if payment_data.get('payment_id'):
             order.payment_id = payment_data['payment_id']
             order.save(update_fields=['payment_id'])
-        
+
         return Response({
+            'order_id': order.id,
             'payment_id': payment_data.get('payment_id'),
             'confirmation_url': payment_data.get('confirmation_url'),
-            'message': payment_data.get('message', 'Платеж создан')
+            'message': payment_data.get('message', 'Платёж создан'),
+        })
+
+    @action(detail=True, methods=['get'])
+    def check_payment(self, request, pk=None):
+        """GET /api/orders/{id}/check_payment/ — проверить статус оплаты"""
+        order = self.get_object()
+
+        if order.payment_status == 'paid':
+            return Response({'status': 'paid', 'paid': True, 'order_id': order.id})
+
+        if not order.payment_id:
+            return Response({'status': 'no_payment', 'paid': False, 'order_id': order.id})
+
+        from . import yookassa as yk
+
+        result = yk.check_payment_status(order.payment_id)
+
+        if result.get('paid'):
+            order.mark_as_paid()
+
+        return Response({
+            'status': result.get('status'),
+            'paid': result.get('paid', False),
+            'order_id': order.id,
         })
 
 
@@ -438,3 +474,55 @@ class PromoCodeViewSet(viewsets.ReadOnlyModelViewSet):
                 'discount_amount': '0',
                 'error': error_message
             }, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class YooKassaWebhookView(APIView):
+    """
+    POST /api/webhook/yookassa/
+    Принимает уведомления от ЮКассы об изменении статуса платежа.
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+        except (json.JSONDecodeError, ValueError):
+            logger.warning('YooKassa webhook: bad JSON body')
+            return Response({'detail': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from . import yookassa as yk
+
+        result = yk.parse_webhook(data)
+        logger.info('YooKassa webhook received: %s', result)
+
+        if result.get('status') == 'error':
+            return Response({'detail': 'parse error'}, status=status.HTTP_400_BAD_REQUEST)
+
+        order_id = result.get('order_id')
+        payment_id = result.get('payment_id')
+        paid = result.get('paid', False)
+        yookassa_status = result.get('status')
+
+        if order_id:
+            try:
+                order = Order.objects.get(id=order_id)
+            except Order.DoesNotExist:
+                logger.warning('YooKassa webhook: order %s not found', order_id)
+                return Response(status=status.HTTP_200_OK)
+
+            if payment_id and not order.payment_id:
+                order.payment_id = payment_id
+                order.save(update_fields=['payment_id'])
+
+            if paid and yookassa_status == 'succeeded' and order.payment_status != 'paid':
+                order.mark_as_paid()
+                logger.info('Order %s marked as paid via webhook', order.order_number)
+
+            elif yookassa_status == 'canceled' and order.payment_status == 'pending':
+                order.payment_status = 'failed'
+                order.save(update_fields=['payment_status'])
+                logger.info('Order %s payment marked as failed via webhook', order.order_number)
+
+        return Response(status=status.HTTP_200_OK)

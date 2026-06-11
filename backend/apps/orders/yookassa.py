@@ -1,170 +1,125 @@
+import uuid
+import logging
 from decimal import Decimal
 from typing import Optional, Dict, Any
-import uuid
+
+logger = logging.getLogger(__name__)
 
 
-class YooKassaService:
-    """
-    Сервис для работы с ЮКасса (Yookassa)
-    
-    Текущее состояние: заглушка для будущей интеграции
-    
-    Для активации интеграции:
-    1. Установить библиотеку: pip install yookassa
-    2. Получить Shop ID и Secret Key в личном кабинете ЮКассы
-    3. Добавить переменные окружения в .env
-    4. Включить YOOKASSA_ENABLED=true
-    5. Раскомментировать код интеграции ниже
-    """
-    
-    def __init__(self):
-        from django.conf import settings
-        
-        self.shop_id = getattr(settings, 'YOOKASSA_SHOP_ID', None)
-        self.secret_key = getattr(settings, 'YOOKASSA_SECRET_KEY', None)
-        self.enabled = getattr(settings, 'YOOKASSA_ENABLED', False)
-        self.return_url = getattr(settings, 'YOOKASSA_RETURN_URL', 'http://localhost:5173/payment/return')
-    
-    def create_payment(
-        self, 
-        order_number: str, 
-        amount: Decimal,
-        description: str,
-        return_url: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        """
-        Создать платеж в ЮКасса
-        
-        Параметры:
-        - order_number: номер заказа
-        - amount: сумма платежа
-        - description: описание платежа
-        - return_url: URL для возврата после оплаты
-        - metadata: дополнительные данные
-        
-        Возвращает:
-        - payment_id: ID платежа в ЮКассе
-        - confirmation_url: URL для перехода на оплату
-        - status: статус платежа
-        - paid: оплачен ли
-        """
-        if not self.enabled:
-            return {
-                'payment_id': str(uuid.uuid4()),
-                'confirmation_url': None,
-                'status': 'pending',
-                'paid': False,
-                'message': 'Интеграция с ЮКасса пока отключена'
-            }
-        
-        # TODO: Раскомментировать после установки библиотеки yookassa
-        # from yookassa import Configuration, Payment
-        # 
-        # Configuration.account_id = self.shop_id
-        # Configuration.secret_key = self.secret_key
-        # 
-        # payment = Payment.create({
-        #     "amount": {
-        #         "value": str(amount),
-        #         "currency": "RUB"
-        #     },
-        #     "confirmation": {
-        #         "type": "redirect",
-        #         "return_url": return_url or self.return_url
-        #     },
-        #     "capture": True,
-        #     "description": description,
-        #     "metadata": metadata or {}
-        # }, uuid.uuid4())
-        # 
-        # return {
-        #     'payment_id': payment.id,
-        #     'confirmation_url': payment.confirmation.confirmation_url,
-        #     'status': payment.status,
-        #     'paid': payment.paid
-        # }
-        
+def _get_settings():
+    from django.conf import settings
+    return settings
+
+
+def _configure():
+    settings = _get_settings()
+    from yookassa import Configuration
+    Configuration.account_id = settings.YOOKASSA_SHOP_ID
+    Configuration.secret_key = settings.YOOKASSA_SECRET_KEY
+
+
+def create_payment(
+    order_id: int,
+    order_number: str,
+    amount: Decimal,
+    description: str,
+    return_url: str,
+    metadata: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    settings = _get_settings()
+
+    if not settings.YOOKASSA_ENABLED:
         return {
             'payment_id': str(uuid.uuid4()),
             'confirmation_url': None,
             'status': 'pending',
-            'paid': False
-        }
-    
-    def check_payment_status(self, payment_id: str) -> Dict[str, Any]:
-        """
-        Проверить статус платежа в ЮКасса
-        
-        Параметры:
-        - payment_id: ID платежа
-        
-        Возвращает:
-        - status: статус платежа
-        - paid: оплачен ли
-        - amount: сумма платежа
-        """
-        if not self.enabled:
-            return {
-                'status': 'pending',
-                'paid': False,
-                'amount': None
-            }
-        
-        # TODO: Раскомментировать после установки библиотеки yookassa
-        # from yookassa import Payment
-        # 
-        # payment = Payment.find_one(payment_id)
-        # 
-        # return {
-        #     'status': payment.status,
-        #     'paid': payment.paid,
-        #     'amount': payment.amount.value
-        # }
-        
-        return {
-            'status': 'pending',
             'paid': False,
-            'amount': None
+            'message': 'Интеграция с ЮКасса отключена',
         }
-    
-    def process_webhook(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Обработать webhook от ЮКассы
-        
-        ЮКасса отправляет уведомления об изменении статуса платежа.
-        Этот метод должен быть вызван из отдельного endpoint для webhooks.
-        
-        Параметры:
-        - data: данные от ЮКассы
-        
-        Возвращает:
-        - payment_id: ID платежа
-        - status: новый статус
-        - paid: оплачен ли
-        """
-        if not self.enabled:
-            return {
-                'payment_id': None,
-                'status': 'pending',
-                'paid': False
-            }
-        
-        # TODO: Раскомментировать после установки библиотеки yookassa
-        # from yookassa import WebhookNotification
-        # 
-        # notification = WebhookNotification(data)
-        # payment = notification.object
-        # 
-        # return {
-        #     'payment_id': payment.id,
-        #     'status': payment.status,
-        #     'paid': payment.paid,
-        #     'metadata': payment.metadata
-        # }
-        
+
+    try:
+        _configure()
+        from yookassa import Payment
+
+        idempotency_key = str(uuid.uuid4())
+        payload = {
+            'amount': {
+                'value': str(amount.quantize(Decimal('0.01'))),
+                'currency': 'RUB',
+            },
+            'confirmation': {
+                'type': 'redirect',
+                'return_url': f'{return_url}?order_id={order_id}',
+            },
+            'capture': True,
+            'description': description,
+            'metadata': {**(metadata or {}), 'order_id': order_id, 'order_number': order_number},
+        }
+
+        payment = Payment.create(payload, idempotency_key)
+
+        return {
+            'payment_id': payment.id,
+            'confirmation_url': payment.confirmation.confirmation_url,
+            'status': payment.status,
+            'paid': payment.paid,
+        }
+    except Exception as exc:
+        logger.exception('YooKassa create_payment error: %s', exc)
         return {
             'payment_id': None,
-            'status': 'pending',
-            'paid': False
+            'confirmation_url': None,
+            'status': 'error',
+            'paid': False,
+            'message': str(exc),
         }
+
+
+def check_payment_status(payment_id: str) -> Dict[str, Any]:
+    settings = _get_settings()
+
+    if not settings.YOOKASSA_ENABLED:
+        return {'status': 'pending', 'paid': False, 'amount': None}
+
+    try:
+        _configure()
+        from yookassa import Payment
+
+        payment = Payment.find_one(payment_id)
+        return {
+            'status': payment.status,
+            'paid': payment.paid,
+            'amount': str(payment.amount.value) if payment.amount else None,
+        }
+    except Exception as exc:
+        logger.exception('YooKassa check_payment_status error: %s', exc)
+        return {'status': 'error', 'paid': False, 'amount': None, 'message': str(exc)}
+
+
+def parse_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse incoming YooKassa webhook notification."""
+    settings = _get_settings()
+
+    if not settings.YOOKASSA_ENABLED:
+        return {'payment_id': None, 'status': 'pending', 'paid': False, 'order_id': None}
+
+    try:
+        _configure()
+        from yookassa.domain.notification import WebhookNotification
+
+        notification = WebhookNotification(data)
+        payment = notification.object
+
+        order_id = None
+        if payment.metadata:
+            order_id = payment.metadata.get('order_id')
+
+        return {
+            'payment_id': payment.id,
+            'status': payment.status,
+            'paid': payment.paid,
+            'order_id': order_id,
+        }
+    except Exception as exc:
+        logger.exception('YooKassa parse_webhook error: %s', exc)
+        return {'payment_id': None, 'status': 'error', 'paid': False, 'order_id': None, 'message': str(exc)}

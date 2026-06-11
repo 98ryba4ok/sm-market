@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { Button } from "../../components/ui/Button/Button";
 import { useToast } from "../../contexts/ToastContext";
+import { paymentApi } from "../../api/paymentApi";
 import "./OrderSuccessPage.css";
 
 export const OrderSuccessPage = () => {
@@ -20,11 +21,15 @@ export const OrderSuccessPage = () => {
 
     setIsPaymentLoading(true);
     try {
-      showToast("Интеграция с ЮКасса будет добавлена позже", "info");
-      
+      const { data } = await paymentApi.createPaymentByOrderNumber(orderNumber);
+      if (data.confirmation_url) {
+        window.location.href = data.confirmation_url;
+      } else {
+        showToast("Оплата через ЮКасса временно недоступна", "info");
+      }
     } catch (error: any) {
       console.error("Failed to create payment:", error);
-      showToast("Ошибка при создании платежа", "error");
+      showToast("Ошибка при создании платежа. Попробуйте позже.", "error");
     } finally {
       setIsPaymentLoading(false);
     }
