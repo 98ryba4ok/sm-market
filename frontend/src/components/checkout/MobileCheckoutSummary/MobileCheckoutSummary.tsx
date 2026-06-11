@@ -2,16 +2,12 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 
 import { Button } from "../../ui/Button/Button";
-import { Input } from "../../ui/Input/Input";
 import type { OrderTotals } from "../../../types/promo";
 import "./MobileCheckoutSummary.css";
 
 interface MobileCheckoutSummaryProps {
   totals: OrderTotals | null;
   selectedCount: number;
-  promoCode: string;
-  onPromoCodeChange: (value: string) => void;
-  onApplyPromo: () => void;
   onSubmit: () => void;
   isSubmitting: boolean;
   disabled?: boolean;
@@ -22,9 +18,6 @@ interface MobileCheckoutSummaryProps {
 export const MobileCheckoutSummary: React.FC<MobileCheckoutSummaryProps> = ({
   totals,
   selectedCount,
-  promoCode,
-  onPromoCodeChange,
-  onApplyPromo,
   onSubmit,
   isSubmitting,
   disabled = false,
@@ -71,24 +64,6 @@ export const MobileCheckoutSummary: React.FC<MobileCheckoutSummaryProps> = ({
         </span>
       </label>
 
-      {isDetailsExpanded && (
-        <div className="mobile-checkout-summary__promo">
-          <Input
-            type="text"
-            placeholder="Промокод"
-            value={promoCode}
-            onChange={(e) => onPromoCodeChange(e.target.value)}
-          />
-          <Button
-            variant="outline"
-            size="md"
-            onClick={onApplyPromo}
-          >
-            Применить
-          </Button>
-        </div>
-      )}
-
       <button
         className="mobile-checkout-summary__toggle"
         onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
@@ -102,20 +77,6 @@ export const MobileCheckoutSummary: React.FC<MobileCheckoutSummaryProps> = ({
           <div className="mobile-checkout-summary__row">
             <span>{selectedCount} товара</span>
             <span>{parseFloat(totals.subtotal).toLocaleString("ru-RU")} ₽</span>
-          </div>
-          {parseFloat(totals.promo_discount) > 0 && (
-            <div className="mobile-checkout-summary__row mobile-checkout-summary__row--discount">
-              <span>Скидка по промокоду</span>
-              <span>-{parseFloat(totals.promo_discount).toLocaleString("ru-RU")} ₽</span>
-            </div>
-          )}
-          <div className="mobile-checkout-summary__row">
-            <span>Доставка</span>
-            <span>
-              {parseFloat(totals.delivery_cost) > 0
-                ? `${parseFloat(totals.delivery_cost).toLocaleString("ru-RU")} ₽`
-                : "Без доплат"}
-            </span>
           </div>
         </div>
       )}

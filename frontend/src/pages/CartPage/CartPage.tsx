@@ -5,7 +5,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { cartApi } from "../../api/cartApi";
 import { wishlistApi } from "../../api/wishlistApi";
 import { Button } from "../../components/ui/Button/Button";
-import { Input } from "../../components/ui/Input/Input";
 import { MobileCartItem } from "../../components/cart/MobileCartItem";
 import { MobileCartSummary } from "../../components/cart/MobileCartSummary";
 import { useToast } from "../../contexts/ToastContext";
@@ -19,7 +18,6 @@ export const CartPage = () => {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
-  const [promoCode, setPromoCode] = useState("");
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -141,11 +139,6 @@ export const CartPage = () => {
       .reduce((sum, item) => sum + parseFloat(item.subtotal), 0);
     
     return total.toFixed(2);
-  };
-
-  const calculateDiscount = () => {
-    // Здесь можно добавить логику расчета скидки
-    return "0";
   };
 
   const handleCheckout = () => {
@@ -312,26 +305,10 @@ export const CartPage = () => {
           {!isMobile && (
             <div className="cart-page__summary">
               <div className="cart-summary">
-                <div className="cart-summary__promo">
-                  <Input
-                    type="text"
-                    placeholder="Промокод"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                  />
-                  <Button variant="outline" size="md">
-                    Применить
-                  </Button>
-                </div>
-
                 <div className="cart-summary__details">
                   <div className="cart-summary__row">
                     <span>{selectedCount} товара</span>
                     <span>{parseFloat(calculateSelectedTotal()).toLocaleString("ru-RU")} ₽</span>
-                  </div>
-                  <div className="cart-summary__row">
-                    <span>Скидка</span>
-                    <span>{parseFloat(calculateDiscount()).toLocaleString("ru-RU")} ₽</span>
                   </div>
                 </div>
 
@@ -360,10 +337,6 @@ export const CartPage = () => {
         <MobileCartSummary
           selectedCount={selectedCount}
           total={calculateSelectedTotal()}
-          discount={calculateDiscount()}
-          promoCode={promoCode}
-          onPromoCodeChange={setPromoCode}
-          onApplyPromoCode={() => showToast("Промокод применен", "success")}
           onCheckout={handleCheckout}
           disabled={selectedItems.size === 0}
         />

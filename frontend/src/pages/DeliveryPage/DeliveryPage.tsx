@@ -34,7 +34,7 @@ export const DeliveryPage = () => {
                   <span>1–2 рабочих дня</span>
                 </div>
                 <div className="delivery-detail">
-                  <span className="delivery-method-card__price">от 390 ₽</span>
+                  <span className="delivery-method-card__price">от 1 200 ₽</span>
                 </div>
               </div>
             </div>
@@ -79,28 +79,24 @@ export const DeliveryPage = () => {
           </div>
         </div>
 
-        {/* Зоны и стоимость */}
+        {/* Стоимость доставки */}
         <div className="info-page__section">
-          <h2 className="info-page__section-title">Стоимость доставки по Москве</h2>
+          <h2 className="info-page__section-title">Стоимость доставки</h2>
           <div className="delivery-zones">
             <div className="delivery-zone-table">
               <div className="delivery-zone-row delivery-zone-row--header">
-                <span>Зона доставки</span>
+                <span>Способ доставки</span>
                 <span>Сроки</span>
                 <span>Стоимость</span>
-                <span>Бесплатно от</span>
               </div>
               {[
-                { zone: "Москва (в пределах МКАД)", time: "1 день", price: "390 ₽", free: "5 000 ₽" },
-                { zone: "Московская область (до 30 км)", time: "1–2 дня", price: "590 ₽", free: "8 000 ₽" },
-                { zone: "Московская область (30–100 км)", time: "2–3 дня", price: "790 ₽", free: "12 000 ₽" },
-                { zone: "Регионы России", time: "3–14 дней", price: "от 290 ₽", free: "15 000 ₽" },
+                { zone: "Курьер по Москве (Достависта)", time: "1–2 дня", price: "от 1 200 ₽" },
+                { zone: "Самовывоз (ул. Дегунинская, д. 17)", time: "1 рабочий день", price: "Бесплатно" },
               ].map((row, i) => (
                 <div key={i} className="delivery-zone-row">
                   <span>{row.zone}</span>
                   <span>{row.time}</span>
                   <span>{row.price}</span>
-                  <span className="delivery-zone-row__free">{row.free}</span>
                 </div>
               ))}
             </div>

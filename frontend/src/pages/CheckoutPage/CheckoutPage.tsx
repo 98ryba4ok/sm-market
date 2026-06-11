@@ -48,7 +48,6 @@ export const CheckoutPage = () => {
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
 
-  const [promoCode, setPromoCode] = useState("");
   const [totals, setTotals] = useState<OrderTotals | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,7 +70,7 @@ export const CheckoutPage = () => {
     if (cart && selectedItems.size > 0) {
       calculateTotals();
     }
-  }, [selectedItems, promoCode]);
+  }, [selectedItems]);
 
   const loadCart = async () => {
     try {
@@ -94,7 +93,7 @@ export const CheckoutPage = () => {
 
     try {
       const response = await cartApi.calculateTotals({
-        promo_code: promoCode || undefined,
+        promo_code: undefined,
         selected_items: Array.from(selectedItems),
       });
       setTotals(response.data);
@@ -162,9 +161,6 @@ export const CheckoutPage = () => {
     }
   };
 
-  const handleApplyPromo = () => {
-    calculateTotals();
-  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -235,7 +231,7 @@ export const CheckoutPage = () => {
         phone: formData.phone,
         email: formData.email,
         payment_method: paymentMethod,
-        promo_code: promoCode || undefined,
+        promo_code: undefined,
         selected_items: Array.from(selectedItems),
       };
 
@@ -496,21 +492,6 @@ export const CheckoutPage = () => {
           {!isMobile && (
             <div className="checkout-page__summary">
               <div className="checkout-summary">
-                <div className="checkout-summary__promo">
-                  <Input
-                    type="text"
-                    placeholder="Промокод"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                  />
-                  <Button variant="outline" size="md" onClick={handleApplyPromo}>
-                    Применить
-                  </Button>
-                </div>
-                {totals?.promo_error && (
-                  <div className="checkout-summary__error">{totals.promo_error}</div>
-                )}
-
                 {totals && (
                   <>
                     <div className="checkout-summary__details">
@@ -518,22 +499,6 @@ export const CheckoutPage = () => {
                         <span>{selectedItems.size} товара</span>
                         <span>
                           {parseFloat(totals.subtotal).toLocaleString("ru-RU")} ₽
-                        </span>
-                      </div>
-                      {parseFloat(totals.promo_discount) > 0 && (
-                        <div className="checkout-summary__row checkout-summary__row--discount">
-                          <span>Скидка по промокоду</span>
-                          <span>
-                            -{parseFloat(totals.promo_discount).toLocaleString("ru-RU")} ₽
-                          </span>
-                        </div>
-                      )}
-                      <div className="checkout-summary__row">
-                        <span>Доставка</span>
-                        <span>
-                          {parseFloat(totals.delivery_cost) > 0
-                            ? `${parseFloat(totals.delivery_cost).toLocaleString("ru-RU")} ₽`
-                            : "Без доплат"}
                         </span>
                       </div>
                     </div>
@@ -584,9 +549,6 @@ export const CheckoutPage = () => {
         <MobileCheckoutSummary
           totals={totals}
           selectedCount={selectedItems.size}
-          promoCode={promoCode}
-          onPromoCodeChange={setPromoCode}
-          onApplyPromo={handleApplyPromo}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           disabled={selectedItems.size === 0}

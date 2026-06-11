@@ -11,11 +11,6 @@ export const Footer = () => {
             <h3 className="footer__section-title">О нас</h3>
             <ul className="footer__list">
               <li>
-                <Link to="/about" className="footer__link">
-                  О компании
-                </Link>
-              </li>
-              <li>
                 <Link to="/feedback" className="footer__link">
                   Обратная связь
                 </Link>
