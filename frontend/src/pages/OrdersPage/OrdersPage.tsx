@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Package, Truck, CheckCircle, XCircle, Calendar, DollarSign } from "lucide-react";
 
 import { ordersApi } from "../../api/ordersApi";
+import { paymentApi } from "../../api/paymentApi";
 import { useToast } from "../../contexts/ToastContext";
 import type { Order } from "../../types/order";
 import "./OrdersPage.css";
@@ -14,6 +15,7 @@ export const OrdersPage = () => {
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
   const [cancellingOrder, setCancellingOrder] = useState<number | null>(null);
+  const [payingOrder, setPayingOrder] = useState<number | null>(null);
 
   useEffect(() => {
     loadOrders();
@@ -55,6 +57,27 @@ export const OrdersPage = () => {
       );
     } finally {
       setCancellingOrder(null);
+    }
+  };
+
+  const handlePayOrder = async (orderId: number) => {
+    setPayingOrder(orderId);
+    try {
+      const { data } = await paymentApi.createPayment(orderId);
+      if (data.confirmation_url) {
+        // Переходим на страницу оплаты ЮKassa
+        window.location.href = data.confirmation_url;
+        return;
+      }
+      showToast(data.message || "Не удалось создать платёж", "error");
+      setPayingOrder(null);
+    } catch (err: any) {
+      console.error("Error creating payment:", err);
+      showToast(
+        err.response?.data?.detail || "Не удалось создать платёж",
+        "error"
+      );
+      setPayingOrder(null);
     }
   };
 
@@ -150,6 +173,10 @@ export const OrdersPage = () => {
             {orders.map((order) => {
               const isExpanded = expandedOrder === order.id;
               const isCancelling = cancellingOrder === order.id;
+              const isPaying = payingOrder === order.id;
+              const canPay =
+                order.payment_status === "pending" &&
+                order.status !== "cancelled";
 
               return (
                 <div
@@ -277,16 +304,27 @@ export const OrdersPage = () => {
                         </div>
                       </div>
 
-                      {/* Кнопка отмены заказа */}
-                      {order.can_be_cancelled && (
+                      {/* Действия по заказу */}
+                      {(canPay || order.can_be_cancelled) && (
                         <div className="order__actions">
-                          <button
-                            className="order__cancel-btn"
-                            onClick={() => handleCancelOrder(order.id)}
-                            disabled={isCancelling}
-                          >
-                            {isCancelling ? "Отмена..." : "Отменить заказ"}
-                          </button>
+                          {canPay && (
+                            <button
+                              className="order__pay-btn"
+                              onClick={() => handlePayOrder(order.id)}
+                              disabled={isPaying}
+                            >
+                              {isPaying ? "Создание платежа..." : "Оплатить"}
+                            </button>
+                          )}
+                          {order.can_be_cancelled && (
+                            <button
+                              className="order__cancel-btn"
+                              onClick={() => handleCancelOrder(order.id)}
+                              disabled={isCancelling}
+                            >
+                              {isCancelling ? "Отмена..." : "Отменить заказ"}
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

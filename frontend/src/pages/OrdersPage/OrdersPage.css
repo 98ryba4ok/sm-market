@@ -352,6 +352,30 @@
   border-top: 1px solid rgba(243, 244, 246, 1);
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
+}
+
+.order__pay-btn {
+  padding: 10px 20px;
+  background: rgba(34, 197, 94, 1);
+  border: 2px solid rgba(34, 197, 94, 1);
+  border-radius: 8px;
+  font-family: Montserrat, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.order__pay-btn:hover:not(:disabled) {
+  background: rgba(22, 163, 74, 1);
+  border-color: rgba(22, 163, 74, 1);
+}
+
+.order__pay-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .order__cancel-btn {
