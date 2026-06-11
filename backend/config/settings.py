@@ -185,7 +185,7 @@ YOOKASSA_RETURN_URL = os.getenv('YOOKASSA_RETURN_URL', 'http://localhost:5173/pa
 # Код ставки НДС для чеков 54-ФЗ. 11 = НДС 22% (с 2026), 12 = НДС 22/122, 1 = без НДС.
 YOOKASSA_VAT_CODE = int(os.getenv('YOOKASSA_VAT_CODE', '11'))
 
-# Telegram-уведомления о заказах (новый заказ / оплата).
+# Telegram-уведомления об оплаченных заказах.
 # TELEGRAM_BOT_TOKEN — токен бота от @BotFather; TELEGRAM_CHAT_ID — id чата/группы.
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')

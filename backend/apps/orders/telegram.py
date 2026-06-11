@@ -79,23 +79,6 @@ def _delivery_str(order) -> str:
     return ", ".join(p for p in parts if p) or "—"
 
 
-def notify_order_created(order) -> None:
-    """Уведомление о новом оформленном заказе."""
-    lines = [
-        f"🆕 Новый заказ №{order.order_number}",
-        f"Сумма: {order.total_amount} ₽",
-        f"Оплата: {order.get_payment_status_display()} ({order.get_payment_method_display()})",
-        "",
-        "Товары:",
-        *_items_lines(order),
-        "",
-        f"Покупатель: {order.email}",
-        f"Телефон: {order.phone}",
-        f"Доставка: {_delivery_str(order)}",
-    ]
-    _send("\n".join(lines))
-
-
 def notify_order_paid(order) -> None:
     """Уведомление об успешно оплаченном заказе."""
     lines = [

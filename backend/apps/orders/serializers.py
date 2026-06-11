@@ -364,8 +364,4 @@ class OrderCreateSerializer(serializers.Serializer):
             # Удалить из корзины только оформленные товары
             cart_items.delete()
 
-            # Уведомление в Telegram о новом заказе — после коммита транзакции
-            from .telegram import notify_order_created
-            transaction.on_commit(lambda: notify_order_created(order))
-
         return order
