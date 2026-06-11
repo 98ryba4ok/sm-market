@@ -5,11 +5,18 @@
 TELEGRAM_BOT_TOKEN и TELEGRAM_CHAT_ID (берутся из .env).
 """
 import logging
+import socket
 
 import requests
+import urllib3.util.connection as _urllib3_conn
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+# У сервера нет IPv6-маршрута, а api.telegram.org отдаёт AAAA-запись —
+# requests пытается идти по IPv6 и падает с "Network is unreachable".
+# Форсируем IPv4 (на этом хосте весь исходящий трафик и так IPv4).
+_urllib3_conn.allowed_gai_family = lambda: socket.AF_INET
 
 _API_URL = "https://api.telegram.org/bot{token}/sendMessage"
 
