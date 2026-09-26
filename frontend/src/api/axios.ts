@@ -45,7 +45,9 @@ api.interceptors.response.use(
       error.response?.status === 401 &&
       originalRequest &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/auth/refresh/")
+      !originalRequest.url?.includes("/auth/refresh/") &&
+      !originalRequest.url?.includes("/auth/login/") &&
+      !originalRequest.url?.includes("/auth/register/")
     ) {
       if (isRefreshing) {
         // Если уже идет обновление токена, добавляем запрос в очередь
@@ -69,6 +71,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem("refreshToken");
 
       if (!refreshToken) {
+        isRefreshing = false;
         // Нет refresh токена - открываем модалку логина
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");

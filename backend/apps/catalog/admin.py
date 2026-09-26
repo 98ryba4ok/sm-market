@@ -114,7 +114,7 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = [
         'created_at', 'updated_at', 'views_count',
-        'final_price', 'discount_percentage', 'in_stock', 'country_of_origin'
+        'final_price', 'discount_percentage', 'in_stock', 'country_of_origin', 'stock_quantity'
     ]
     inlines = [ProductImageInline]
 
@@ -126,7 +126,8 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('price', 'discount_price', 'final_price', 'discount_percentage')
         }),
         ('Склад', {
-            'fields': ('stock_quantity', 'in_stock')
+            'fields': ('stock_quantity', 'units_per_box', 'in_stock'),
+            'description': 'Остаток изменяется через раздел Склад: приход, расход и исправления.'
         }),
         ('Характеристики товара', {
             'fields': ('specifications', 'warranty_months', 'country_of_origin'),

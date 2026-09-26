@@ -1,8 +1,10 @@
-import { User, ShoppingCart, LogOut, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Boxes, User, ShoppingCart, LogOut, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { motion } from "framer-motion";
 
+import { authApi } from "../../../../api/authApi";
 import { performLogout } from "../../../../utils/auth";
 import "./UserMenu.css";
 
@@ -12,6 +14,12 @@ interface UserMenuProps {
 }
 
 export const UserMenu = ({ userEmail, onLogout }: UserMenuProps) => {
+  const [isStaff, setIsStaff] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    authApi.me().then(response => { if (!cancelled) setIsStaff(response.data.is_staff); }).catch(() => { if (!cancelled) setIsStaff(false); });
+    return () => { cancelled = true; };
+  }, [userEmail]);
   const handleLogout = async () => {
     try {
       performLogout();
@@ -52,6 +60,10 @@ export const UserMenu = ({ userEmail, onLogout }: UserMenuProps) => {
                 <span>Мои заказы</span>
               </Link>
             </DropdownMenu.Item>
+
+            {isStaff && <DropdownMenu.Item asChild>
+              <Link to="/warehouse" className="user-menu__item"><Boxes size={18}/><span>Складской учёт</span></Link>
+            </DropdownMenu.Item>}
 
             <DropdownMenu.Separator className="user-menu__separator" />
 

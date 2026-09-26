@@ -219,6 +219,7 @@ class Product(models.Model):
         validators=[MinValueValidator(0)],
         verbose_name="Цена со скидкой"
     )
+    units_per_box = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)], verbose_name="Штук в коробке")
     stock_quantity = models.PositiveIntegerField(
         default=0,
         verbose_name="Количество на складе"

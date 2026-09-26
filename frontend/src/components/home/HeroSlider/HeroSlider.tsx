@@ -14,7 +14,7 @@ export const HeroSlider = () => {
       title: "Новая коллекция",
       description: "Откройте для себя нашу новую коллекцию товаров",
       image: collectionImage,
-      link: "/products",
+      link: "/catalog",
       button_text: "Смотреть каталог"
     },
     {
@@ -22,7 +22,7 @@ export const HeroSlider = () => {
       title: "Специальные предложения",
       description: "Лучшие цены на популярные товары",
       image: collectionImage,
-      link: "/products",
+      link: "/catalog",
       button_text: "Узнать больше"
     }
   ];

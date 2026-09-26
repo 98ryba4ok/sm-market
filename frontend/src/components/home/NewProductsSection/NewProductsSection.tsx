@@ -119,7 +119,7 @@ export const NewProductsSection = () => {
             </div>
           </div>
 
-          <Link to="/catalog/new" className="new-products-section__view-all">
+          <Link to="/catalog?label=new" className="new-products-section__view-all">
             Смотреть все
             <ArrowRight size={20} />
           </Link>

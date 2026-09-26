@@ -1,3 +1,4 @@
+import { WarehousePage } from "./pages/WarehousePage/WarehousePage";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import "./App.css";
@@ -34,6 +35,7 @@ function App() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
+          <Route path="/warehouse" element={<WarehousePage />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="/catalog" element={<CatalogPage />} />

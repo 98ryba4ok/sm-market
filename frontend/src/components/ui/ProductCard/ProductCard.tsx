@@ -1,6 +1,7 @@
 import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { productUrl } from "../../../utils/productUrl";
 import type { ProductListItem } from "../../../types";
 import { getImageUrl } from "../../../utils/imageUrl";
 import { StarRating } from "../StarRating";
@@ -59,7 +60,7 @@ export const ProductCard = ({
       )}
 
       {/* Image */}
-      <Link to={`/products/${product.slug}`} className="product-card__image-wrapper">
+      <Link to={productUrl(product)} className="product-card__image-wrapper">
         {product.main_image && (
           <img
             src={getImageUrl(product.main_image)}
@@ -71,7 +72,7 @@ export const ProductCard = ({
 
       {/* Content */}
       <div className="product-card__content">
-        <Link to={`/products/${product.slug}`} className="product-card__title-link">
+        <Link to={productUrl(product)} className="product-card__title-link">
           <h3 className="product-card__title">
             {product.name}
           </h3>

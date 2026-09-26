@@ -1,3 +1,4 @@
+import { productUrl } from "../../utils/productUrl";
 import { Heart, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -240,7 +241,7 @@ export const CartPage = () => {
 
                     <div className="cart-item__info">
                       <Link
-                        to={`/products/${item.product_detail.slug}`}
+                        to={productUrl(item.product_detail)}
                         className="cart-item__name"
                       >
                         {item.product_detail.name}

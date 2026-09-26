@@ -1,3 +1,4 @@
+from rest_framework import mixins
 import json
 import logging
 
@@ -240,7 +241,7 @@ class CartViewSet(viewsets.ViewSet):
         })
 
 
-class OrderViewSet(viewsets.ModelViewSet):
+class OrderViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
     ViewSet для заказов
     
@@ -254,9 +255,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Получить заказы текущего пользователя"""
-        return Order.objects.filter(
-            user=self.request.user
-        ).prefetch_related('items__product').order_by('-created_at')
+        orders = Order.objects.all() if self.request.user.is_staff else Order.objects.filter(user=self.request.user)
+        return orders.prefetch_related('items__product').order_by('-created_at')
     
     def get_serializer_class(self):
         """Выбрать сериализатор в зависимости от действия"""
@@ -295,8 +295,9 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Отменить заказ и вернуть товары на склад
-        order.cancel()
+        # Повторная отмена проверяется под блокировкой, включая конкурирующие запросы.
+        if not order.cancel():
+            return Response({'detail': 'Заказ уже отменён или его нельзя отменить.'}, status=400)
         
         # Вернуть обновленный заказ
         serializer = self.get_serializer(order)
@@ -306,6 +307,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         })
     
     @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated])
+    @transaction.atomic
     def update_status(self, request, pk=None):
         """
         Обновить статус заказа (только для администраторов)
@@ -324,7 +326,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        order = self.get_object()
+        order = Order.objects.select_for_update().get(pk=self.get_object().pk)
         new_status = request.data.get('status')
         
         if not new_status:
@@ -343,9 +345,15 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Обновить статус
-        order.status = new_status
-        order.save(update_fields=['status', 'updated_at'])
+        # Отмена проходит через журнал; отменённые заказы нельзя открыть повторно.
+        if new_status == 'cancelled':
+            if not order.cancel():
+                return Response({'detail': 'Заказ нельзя отменить.'}, status=400)
+        elif order.status == 'cancelled':
+            return Response({'detail': 'Отменённый заказ нельзя возобновить. Создайте новый.'}, status=400)
+        else:
+            order.status = new_status
+            order.save(update_fields=['status', 'updated_at'])
         
         # Вернуть обновленный заказ
         serializer = self.get_serializer(order)

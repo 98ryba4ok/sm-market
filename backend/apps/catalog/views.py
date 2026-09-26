@@ -81,7 +81,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
                 room = Room.objects.get(slug=room_slug, is_active=True)
                 queryset = queryset.filter(rooms=room)
             except Room.DoesNotExist:
-                pass
+                queryset = queryset.none()
         
         return queryset
     
@@ -172,7 +172,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.filter(is_active=True).select_related('category')
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name', 'description']
+    search_fields = ['name', 'description', 'category__name']
     ordering_fields = ['price', 'created_at', 'views_count', 'orders_count', 'name']
     ordering = ['-created_at']
     
@@ -227,7 +227,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
                 room = Room.objects.get(slug=room_slug, is_active=True)
                 queryset = queryset.filter(room=room)
             except Room.DoesNotExist:
-                pass
+                queryset = queryset.none()
         
         # Фильтр по категориям (множественный выбор с логикой ИЛИ)
         # Если выбраны категории, дополнительно фильтруем по ним (логика AND с помещением)

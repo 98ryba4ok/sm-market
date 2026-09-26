@@ -258,32 +258,26 @@ class Order(models.Model):
         return self.status in ['pending', 'processing']
 
     def cancel(self):
-        """Отменить заказ"""
-        if self.can_be_cancelled:
-            self.status = 'cancelled'
-            # Вернуть товары на склад и уменьшить счетчик заказов
-            for item in self.items.all():
-                item.product.stock_quantity += item.quantity
-                item.product.orders_count = max(0, item.product.orders_count - item.quantity)
-                item.product.save(update_fields=['stock_quantity', 'orders_count'])
-            self.save(update_fields=['status'])
-            return True
-        return False
+        from apps.inventory.services import cancel_order
+        result = cancel_order(self.pk)
+        self.refresh_from_db()
+        return result
 
     def mark_as_paid(self):
-        """Отметить заказ как оплаченный (идемпотентно)"""
-        if self.payment_status == 'paid':
-            return
-        self.payment_status = 'paid'
-        if self.status == 'pending':
-            self.status = 'processing'
-        self.save(update_fields=['payment_status', 'status'])
-
-        # Уведомление в Telegram только после успешного коммита и только при
-        # реальном переходе в "оплачено" (повторные вызовы webhook не дублируют).
+        """Оплата не списывает товар повторно и не возобновляет отменённый заказ."""
         from django.db import transaction
         from .telegram import notify_order_paid
-        transaction.on_commit(lambda: notify_order_paid(self))
+        with transaction.atomic():
+            current = Order.objects.select_for_update().get(pk=self.pk)
+            if current.payment_status == 'paid':
+                self.refresh_from_db()
+                return
+            current.payment_status = 'paid'
+            if current.status == 'pending':
+                current.status = 'processing'
+            current.save(update_fields=['payment_status', 'status'])
+            self.refresh_from_db()
+            transaction.on_commit(lambda: notify_order_paid(current))
 
     def recalculate_total(self):
         """Пересчитать общую сумму заказа из элементов"""
