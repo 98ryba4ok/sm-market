@@ -1,3 +1,4 @@
+import { productUrl } from "../../utils/productUrl";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
@@ -154,7 +155,7 @@ export const WishlistPage = () => {
 
                 <div
                   className="wishlist-item__image-wrapper"
-                  onClick={() => navigate(`/products/${product.slug}`)}
+                  onClick={() => navigate(productUrl(product))}
                 >
                   {product.main_image ? (
                     <img
@@ -172,7 +173,7 @@ export const WishlistPage = () => {
                 <div className="wishlist-item__content">
                   <h3
                     className="wishlist-item__title"
-                    onClick={() => navigate(`/products/${product.slug}`)}
+                    onClick={() => navigate(productUrl(product))}
                   >
                     {product.name}
                   </h3>

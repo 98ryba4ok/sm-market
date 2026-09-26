@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'apps.catalog',
     'apps.users',
     'apps.orders',
+    'apps.inventory',
     'rest_framework_simplejwt.token_blacklist',
 ]
 

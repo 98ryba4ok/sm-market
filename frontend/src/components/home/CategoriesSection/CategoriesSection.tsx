@@ -1,97 +1,327 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import { getRooms } from "../../../api/roomsApi";
-import arrowIcon from "../../../assets/arrow_right.svg";
-import type { Room } from "../../../types/room";
 import "./CategoriesSection.css";
 
-// Import local category images as fallback
-import bathroomImage from "../../../assets/categories/ванная комната.png";
+// Локальные изображения комнат
+import bathroomImage from "../../../assets/categories/ванная.png";
 import livingRoomImage from "../../../assets/categories/гостиная.png";
-import officeImage from "../../../assets/categories/кабинет.png";
 import kitchenImage from "../../../assets/categories/кухня.png";
 import hallwayImage from "../../../assets/categories/прихожая.png";
 import bedroomImage from "../../../assets/categories/спальня.png";
 
-// Fallback images array
-const fallbackImages = [
-  bathroomImage,
-  livingRoomImage,
-  officeImage,
-  kitchenImage,
-  hallwayImage,
-  bedroomImage,
+interface Hotspot {
+  id: string;
+  label: string;
+  href: string;
+  d: string;
+  x: number;
+  y: number;
+  scale?: number;
+  rotate?: number;
+}
+
+interface RoomItem {
+  id: string;
+  title: string;
+  image: string;
+  width: number;
+  height: number;
+  /** slug для /catalog?room=... */
+  catalogSlug: string;
+  hotspots: Hotspot[];
+}
+
+const STATIC_ROOMS: RoomItem[] = [
+  {
+    id: "bathroom",
+    title: "Ванная",
+    image: bathroomImage,
+    width: 1536,
+    height: 1024,
+    catalogSlug: "vannaya-komnata",
+    hotspots: [
+      { id: "bathroom-object-1", label: "Шторы", href: "/catalog?search=Шторы", d: "M184.5 163.014L198.5 1029.01H0.5V0.513672L184.5 5.51367V163.014Z", x: 0, y: 0 },
+      { id: "bathroom-object-2", label: "Смесители", href: "/catalog?search=Смесители", d: "M40.0006 486.5V460H31.5H15L0.5 463V437.5H8H18L26.5 435L31.5 431.5L34 173.5L31 167V161H27.5L26.5 162.5L24.5 170.5H17L15 164.5L13 156L17 150.5L23 148L27.5 156L31 148V30.5L34 13L39.5 4.5L51.5 0.5H156.5L165 4.5L177.5 17.5V39.5L202 44L213.5 51.5V61.5L202 64L189.5 66H170.5L159 64L145 61.5L130.5 55.5L127 48L135 39.5H156.5L165 37V20.5L156.5 11C145 11.6667 121.6 13 120 13H57H49.5L43 20.5C43.1667 61.8333 43.4 144.9 43 146.5C42.6 148.1 44.8333 148.167 46 148V161H49.5L46 164.5V167L43.5 170.5V362V425.5H50H58.5L62.5 428L60.5 435H65V387.5H58.5V394.5H52L50 387.5V377.5L55.5 372.5L58.5 379.5L62.5 377.5V356.5V306.5H75.5V318.5V339.5V372.5V385.5L72 390V435H81.5L84.5 442.5L81.5 451L74 453.5V473.5C74 475.1 75 503.5 75.5 517.5V561.5L70 589.5L62.5 602H50L43.5 587C43.0002 583 41.6006 574.7 40.0006 573.5C38.4006 572.3 39.334 551.667 40.0006 541.5V517.5V486.5Z", x: 186, y: 125 },
+      { id: "bathroom-object-3", label: "Смесители", href: "/catalog?search=Смесители", d: "M13 100.5L11.5 50.5H0.5V47H11.5C10.8333 46.5 10.2 45.5 13 45.5H20.5C21.5 45.5 20.5 64 22 64H34C33.3333 61.5 32.4 56.5 34 56.5C35.924 54.576 36.1513 30.5968 36.0175 17.5L36 16L34 30.5H29V9.5L34 0.5H41.5L43 25V52.5L45.5 56.5V64H62V16H69C68.3333 32.1667 67.4 64.7 69 65.5C70.6 66.3 70.6667 68.5 70.5 69.5L69 73.5V78.5V103H65V73.5H58.5V100.5H53V73.5H45.5V100.5H34L36 73.5H22V100.5H13Z", x: 557, y: 573 },
+      { id: "bathroom-object-4", label: "Ванны", href: "/catalog?search=Ванны", d: "M43.0391 134C52.5391 145 68.4391 168.2 80.0391 173L88.5391 177L121.539 181H232.539L335.539 175C350.039 175 365.839 158.5 369.039 156.5C373.039 154 385.539 128.5 392.539 120C398.139 113.2 408.539 81.5 413.039 66.5C413.872 53.6667 421.539 29 423.039 20.4996C424.882 10.054 409.539 6.99957 404.539 6.99957C400.539 6.99957 363.539 4.5 345.539 4.5L204.039 0.5C176.372 2.66652 120.039 3.5 116.039 3.5C111.039 3.5 51.5391 6.49957 43.0391 6.99957C36.2391 7.39957 10.0391 12 0.539062 20.4996L10.0391 77.4996L43.0391 134Z", x: 363, y: 673 },
+      { id: "bathroom-object-5", label: "Коврики", href: "/catalog?search=Коврики", d: "M60.7285 0.5L0.728516 156H565.229L459.729 0.5H60.7285Z", x: 576, y: 868 },
+      { id: "bathroom-object-6", label: "Туалеты", href: "/catalog?search=Туалеты", d: "M207 94C208.2 95.2 203.833 114.5 201.5 124H142H92C90.8 124 72.5 122.333 63.5 121.5L46.5 115.5C42.6667 111.667 34.8 103.7 34 102.5C33.2 101.3 24.3333 87.3333 20 80.5L5.5 55L2 38C1.5 30.8333 0.5 16.2 0.5 15V7.5L7.5 5C16.1667 3.5 34.2 0.5 37 0.5H82C84.5 0.5 205.5 92.5 207 94Z", x: 1040, y: 747 },
+      { id: "bathroom-object-7", label: "Раковины", href: "/catalog?search=Раковины", d: "M91.5234 88.5H203.023L239.523 87.5L247.023 27.5L241.523 22.5C218.523 16.6667 171.923 4.6 169.523 3C166.523 1 148.523 0.5 144.523 0.5H37.5234L4.52344 3L0.523438 12.5L8.52344 47C14.3568 52.3333 26.7234 63.7 29.5234 66.5C33.0234 70 40.0234 72 47.5234 75C55.0234 78 79.0234 88.5 91.5234 88.5Z", x: 1191, y: 647 },
+      { id: "bathroom-object-8", label: "Смесители", href: "/catalog?search=Смесители", d: "M0.666016 41.0547L12.166 43.5547L17.166 33.0547L26.666 24.5547L39.666 23.5547H86.166L90.666 30.0547L98.166 33.0547L101.166 58.5547L105.666 37.5547V29.5547H114.166L117.166 37.5547H128.166L132.166 29.5547L135.166 19.5547L132.166 9.55469L124.166 3.55469H117.166L114.166 11.5547H105.666L101.166 3.55469L95.166 0.554688L88.666 3.55469L86.166 11.5547H44.666H24.666C22.666 11.5547 16.166 18.5547 12.166 19.5547C8.96602 20.3547 3.16602 34.2214 0.666016 41.0547Z", x: 1326, y: 589 },
+      { id: "bathroom-object-9", label: "Зеркала", href: "/catalog?search=Зеркала", d: "M0.5 547C55.8333 552.333 167.9 563.1 173.5 563.5V0H28L0.5 19.5V547Z", x: 1360, y: 0 },
+    ],
+  },
+  {
+    id: "kitchen",
+    title: "Кухня",
+    image: kitchenImage,
+    width: 1536,
+    height: 1024,
+    catalogSlug: "kuhnya",
+    hotspots: [
+      { id: "kitchen-object-1", label: "Столы", href: "/catalog?search=Столы", d: "M519.5 622.993L507 616.493V560.993L169.5 441.493L164 407.993C155.833 401.493 138.7 387.893 135.5 385.493C132.3 383.093 70.8333 369.159 40.5 362.493L0.5 356.993V173.493L216.5 160.993H243V140.493L251.5 130.493L258 125.493V117.493L249.5 110.993H239L235 117.493L227.5 123.993L220.5 125.493L230.5 114.993L235 107.993C234.5 107.326 232.9 105.893 230.5 105.493C227.5 104.993 221.5 107.993 219 109.493C217 110.693 214.167 113.659 213 114.993C211.667 115.325 208.9 115.491 208.5 113.492C208 110.993 209.5 105.992 213 103.492C216.5 100.992 217 97.9919 220.5 97.9919C224 97.9919 224.5 93.9919 220.5 93.9919C216.5 93.9919 203 89.9919 202.5 93.9919C202 97.9919 208.5 101.994 207 104.993C205.8 107.393 203.5 109.993 202.5 110.993C201.333 111.493 198.8 112.193 198 110.993C197 109.493 194 109.492 196 105.493C198 101.493 198.5 98.9949 200.5 96.4934C202.5 93.9919 205.5 86.9934 207 87.4934C208.2 87.8934 211.5 84.3267 213 82.4933C213.167 81.16 212.2 78.8933 207 80.4933C200.5 82.4933 198.5 81.4903 196 84.4918C193.5 87.4934 191.5 84.9949 190.5 87.4934C189.5 89.9918 190.5 91.4903 188.5 93.9919C186.5 96.4934 184 100.495 183 96.4934C182 92.4918 185 84.9948 188.5 82.4933C192 79.9918 196.5 78.9918 193.5 77.9918C191.1 77.1918 182.833 83.9929 179 87.4934H175C172.5 87.4934 165 84.4933 167 82.4933C169 80.4933 170.5 79.4902 172.5 77.9918C174.5 76.4934 175 73.9934 175 72.9934C175 71.9934 172 68.9934 167 69.9934C162 70.9934 161 72.9934 159 72.9934C157 72.9934 157.5 71.9935 153 69.9934C148.5 67.9933 142.5 66.4933 140.5 66.4933C139 61.4933 136 58.4933 140.5 58.4933H153C159 58.4933 165.5 58.9933 169 60.4933C172.5 61.9933 178.5 64.4933 180 64.9933C181.5 65.4933 180.5 67.9933 185.5 66.4933C189.5 65.2933 194.167 61.9933 196 60.4933C196.333 60.4933 196 60.1933 192 58.9933C187 57.4933 181 55.4933 180 54.4933C179 53.4933 176 51.4933 172.5 48.9933C169 46.4933 161 42.4933 159 40.9933C157 39.4933 155.5 38.9933 155.5 35.4933C155.5 31.9933 154 28.9933 155.5 27.9933C157 26.9933 158 25.4933 161.5 25.4933C165 25.4933 170 25.9933 172.5 27.9933C175 29.9933 172 26.4933 177.5 30.9933C183 35.4933 182.5 33.9933 185.5 37.4933C187.772 40.144 195.601 43.9001 199.823 45.7071C199.907 45.7115 200.189 45.8379 200.5 45.9933C200.287 45.9045 200.06 45.8089 199.823 45.7071C199.635 45.6974 200.416 46.2878 204 48.4933C210.5 52.4933 213.5 55.4933 215 54.9933C213 48.4933 213 45.9933 208.5 43.4933C204 40.9933 204.5 40.9933 202.5 37.4933C200.5 33.9933 201 37.9933 198 30.9933C195 23.9933 192 19.4933 192 16.9933C192 14.4933 188.5 10.4933 188.5 6.9933C188.5 3.4933 183 -1.0067 190.5 0.993304C198 2.9933 199.5 -0.505579 204 6.9933C208.5 14.4922 205.5 8.4933 213 16.9933C220.5 25.4933 223.5 22.9944 225.5 27.9933C227.5 32.9922 226 33.9922 229 38.4922C232 42.9922 231 43.4933 235 45.9933C239 48.4933 243 50.9933 243 48.4933C243 45.9933 238 38.9911 237.5 34.9922C237 30.9933 236 27.9944 237.5 25.4933C239 22.9922 239 19.4922 243 21.4922C247 23.4922 245.5 20.9944 247.5 27.9933C249.5 34.9922 249.5 35.9911 249.5 38.4922C249.5 40.9933 252 45.9911 253 47.4922C258 54.4933 260.5 62.4933 262 58.4933C263.5 54.4933 262.5 44.4933 267 40.9933C271.5 37.4933 272.5 33.9933 277.5 30.9933C282.5 27.9933 280.5 29.9911 284.5 23.4922C288.5 16.9933 289 13.9922 291.5 11.9922C294 9.99219 297 6.99107 297.5 11.9922C298 16.9933 301 14.9911 297.5 21.4922C294 27.9933 291.5 31.4922 291.5 34.9922C299 32.9922 292.5 29.9911 303.5 23.4922C314.5 16.9933 315 16.9922 320.5 14.4922C326 11.9922 326 6.9933 333.5 6.9933C341 6.9933 349.5 2.49219 345 11.9922C340.5 21.4922 337.5 19.9933 336.5 25.4933C335.5 30.9933 339 33.4911 333.5 38.4922C328 43.4933 328.5 42.4933 323.5 48.4933C318.5 54.4933 316.5 53.9944 314 58.4933C319.5 61.4922 316.5 62.4933 323.5 58.4933C330.5 54.4933 332.5 51.9911 341 50.4922C349.5 48.9933 349.5 47.9933 362 48.4933C374.5 48.9933 376 42.4911 379.5 50.4922C383 58.4933 390 63.4933 376 64.9933C362 66.4933 362.5 66.9934 356 69.9934C349.5 72.9934 342.5 66.4926 336.5 75.4922C333 88.9922 339 89.9922 347.5 89.9922C356 89.9922 359 86.491 360.5 91.4922C362 96.4934 354 95.9915 352 97.9919C350 99.9922 348.5 100.492 341 100.992C333.5 101.492 332.5 97.9919 328 97.9919C323.5 97.9919 327 94.9949 320.5 96.4934C314 97.9919 301.5 100.492 314 103.492C326.5 106.492 328 104.993 328 107.993C328 110.993 331 114.993 323.5 114.993C320.065 114.993 316.357 113.791 313.314 112.419C313.738 113.119 314 113.969 314 114.993C314 119.992 317.5 120.493 314 125.493C310.5 130.493 310 134.992 305 129.492C300 123.993 301 114.993 297.5 114.993C294 114.993 295 110.493 291.5 114.993C288 119.492 282 118.492 284.5 121.992C286.5 124.793 285 127.159 284 127.992L294 132.992L297.5 142.992V154.992C300 155.992 305.3 158.292 306.5 159.492C307.7 160.693 310 162.326 311 162.992L308 171.992H311L314 148.992L336.5 146.992L338.5 165.992L365 168.492L450.5 173.493L726.5 195.992V556.992L519.5 622.993Z", x: 131, y: 314 },
+      { id: "kitchen-object-2", label: "Раковины", href: "/catalog?search=Раковины", d: "M62.5 0.601329C60.1 -0.198671 20.1667 3.93466 0.5 6.10133V27.6016L138 38.1016L146 4.60156C119.667 2.60148 64.9 1.40133 62.5 0.601329Z", x: 662, y: 466 },
+      { id: "kitchen-object-3", label: "Смесители", href: "/catalog?search=Смесители", d: "M38 66.5V75.5H27.5V49L29.5 47.5L31 23.5L29 9L23.5 6H11L7.5 13.5L5.5 26.5H0.5V13.5L3 6L7.5 0.5H14H29L33 5L36 11.5V47L38 55.5H43L43.5 43L45 41L46 55L47.5 57.5L48.5 65.5L38 66.5Z", x: 745, y: 395 },
+      { id: "kitchen-object-4", label: "Кастрюли", href: "/catalog?search=Кастрюли", d: "M69 55.3889L76.5 50.3889L78 25.8889H86.5L89 20.8887H79.5V18.3889L72 14.3889L64 10.8887L51 9.88889V7.88867V3.38889C50.1667 3.38889 48.2 2.98889 47 1.38889C45.5 -0.611111 41 1.38889 40 1.38889C39.2 1.38889 37.3333 2.72222 36.5 3.38889L38.5 6.38889V9.88889H27L15 14.3889L8.5 16.3889V19.3889L0.5 18.3889V22.3889C3.33333 23.3889 9 25.4889 9 25.8889V35.3889V48.3889C11 49.5556 15.6 52.1889 18 53.3889C21 54.8889 32.5 55.3889 36.5 56.3889C39.7 57.1889 59.5 56.0556 69 55.3889Z", x: 1095, y: 441 },
+      { id: "kitchen-object-5", label: "Сковороды", href: "/catalog?search=Сковороды", d: "M17.6016 21C20.1016 22 55.6016 23.5 58.6016 23.5L74.6016 22C77.2682 20.5 82.8016 17.4 83.6016 17C84.6016 16.5 86.6016 12 89.6016 10C90.6016 10 125.602 7 127.102 6.5C128.302 6.1 130.602 4.66667 131.602 4L86.6016 4.5C86.6016 3.5 86.4016 1.5 85.6016 1.5C84.6016 1.5 39.1016 0.5 37.6016 0.5H5.60156L1.10156 1.5L4.10156 4L5.60156 13.5C8.76823 15.6667 15.6016 20.2 17.6016 21Z", x: 1193, y: 480 },
+      { id: "kitchen-object-6", label: "Духовки", href: "/catalog?search=Духовки", d: "M0.5 0.527344V176.527L175.5 206.527V9.52734L0.5 0.527344Z", x: 1076, y: 515 },
+      { id: "kitchen-object-7", label: "Холодильники", href: "/catalog?search=Холодильники", d: "M0.5 17.5918V732.592V741.592L101 762.592V0.591797L0.5 17.5918Z", x: 1434, y: 88 },
+    ],
+  },
+  {
+    id: "bedroom",
+    title: "Спальня",
+    image: bedroomImage,
+    width: 1536,
+    height: 1024,
+    catalogSlug: "spalnya",
+    hotspots: [
+      { id: "bedroom-object-1", label: "Лампы", href: "/catalog?search=Лампы", d: "M76.5161 9.02173L10.4799 0.56588C5.71003 -0.0448948 1.48306 3.6604 1.46386 8.46917L-0.464416 491.502C-0.483415 496.262 3.63202 499.985 8.36579 499.491L49.14 495.236C53.4965 494.782 56.6773 490.908 56.2761 486.547L22.6782 121.289C22.2954 117.128 25.1793 113.373 29.2982 112.67L76.8464 104.552C80.6895 103.896 83.5 100.565 83.5 96.6661V16.9569C83.5 12.9315 80.5089 9.53301 76.5161 9.02173Z", x: 0, y: 215 },
+      { id: "bedroom-object-2", label: "Постельное", href: "/catalog?search=Тумбы", d: "M571.502 529L64.002 354L59.002 180L34.502 175.5L26.002 169.5L18.002 161.5L8.50195 158L5.00195 147.5L0.501953 26L5.00195 5C10.1686 3.5 21.602 0.5 26.002 0.5C30.402 0.5 344.502 9.16667 501.002 13.5L521.002 19L527.502 133L542.002 140H598.002L753.502 161.5H770.002H792.002L861.502 169.5L934.502 185L969.502 200L982.502 205L1005 228L1028 297.5L1038.5 330.5L1045.5 343.5L1028 354V371.5L1022 367L1009.5 354L1005 360V367V382H995.502V371.5L645.002 529L635.002 550H622.002H607.502L571.502 543V529Z", x: 195, y: 332 },
+      { id: "bedroom-object-3", label: "Тумбы", href: "/catalog?search=Постельное", d: "M8.5 279.027L4 320.527H11L18 287.027H24.5L34.5 291.027V293.527L41.5 297.527L39.5 344.027L46.5 345.027L55 302.027L63.5 297.527L70 291.027L152 279.027V283.527L161 283.027L171 317.527H182L174 275.027L185 272.027V133.527L154.5 128.527L154 121.027L145.5 119.027L143.5 112.527L132 110.527L128.5 105.027L119 102.527L98 105.027V110.527L87.5 111.527L89.5 102.527V85.0273L84 81.0273V72.5273L105.5 63.0273H126L132 49.5273L126 18.0273L112.5 7.52734L70 0.527344L34.5 26.0273L28 49.5273L70 72.5273L67 81.0273L63.5 85.0273V102.527L67 110.527L49 112.527V121.027H41.5V130.527L0.5 133.527V275.027L8.5 279.027Z", x: 70, y: 379 },
+      { id: "bedroom-object-4", label: "Подушки", href: "/catalog?search=Подушки", d: "M55.1934 155.02H65.1934L101.693 150.02L131.193 144.52V155.02L160.693 150.02H181.693L205.693 140.52C227.693 135.853 272.493 126.32 275.693 125.52C279.693 124.52 324.193 117.52 327.693 116.52C331.193 115.52 388.693 112.02 392.193 111.02C394.993 110.22 424.36 107.353 438.693 106.02H465.193L447.693 91.5195L427.193 59.0195L415.193 35.0195L420.693 20.5195L415.193 15.5195L380.193 20.5195V11.0195V2.51953L375.193 0.519531L347.193 6.01953H302.693H264.693L240.693 0.519531H228.193L202.193 6.01953H191.193L149.693 11.0195H95.6934L29.6934 6.01953L15.1934 0.519531L0.693359 2.51953L5.69336 15.5195L12.6934 35.0195L29.6934 72.0195L55.1934 140.52V144.52V155.02Z", x: 272, y: 368 },
+    ],
+  },
+  {
+    id: "living",
+    title: "Гостиная",
+    image: livingRoomImage,
+    width: 1536,
+    height: 1024,
+    catalogSlug: "gostinaya",
+    hotspots: [
+      { id: "living-object-1", label: "Стулья", href: "/catalog?search=Стулья", d: "M67.5 226.025L0.5 16.5254V6.52539L10 0.525391C20.6667 2.35872 42.5 6.12539 44.5 6.52539C47 7.02539 74.5 36.5254 77 39.0254C79 41.0254 101.5 59.5254 112.5 68.5254L154.5 73.5254L221 81.0254L244.5 95.5254L264.5 124.025H298H326.5L348 142.025L364 162.025L360.5 180.025L364 187.025V206.525L343.5 222.025L364 307.525H348L326.5 234.525L317.5 240.025L323 260.525L309.5 265.025L303.5 240.025C298.667 240.692 288.2 242.225 285 243.025C281.8 243.825 213.333 255.025 179.5 260.525L129.5 272.525L102 349.025H89.5L99 290.525L112.5 255.525H108L89.5 298.025L77 294.025L89.5 255.525L81.5 249.525L67.5 226.025Z", x: 38, y: 659 },
+      { id: "living-object-2", label: "Диваны", href: "/catalog?search=Диваны", d: "M111.5 290.092V300.592H289.5L343.5 214.092L486 215.592V165.092H614H728H804L870 159.592L926.5 165.092L979.5 193.592L1009.5 215.592L1032.5 211.592L1027.5 73.0918L956.5 51.0918L964 20.5918C949.333 20.4251 919.4 20.1918 917 20.5918C914.6 20.9918 906 13.7585 902 10.0918V1.0918L873.5 0.591797L836.5 2.5918L757.5 1.0918L754.5 45.0918L728 51.0918L716 45.0918V2.5918L638 5.5918L571 2.5918L567.5 45.0918H524V0.591797H498H424.5H377.5V45.0918L366 54.0918L340.5 45.0918L335 26.0918V0.591797H256.5H193L187.5 19.5918H168L154.5 10.0918L138.5 0.591797L124.5 10.0918L106.5 5.5918L93.5 10.0918L82 14.0918L55.5 19.5918H43L32 26.0918L43 54.0918L35.5 59.0918L32 77.0918L0.5 92.5918V148.092V159.592L9 164.592L28.5 193.092H93.5C99.5 198.925 112.4 211.192 116 213.592C119.6 215.992 125.833 227.258 128.5 232.592L124.5 248.092L128.5 255.592V277.092L111.5 290.092Z", x: 273, y: 590 },
+      { id: "living-object-3", label: "Люстры", href: "/catalog?search=Люстры", d: "M336.668 249L343.168 240H376.668L388.168 236.5L405.668 212L412.668 197.5V188H405.668L265.668 185L263.168 144.5L260.168 23.5L265.668 21L269.668 10L265.668 0.5H149.168L146.668 10V23.5L153.668 21V110L149.168 185H82.668C62.3345 185.333 19.3677 186.4 10.1677 188C0.967701 189.6 0.00103411 195 0.667701 197.5L10.1677 216.5L31.1677 240H72.1677C74.9677 240 76.6677 246 77.1677 249H192.168H336.668Z", x: 569, y: 12 },
+      { id: "living-object-4", label: "Столики", href: "/catalog?search=Столики", d: "M71 352.732H88.5V268.232H369V305.232L422.5 352.732H440V268.232H524.5V248.732L440 202.732L383.5 198.232V169.732L378.5 153.732L369 144.732V133.232L378.5 125.732L393.5 115.232V92.7324L406.5 73.2324L428.5 62.2324V45.2324L406.5 49.7324L393.5 57.7324L383.5 73.2324V62.2324L389 35.7324L397 20.2324L401.5 9.23242L397 0.732422L378.5 5.73242L369 26.7324V62.2324L360.5 69.7324L356.5 49.7324L360.5 35.7324L356.5 16.7324C352.667 16.2324 344.2 15.5324 341 16.7324C337.8 17.9324 342.333 36.2324 345 45.2324V62.2324L337.5 73.2324L333 45.2324L311 26.7324L294 9.23242L284.5 0.732422L278 9.23242L294 30.7324L311 49.7324L321.5 73.2324L311 69.7324L297.5 62.2324L284.5 49.7324L278 57.7324L294 73.2324L311 92.7324L326 98.7324L333 115.232V129.232L341 136.732L345 144.732L333 153.732L326 166.232V202.732H311L278 198.232V188.732L274 166.232L265.5 148.232L278 136.732V125.732H265.5H241.5L235.5 129.232L241.5 136.732L248 148.232L241.5 157.232L235.5 176.732L241.5 202.732L225 198.232L220.5 162.732C219.667 150.399 217 125.732 213 125.732H187L181.5 162.732C179.833 167.232 175.8 176.332 173 176.732C170.2 177.132 164.833 184.899 162.5 188.732L155.5 202.732H141L130 188.732H113H96.5L63 183.232L50 188.732L40.5 202.732H0.5V268.232H63V305.232L71 352.732Z", x: 759, y: 552 },
+    ],
+  },
+  {
+    id: "hallway",
+    title: "Прихожая",
+    image: hallwayImage,
+    width: 1536,
+    height: 1024,
+    catalogSlug: "prihozhaya",
+    hotspots: [
+      { id: "hallway-object-1", label: "Зеркала", href: "/catalog?search=Зеркала", d: "M0.5 -2V535.5L416 508V-2H0.5Z", x: 192, y: 0 },
+      { id: "hallway-object-2", label: "Лампы", href: "/catalog?search=Лампы", d: "M20.0664 145.502H63.0664L64.0664 142.002C64.8997 140.335 66.5664 136.902 66.5664 136.502C66.5664 136.102 64.8997 134.002 64.0664 133.002L49.5664 131.502L50.0664 59.002L51.0664 45.502L95.0664 43.002L93.5664 31.002C91.8997 27.502 88.4664 20.402 88.0664 20.002C87.6664 19.602 81.8997 12.502 79.0664 9.00195C74.8997 6.83529 66.3664 2.40195 65.5664 2.00195C64.7664 1.60195 55.2331 0.835286 50.5664 0.501953C44.0664 1.16862 30.9664 2.60195 30.5664 3.00195C30.0664 3.50195 15.0664 12.002 14.5664 12.502C14.1664 12.902 6.39974 24.002 2.56641 29.502L0.566406 45.502H38.5664V132.002H20.0664V145.502Z", x: 569, y: 388 },
+      { id: "hallway-object-3", label: "Тумбы", href: "/catalog?search=Тумбы", d: "M0.515625 274.51L8.51562 85.0098L21.0156 71.0098L349.516 0.509766L485.016 24.0098V179.01L105.516 310.51L0.515625 274.51Z", x: 689, y: 592 },
+      { id: "hallway-object-4", label: "Ковры", href: "/catalog?search=Ковры", d: "M523.5 0.525391L0.5 188.025V198.525L930.5 177.025L947 122.525L523.5 0.525391Z", x: 599, y: 838 },
+      { id: "hallway-object-5", label: "Ручки", href: "/catalog?search=Ручки", d: "M30 16.543V81.043H9L7.5 14.543H0.5V8.04297H7.5L9 0.542969L28.5 2.54297L30.5 8.04297L55 9.04297L53.5 14.543L30 16.543Z", x: 1293, y: 451 },
+      { id: "hallway-object-6", label: "Замки", href: "/catalog?search=Замки", d: "M24.0039 43C17.1706 42.5 3.30391 41.5 2.50391 41.5L0.503906 9.5L2.50391 0.5H24.0039V43Z", x: 1299, y: 397 },
+    ],
+  },
 ];
 
+function buildTransform(h: Hotspot): string | undefined {
+  const parts: string[] = [];
+  if (h.x !== 0 || h.y !== 0) parts.push(`translate(${h.x} ${h.y})`);
+  if (h.rotate) parts.push(`rotate(${h.rotate})`);
+  if (h.scale != null && h.scale !== 1) parts.push(`scale(${h.scale})`);
+  return parts.length ? parts.join(" ") : undefined;
+}
+
 export const CategoriesSection = () => {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const [activeId, setActiveId] = useState<string>(STATIC_ROOMS[0].id);
+  const [prevId, setPrevId] = useState<string | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [hoveredHotspot, setHoveredHotspot] = useState<string | null>(null);
+
+  const animationTimer = useRef<number | null>(null);
+
+  const activeRoom = useMemo(
+    () => STATIC_ROOMS.find((r) => r.id === activeId) ?? STATIC_ROOMS[0],
+    [activeId],
+  );
+  const prevRoom = useMemo(
+    () => STATIC_ROOMS.find((r) => r.id === prevId) ?? null,
+    [prevId],
+  );
+
+  // Уникальные ссылки для правой колонки (по label)
+  const uniqueLinks = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const h of activeRoom.hotspots) {
+      if (!seen.has(h.label)) {
+        seen.set(h.label, h.href);
+      }
+    }
+    return Array.from(seen.entries()).map(([label, href]) => ({ label, href }));
+  }, [activeRoom]);
 
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const response = await getRooms();
-        setRooms(response.results);
-      } catch (err) {
-        console.error("Ошибка загрузки помещений:", err);
-      } finally {
-        setIsLoading(false);
-      }
+    return () => {
+      if (animationTimer.current) window.clearTimeout(animationTimer.current);
     };
-
-    fetchRooms();
   }, []);
 
-  if (isLoading) {
-    return null;
-  }
+  const handleSelect = (id: string) => {
+    if (id === activeId || isAnimating) return;
+    setPrevId(activeId);
+    setActiveId(id);
+    setHoveredHotspot(null);
+    setIsAnimating(true);
 
-  if (rooms.length === 0) {
-    return null;
-  }
+    if (animationTimer.current) window.clearTimeout(animationTimer.current);
+    animationTimer.current = window.setTimeout(() => {
+      setPrevId(null);
+      setIsAnimating(false);
+    }, 450);
+  };
+
+  const activeHotspot =
+    activeRoom.hotspots.find((h) => h.id === hoveredHotspot) ?? null;
+
+  const catalogUrl = `/catalog?room=${activeRoom.catalogSlug}`;
+
+  // Переход на страницу каталога при клике по изображению (не по hotspot)
+  const handlePreviewClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Если клик пришёл от SVG-хотспота — не переходим
+    const target = e.target as HTMLElement;
+    if (target.closest("a.hotspot")) return;
+    navigate(catalogUrl);
+  };
 
   return (
     <section className="categories-section">
       <div className="categories-section__container">
-        <div className="categories-section__grid">
-          {rooms.map((room, index) => {
-            // Определяем размер карточки по индексу и ряду
-            // Первый ряд (0,1,2): large(480), medium(380), small(280)
-            // Второй ряд (3,4,5): small(280), medium(380), large(480)
-            const rowIndex = Math.floor(index / 3); // 0 для первого ряда, 1 для второго
-            const positionInRow = index % 3; // 0, 1, 2
-            
-            let size;
-            if (rowIndex % 2 === 0) {
-              // Четные ряды (0, 2, 4...): large, medium, small
-              size = positionInRow === 0 ? 'large' : positionInRow === 1 ? 'medium' : 'small';
-            } else {
-              // Нечетные ряды (1, 3, 5...): small, medium, large
-              size = positionInRow === 0 ? 'small' : positionInRow === 1 ? 'medium' : 'large';
-            }
-            
-            // Используем изображение из API или fallback из локальных файлов
-            const imageUrl = room.image || fallbackImages[index % fallbackImages.length];
-            
-            return (
-              <Link
-                key={room.id}
-                to={`/catalog?room=${room.slug}`}
-                className={`category-card category-card--${size}`}
+        <h2>Интерактивный каталог</h2>
+        <div className="categories-section__main">
+          {/* ===== Превью ===== */}
+          <div
+            className="categories-section__preview"
+            onMouseLeave={() => setHoveredHotspot(null)}
+            onClick={handlePreviewClick}
+            role="link"
+            tabIndex={0}
+            aria-label={`Перейти в каталог: ${activeRoom.title}`}
+            onKeyDown={(e) => {
+              if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                navigate(catalogUrl);
+              }
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            {prevRoom && isAnimating && (
+              <img
+                key={`exit-${prevRoom.id}`}
+                src={prevRoom.image}
+                alt={prevRoom.title}
+                className="categories-section__preview-image categories-section__preview-image--exit"
+              />
+            )}
+
+            <div
+              key={`enter-${activeRoom.id}`}
+              className={`categories-section__preview-stage ${isAnimating ? "categories-section__preview-stage--enter" : ""
+                }`}
+            >
+              {/* размытая копия */}
+              <img
+                src={activeRoom.image}
+                alt={activeRoom.title}
+                className={`categories-section__preview-image categories-section__preview-image--blur ${activeHotspot ? "is-active" : ""
+                  }`}
+              />
+
+              {/* SVG-оверлей: viewBox = реальные размеры PNG */}
+              <svg
+                className="categories-section__hotspots"
+                viewBox={`0 0 ${activeRoom.width} ${activeRoom.height}`}
+                preserveAspectRatio="none"
+                aria-label={`Предметы: ${activeRoom.title}`}
               >
-                <img
-                  src={imageUrl}
-                  alt={room.name}
-                  className="category-card__image"
-                />
-                <div className="category-card__content">
-                  <h3 className="category-card__title">{room.name}</h3>
-                </div>
-                <div className="category-card__arrow">
-                  <img src={arrowIcon} alt="" />
-                </div>
-              </Link>
+                <defs>
+                  {activeRoom.hotspots.map((h) => (
+                    <clipPath
+                      key={h.id}
+                      id={`clip-${h.id}`}
+                      clipPathUnits="userSpaceOnUse"
+                    >
+                      <path d={h.d} transform={buildTransform(h)} />
+                    </clipPath>
+                  ))}
+                </defs>
+
+                {/* резкая копия картинки, обрезанная по контуру активного хотспота */}
+                {activeHotspot && (
+                  <image
+                    href={activeRoom.image}
+                    x="0"
+                    y="0"
+                    width={activeRoom.width}
+                    height={activeRoom.height}
+                    preserveAspectRatio="none"
+                    clipPath={`url(#clip-${activeHotspot.id})`}
+                  />
+                )}
+
+                {/* хотспоты */}
+                {activeRoom.hotspots.map((h) => (
+                  <a
+                    key={h.id}
+                    href={h.href}
+                    className={`hotspot ${hoveredHotspot === h.id ? "hotspot--active" : ""}`}
+                    onMouseEnter={() => setHoveredHotspot(h.id)}
+                    onMouseLeave={() => setHoveredHotspot(null)}
+                    aria-label={h.label}
+                    onBlur={() => setHoveredHotspot(null)}
+                    onFocus={() => setHoveredHotspot(h.id)}
+                  >
+                    <title>{h.label}</title>
+                    <path
+                      d={h.d}
+                      transform={buildTransform(h)}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </a>
+                ))}
+              </svg>
+            </div>
+          </div>
+
+          {/* ===== Правая колонка ===== */}
+          <div className="categories-section__info">
+            <h3 className="categories-section__room-title">{activeRoom.title}</h3>
+
+            <div className="categories-section__categories">
+              {uniqueLinks.map(({ label, href }) => (
+                <Link
+                  key={label}
+                  to={href}
+                  onMouseEnter={() => setHoveredHotspot(activeRoom.hotspots.find((h) => h.label === label)?.id ?? null)}
+                  onMouseLeave={() => setHoveredHotspot(null)}
+                  onFocus={() => setHoveredHotspot(activeRoom.hotspots.find((h) => h.label === label)?.id ?? null)}
+                  onBlur={() => setHoveredHotspot(null)}
+                  className="category-chip"
+                  style={{ textDecoration: "none" }}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ===== Нижний ряд комнат ===== */}
+        <div className="categories-section__rooms">
+          {STATIC_ROOMS.map((room) => {
+            const isActive = room.id === activeId;
+            return (
+              <button
+                key={room.id}
+                type="button"
+                className={`room-thumb ${isActive ? "room-thumb--active" : ""}`}
+                onClick={() => handleSelect(room.id)}
+                aria-pressed={isActive}
+              >
+                <img src={room.image} alt={room.title} className="room-thumb__image" />
+                <span className="room-thumb__label">{room.title}</span>
+              </button>
             );
           })}
         </div>

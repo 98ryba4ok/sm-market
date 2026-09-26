@@ -1,3 +1,4 @@
+import { productUrl } from "../../../utils/productUrl";
 import * as React from "react";
 import * as Checkbox from "@radix-ui/react-checkbox";
 import { Check, Heart, Trash2 } from "lucide-react";
@@ -50,7 +51,7 @@ export const MobileCartItem: React.FC<MobileCartItemProps> = ({
 
         <div className="mobile-cart-item__info">
           <Link
-            to={`/products/${item.product_detail.slug}`}
+            to={productUrl(item.product_detail)}
             className="mobile-cart-item__name"
           >
             {item.product_detail.name}

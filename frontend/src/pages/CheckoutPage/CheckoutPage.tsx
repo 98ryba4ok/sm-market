@@ -1,3 +1,4 @@
+import { productUrl } from "../../utils/productUrl";
 import { ChevronLeft, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -437,7 +438,7 @@ export const CheckoutPage = () => {
 
                         <div className="checkout-item__info">
                           <Link
-                            to={`/products/${item.product_detail.slug}`}
+                            to={productUrl(item.product_detail)}
                             className="checkout-item__name"
                           >
                             {item.product_detail.name}

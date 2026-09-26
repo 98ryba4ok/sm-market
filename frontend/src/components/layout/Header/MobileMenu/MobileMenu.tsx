@@ -1,8 +1,10 @@
-import { Home, Package, Heart, ClipboardList, User, LogOut, X, ShoppingCart, LogIn } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Boxes, Home, Package, Heart, ClipboardList, User, LogOut, X, ShoppingCart, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
 
+import { authApi } from "../../../../api/authApi";
 import { performLogout } from "../../../../utils/auth";
 import "./MobileMenu.css";
 
@@ -21,6 +23,13 @@ export const MobileMenu = ({
   userEmail,
   onOpenLoginModal,
 }: MobileMenuProps) => {
+  const [isStaff, setIsStaff] = useState(false);
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    authApi.me().then(response => { if (!cancelled) setIsStaff(response.data.is_staff); }).catch(() => { if (!cancelled) setIsStaff(false); });
+    return () => { cancelled = true; };
+  }, [isAuthenticated, userEmail]);
   const handleLogout = async () => {
     try {
       performLogout();
@@ -80,6 +89,8 @@ export const MobileMenu = ({
                 <ShoppingCart size={20} />
                 <span>Корзина</span>
               </Link>
+
+              {isAuthenticated && isStaff && <Link to="/warehouse" className="mobile-menu__item" onClick={onClose}><Boxes size={20}/><span>Складской учёт</span></Link>}
 
               {isAuthenticated ? (
                 <>

@@ -80,6 +80,13 @@ class CartItemAdmin(admin.ModelAdmin):
 
 
 class OrderItemInline(admin.TabularInline):
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     """Inline для элементов заказа"""
     model = OrderItem
     extra = 0
@@ -94,6 +101,11 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     """Админка для заказов"""
     list_display = [
         'order_number', 'user', 'status_badge', 'payment_status_badge',
@@ -106,7 +118,7 @@ class OrderAdmin(admin.ModelAdmin):
     ]
     readonly_fields = [
         'order_number', 'created_at', 'updated_at',
-        'can_be_cancelled', 'total_amount', 'promo_discount'
+        'can_be_cancelled', 'total_amount', 'promo_discount', 'status'
     ]
     inlines = [OrderItemInline]
     
@@ -184,7 +196,7 @@ class OrderAdmin(admin.ModelAdmin):
     
     def mark_as_processing(self, request, queryset):
         """Отметить заказы как "В обработке" """
-        updated = queryset.update(status='processing')
+        updated = queryset.exclude(status='cancelled').update(status='processing')
         self.message_user(
             request,
             f'{updated} заказ(ов) отмечено как "В обработке"'
@@ -193,7 +205,7 @@ class OrderAdmin(admin.ModelAdmin):
     
     def mark_as_shipped(self, request, queryset):
         """Отметить заказы как "Отправлен" """
-        updated = queryset.update(status='shipped')
+        updated = queryset.exclude(status='cancelled').update(status='shipped')
         self.message_user(
             request,
             f'{updated} заказ(ов) отмечено как "Отправлен"'
@@ -202,7 +214,7 @@ class OrderAdmin(admin.ModelAdmin):
     
     def mark_as_delivered(self, request, queryset):
         """Отметить заказы как "Доставлен" """
-        updated = queryset.update(status='delivered')
+        updated = queryset.exclude(status='cancelled').update(status='delivered')
         self.message_user(
             request,
             f'{updated} заказ(ов) отмечено как "Доставлен"'
@@ -213,8 +225,7 @@ class OrderAdmin(admin.ModelAdmin):
         """Отменить заказы"""
         count = 0
         for order in queryset:
-            if order.can_be_cancelled:
-                order.cancel()
+            if order.can_be_cancelled and order.cancel():
                 count += 1
         self.message_user(
             request,
@@ -234,6 +245,13 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return False
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     """Админка для элементов заказа"""
     list_display = [
         'order', 'product', 'product_name',

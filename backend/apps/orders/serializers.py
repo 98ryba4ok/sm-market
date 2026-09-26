@@ -323,6 +323,22 @@ class OrderCreateSerializer(serializers.Serializer):
         total_amount = max(total_amount, Decimal('0'))
         
         with transaction.atomic():
+            # Сериализуем оформление одной корзины и перечитываем строки после блокировки.
+            Cart.objects.select_for_update().get(pk=cart.pk)
+            cart_items = cart.items.all()
+            if selected_items:
+                cart_items = cart_items.filter(id__in=selected_items)
+            cart_items = list(cart_items.order_by('product_id'))
+            if not cart_items:
+                raise serializers.ValidationError('Корзина уже оформлена или пуста.')
+            products = {product.pk: product for product in Product.objects.select_for_update().filter(
+                pk__in=[item.product_id for item in cart_items]).order_by('pk')}
+            for item in cart_items:
+                item.product = products[item.product_id]
+                if item.quantity > item.product.stock_quantity:
+                    raise serializers.ValidationError(f'Недостаточно товара: {item.product.name}. Доступно {item.product.stock_quantity} шт.')
+            subtotal = sum(item.subtotal for item in cart_items)
+            total_amount = max(subtotal - promo_discount, Decimal('0'))
             # Создать заказ
             order = Order.objects.create(
                 user=user if user.is_authenticated else None,
@@ -352,9 +368,11 @@ class OrderCreateSerializer(serializers.Serializer):
                     product_name=cart_item.product.name
                 )
                 
-                # Уменьшить количество товара на складе
-                cart_item.product.stock_quantity -= cart_item.quantity
-                cart_item.product.save(update_fields=['stock_quantity'])
+                from apps.inventory.services import move_stock
+                move_stock(product_id=cart_item.product_id, kind='sale',
+                    quantity=-cart_item.quantity, unit_price=cart_item.product.final_price,
+                    actor=user if user.is_authenticated else None, order=order,
+                    note=f'Заказ {order.order_number}')
             
             # Применить промокод
             if promo_code_obj:
@@ -362,6 +380,6 @@ class OrderCreateSerializer(serializers.Serializer):
                 promo_code_obj.save(update_fields=['used_count'])
             
             # Удалить из корзины только оформленные товары
-            cart_items.delete()
+            CartItem.objects.filter(pk__in=[item.pk for item in cart_items]).delete()
 
         return order

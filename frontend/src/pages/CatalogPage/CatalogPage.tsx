@@ -96,6 +96,7 @@ export const CatalogPage = () => {
           setCategories(response.data.results);
         }
       } catch (err) {
+        setCategories([]);
         console.error("Ошибка загрузки категорий:", err);
       }
     };
@@ -119,6 +120,7 @@ export const CatalogPage = () => {
 
     // Синхронизация поиска
     const newSearchQuery = searchParam || "";
+    setSearchInput(newSearchQuery);
     if (newSearchQuery !== searchQuery) {
       setSearchQuery(newSearchQuery);
     }

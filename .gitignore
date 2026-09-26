@@ -1,3 +1,11 @@
 .env
 backend/media/
 .env.vds
+
+.venv/
+__pycache__/
+*.pyc
+backend/local.sqlite3*
+.local-logs/
+
+.DS_Store

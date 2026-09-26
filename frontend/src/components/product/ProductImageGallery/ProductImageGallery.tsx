@@ -25,6 +25,16 @@ export const ProductImageGallery = ({ images, productName }: ProductImageGallery
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  if (images.length === 0) {
+    return (
+      <div className="product-image-gallery">
+        <div className="product-image-gallery__main-image-container">
+          <div className="product-image-gallery__no-image">Фото пока не добавлено</div>
+        </div>
+      </div>
+    );
+  }
+
   const handleImageClick = () => {
     setIsFullscreen(true);
     const index = images.findIndex(img => getImageUrl(img.image) === selectedImage);
