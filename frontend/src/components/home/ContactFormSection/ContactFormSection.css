@@ -16,7 +16,7 @@
 }
 
 .contact-form-section__container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 1rem;
 }
@@ -33,11 +33,12 @@
   }
 }
 
+/* Сетка */
 .contact-form-section__grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
-  align-items: center;
+  align-items: stretch;
 }
 
 @media (min-width: 640px) {
@@ -54,16 +55,18 @@
 
 @media (min-width: 1024px) {
   .contact-form-section__grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1.4fr 1fr;
   }
 }
 
+/* Изображения */
 .contact-form-section__image {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 4 / 5;   /* выше, чем шире — лицо не режется */
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 @media (min-width: 640px) {
@@ -78,9 +81,14 @@
   }
 }
 
+/* Только когда все три элемента в одну строку — растягиваем картинки по высоте */
 @media (min-width: 1024px) {
   .contact-form-section__image {
     border-radius: 30px;
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 100%;
+    align-self: stretch;
   }
 }
 
@@ -88,6 +96,26 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top; /* ключевое: фокус на верхнюю часть кадра */
+  display: block;
+}
+
+/* На мобильных/планшетах картинки не во всю ширину */
+@media (max-width: 1023px) {
+  .contact-form-section__image {
+    max-width: 500px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+/* Контент формы */
+.contact-form-section__content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
 }
 
 .contact-form-section__title {
@@ -112,7 +140,7 @@
 
 @media (min-width: 1024px) {
   .contact-form-section__title {
-    font-size: 2.25rem;
+    font-size: 2rem;
   }
 }
 

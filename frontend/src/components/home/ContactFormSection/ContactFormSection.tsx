@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-import helpImage from "../../../assets/help.png";
+import helpImage from "../../../assets/help1.png";
+import helpImage2 from "../../../assets/help2.jpg";
 import { Button } from "../../ui/Button/Button";
 import { Input } from "../../ui/Input/Input";
 import { consultationApi } from "../../../api/consultationApi";
@@ -54,8 +55,8 @@ export const ContactFormSection = () => {
     <section className="contact-form-section">
       <div className="contact-form-section__container">
         <div className="contact-form-section__grid">
-          {/* Image */}
-          <div className="contact-form-section__image">
+          {/* Left Image */}
+          <div className="contact-form-section__image contact-form-section__image--left">
             <img
               src={helpImage}
               alt="Помощь"
@@ -64,7 +65,7 @@ export const ContactFormSection = () => {
           </div>
 
           {/* Form */}
-          <div>
+          <div className="contact-form-section__content">
             <h2 className="contact-form-section__title">
               Не нашли подходящий товар или нужна помощь?
             </h2>
@@ -119,6 +120,15 @@ export const ContactFormSection = () => {
                 </p>
               </div>
             </form>
+          </div>
+
+          {/* Right Image */}
+          <div className="contact-form-section__image contact-form-section__image--right">
+            <img
+              src={helpImage2}
+              alt="Помощь"
+              className="contact-form-section__image-img"
+            />
           </div>
         </div>
       </div>
